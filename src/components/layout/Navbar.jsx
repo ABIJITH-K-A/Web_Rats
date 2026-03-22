@@ -28,10 +28,8 @@ const Navbar = () => {
   ];
 
   const getDashboardPath = () => {
-    if (!role) return '/login';
-    if (['owner', 'superadmin', 'admin'].includes(role)) return '/admin-dashboard';
-    if (role === 'manager') return '/manager-dashboard';
-    if (role === 'worker') return '/worker-dashboard';
+    if (!role) return '/join?login=1';
+    if (['owner', 'superadmin', 'admin', 'manager', 'worker'].includes(role)) return '/dashboard';
     return '/profile';
   };
 
@@ -71,12 +69,20 @@ const Navbar = () => {
               Dashboard
             </Link>
           ) : (
-            <Link
-              to="/signup"
-              className="flex items-center gap-2 px-6 py-2 rounded-full bg-cyan-primary text-primary-dark font-bold hover:shadow-[0_0_15px_#66FCF1] transition-all"
-            >
-              Sign Up
-            </Link>
+            <div className="flex items-center gap-3">
+              <Link
+                to="/join?login=1"
+                className="text-sm font-semibold text-light-gray hover:text-cyan-primary transition-colors"
+              >
+                Sign In
+              </Link>
+              <Link
+                to="/join"
+                className="flex items-center gap-2 px-6 py-2 rounded-full bg-cyan-primary text-primary-dark font-bold hover:shadow-[0_0_15px_#66FCF1] transition-all"
+              >
+                Join Free
+              </Link>
+            </div>
           )}
         </div>
 
@@ -122,19 +128,19 @@ const Navbar = () => {
               ) : (
                 <>
                   <Link
-                    to="/login"
+                    to="/join?login=1"
                     className="flex items-center justify-center gap-2 p-3 rounded-xl border border-cyan-primary text-cyan-primary font-bold"
                     onClick={() => setIsOpen(false)}
                   >
                     <LogIn size={20} />
-                    Login
+                    Sign In
                   </Link>
                   <Link
-                    to="/signup"
+                    to="/join"
                     className="flex items-center justify-center gap-2 p-3 rounded-xl bg-cyan-primary text-primary-dark font-bold"
                     onClick={() => setIsOpen(false)}
                   >
-                    Sign Up
+                    Join Free
                   </Link>
                 </>
               )}

@@ -9,6 +9,7 @@ import Projects from './pages/public/Projects';
 import Help from './pages/public/Help';
 import BookService from './pages/public/BookService';
 import JoinHub from './pages/auth/JoinHub';
+import ForgotPassword from './pages/auth/ForgotPassword';
 import Profile from './pages/auth/Profile';
 import AdminDashboard from './pages/dashboard/AdminDashboard';
 import ProtectedRoute from './components/auth/ProtectedRoute';
@@ -29,6 +30,7 @@ function App() {
               <Route path="/help" element={<Help />} />
               <Route path="/book" element={<BookService />} />
               <Route path="/join" element={<JoinHub />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/profile" element={<Profile />} />
               <Route 
                 path="/dashboard" 

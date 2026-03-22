@@ -82,4 +82,8 @@ export function installIdleSessionTimeout(auth, options = {}) {
     events.forEach(eventName => window.removeEventListener(eventName, markActive));
     document.removeEventListener("visibilitychange", markActive);
   };
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> b344e4367531f76f877c8b38de94eec732d42d27

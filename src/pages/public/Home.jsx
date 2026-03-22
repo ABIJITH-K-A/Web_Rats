@@ -117,10 +117,10 @@ const Home = () => {
                 transition={{ duration: 0.6, delay: idx * 0.1 }}
               >
                 <Link to={`/book?service=${service.title === 'PPTs' ? 'ppt' : service.title.toLowerCase().slice(0, -1)}`}>
-                  <BorderGlow 
+                  <BorderGlow
                     className="flex flex-col items-center text-center group h-full cursor-pointer transition-all duration-300"
                     backgroundColor="#0B0C10"
-                    glowColor="102 252 241" // cyan-primary HSL (approx)
+                    glowColor="102 252 241"
                     colors={['#66FCF1', '#45A29E', '#1F2833']}
                     borderRadius={24}
                   >
