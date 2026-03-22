@@ -132,4 +132,8 @@ onAuthStateChanged(auth, async user => {
   } else {
     _toggle(parts.dash, false);
   }
+<<<<<<< HEAD
 });
+=======
+});
+>>>>>>> b344e4367531f76f877c8b38de94eec732d42d27

@@ -234,4 +234,8 @@ export const ABOUT_POINTS = [
   "Server-verified checkout with GST and billing breakdowns shown before payment.",
   "Shared project handling for PPTs, posters, graphics, and websites with tracked delivery windows.",
   "Referral-aware accounts, payout tracking, reporting tools, and cloud-ready Firestore rules."
+<<<<<<< HEAD
 ];
+=======
+];
+>>>>>>> b344e4367531f76f877c8b38de94eec732d42d27
