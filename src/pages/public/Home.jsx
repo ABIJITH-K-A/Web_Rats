@@ -44,7 +44,7 @@ const Home = () => {
           >
             <h1 className="text-6xl md:text-7xl font-black mb-8 leading-tight">
               Design That <br />
-              <span className="text-cyan-primary drop-shadow-[0_0_15px_rgba(102,252,241,0.3)]">Delivers!</span>
+              <span className="text-cyan-primary drop-shadow-[0_0_15px_rgba(103, 248, 29,0.3)]">Delivers!</span>
             </h1>
             <p className="text-xl text-light-gray mb-10 opacity-80 leading-relaxed max-w-xl">
               Stunning PPTs • Bold Posters • Modern Websites. From student projects to business branding,
@@ -140,38 +140,7 @@ const Home = () => {
       </section>
 
       {/* Portfolio Section */}
-      <section className="py-32">
-        <div className="container mx-auto px-6">
-          <SectionHeading subtitle="A glimpse into some of our recent work and creative designs.">
-            Our Portfolio
-          </SectionHeading>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {portfolioItems.map((item, idx) => (
-              <motion.div
-                key={item.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: idx * 0.1 }}
-                className="group relative overflow-hidden rounded-3xl aspect-[4/3] cursor-pointer"
-              >
-                <img
-                  src={item.img}
-                  alt={item.title}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-primary-dark via-primary-dark/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col justify-end p-8">
-                  <h5 className="text-2xl font-bold text-cyan-primary">{item.title}</h5>
-                  <Link to="/projects#projects-grid" className="text-light-gray flex items-center gap-2 mt-2 opacity-80 hover:opacity-100">
-                    View Project <ArrowRight size={16} />
-                  </Link>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
+     
 
       {/* CTA Section */}
       <section className="py-32 mb-20">

@@ -57,7 +57,7 @@ const DashboardLayout = ({ children }) => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0B0C10] text-light-gray flex overflow-hidden font-rajdhani">
+    <div className="min-h-screen bg-[#262B25] text-light-gray flex overflow-hidden font-rajdhani">
       {/* Sidebar Overlay */}
       <AnimatePresence>
         {isSidebarOpen && window.innerWidth < 1024 && (
@@ -110,7 +110,7 @@ const DashboardLayout = ({ children }) => {
                 </span>
                 <span className="text-sm font-semibold tracking-wide capitalize">{item.label}</span>
                 {currentView === item.id && (
-                   <motion.div layoutId="navIndicator" className="ml-auto w-1.5 h-1.5 rounded-full bg-cyan-primary shadow-[0_0_10px_rgba(102,252,241,1)]" />
+                   <motion.div layoutId="navIndicator" className="ml-auto w-1.5 h-1.5 rounded-full bg-cyan-primary shadow-[0_0_10px_rgba(103, 248, 29,1)]" />
                 )}
               </button>
             ))}
@@ -232,7 +232,7 @@ const DashboardLayout = ({ children }) => {
         </header>
 
         {/* View Port */}
-        <main className="flex-grow overflow-y-auto px-6 py-8 lg:px-10 bg-[#0B0C10] no-scrollbar">
+        <main className="flex-grow overflow-y-auto px-6 py-8 lg:px-10 bg-[#262B25] no-scrollbar">
           {children({ currentView })}
         </main>
       </div>

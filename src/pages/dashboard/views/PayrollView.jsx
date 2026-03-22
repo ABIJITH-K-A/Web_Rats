@@ -102,7 +102,7 @@ const PayrollView = () => {
         {!showCreate && !selectedPayroll && (
           <button 
             onClick={() => setShowCreate(true)}
-            className="flex items-center gap-3 px-6 py-3 bg-cyan-primary text-primary-dark font-black text-sm uppercase tracking-widest rounded-xl hover:scale-[1.02] active:scale-95 transition-all shadow-[0_0_20px_rgba(102,252,241,0.2)]"
+            className="flex items-center gap-3 px-6 py-3 bg-cyan-primary text-primary-dark font-black text-sm uppercase tracking-widest rounded-xl hover:scale-[1.02] active:scale-95 transition-all shadow-[0_0_20px_rgba(103, 248, 29,0.2)]"
           >
             <Plus size={18} /> New Payroll Period
           </button>
@@ -117,14 +117,14 @@ const PayrollView = () => {
             <form onSubmit={handleCreatePayroll} className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
                <div className="space-y-1">
                   <label className="text-[10px] uppercase font-mono tracking-widest text-white/20">Target Month *</label>
-                  <input required type="month" className="w-full bg-[#0B0C10] border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-cyan-primary outline-none transition-all" value={newPayroll.month} onChange={(e)=>setNewPayroll({...newPayroll, month: e.target.value})} />
+                  <input required type="month" className="w-full bg-[#262B25] border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-cyan-primary outline-none transition-all" value={newPayroll.month} onChange={(e)=>setNewPayroll({...newPayroll, month: e.target.value})} />
                </div>
                <div className="space-y-1">
                   <label className="text-[10px] uppercase font-mono tracking-widest text-white/20">Total Platform Income (₹) *</label>
-                  <input required type="number" className="w-full bg-[#0B0C10] border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-cyan-primary outline-none transition-all" placeholder="50000" value={newPayroll.totalIncome} onChange={(e)=>setNewPayroll({...newPayroll, totalIncome: e.target.value})} />
+                  <input required type="number" className="w-full bg-[#262B25] border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-cyan-primary outline-none transition-all" placeholder="50000" value={newPayroll.totalIncome} onChange={(e)=>setNewPayroll({...newPayroll, totalIncome: e.target.value})} />
                </div>
                <div className="flex gap-3">
-                  <button type="submit" className="flex-grow py-3 bg-cyan-primary text-primary-dark font-black text-[10px] uppercase tracking-widest rounded-xl shadow-[0_0_15px_rgba(102,252,241,0.1)]">Generate Period</button>
+                  <button type="submit" className="flex-grow py-3 bg-cyan-primary text-primary-dark font-black text-[10px] uppercase tracking-widest rounded-xl shadow-[0_0_15px_rgba(103, 248, 29,0.1)]">Generate Period</button>
                   <button type="button" onClick={()=>setShowCreate(false)} className="px-4 py-3 bg-white/5 border border-white/5 rounded-xl text-white/40 hover:text-white transition-colors "><X size={18}/></button>
                </div>
             </form>
@@ -132,7 +132,7 @@ const PayrollView = () => {
       )}
 
       {selectedPayroll && (
-         <div className="bg-[#121417] border border-cyan-primary/20 rounded-3xl p-8 animate-in slide-in-from-bottom-4 duration-300 shadow-[0_0_40px_rgba(102,252,241,0.05)]">
+         <div className="bg-[#121417] border border-cyan-primary/20 rounded-3xl p-8 animate-in slide-in-from-bottom-4 duration-300 shadow-[0_0_40px_rgba(103, 248, 29,0.05)]">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10 border-b border-white/5 pb-6">
                <div>
                   <h3 className="text-sm font-black text-cyan-primary uppercase tracking-widest mb-1 flex items-center gap-2">
@@ -148,7 +148,7 @@ const PayrollView = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
                {managers.map(m => (
-                  <div key={m.id} className="bg-[#0B0C10] border border-white/5 p-5 rounded-2xl group hover:border-white/10 transition-all">
+                  <div key={m.id} className="bg-[#262B25] border border-white/5 p-5 rounded-2xl group hover:border-white/10 transition-all">
                      <div className="flex items-center gap-3 mb-4">
                         <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center font-bold text-[10px] border border-white/5 group-hover:bg-cyan-primary group-hover:text-primary-dark transition-all">
                            {m.name?.charAt(0)}
@@ -174,7 +174,7 @@ const PayrollView = () => {
 
             <div className="flex gap-4">
                <button onClick={() => setSelectedPayroll(null)} className="px-8 py-3 bg-white/5 border border-white/5 rounded-xl font-bold font-mono text-[10px] uppercase tracking-widest text-white/40 hover:text-white transition-all">Cancel</button>
-               <button onClick={handleSaveAllocations} className="flex-grow py-3 bg-cyan-primary text-primary-dark font-black font-mono text-[10px] uppercase tracking-[0.2em] rounded-xl hover:scale-[1.01] shadow-[0_0_20px_rgba(102,252,241,0.1)] flex items-center justify-center gap-3">
+               <button onClick={handleSaveAllocations} className="flex-grow py-3 bg-cyan-primary text-primary-dark font-black font-mono text-[10px] uppercase tracking-[0.2em] rounded-xl hover:scale-[1.01] shadow-[0_0_20px_rgba(103, 248, 29,0.1)] flex items-center justify-center gap-3">
                   <Save size={14} /> Commit Allocation Map
                </button>
             </div>
@@ -190,7 +190,7 @@ const PayrollView = () => {
          </div>
          <div className="overflow-x-auto">
             <table className="w-full text-left">
-               <thead className="bg-[#0B0C10] text-[9px] font-mono uppercase tracking-widest text-white/20">
+               <thead className="bg-[#262B25] text-[9px] font-mono uppercase tracking-widest text-white/20">
                   <tr>
                      <th className="px-6 py-5">Period Month</th>
                      <th className="px-6 py-5">Input Revenue</th>

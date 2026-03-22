@@ -114,7 +114,7 @@ const ReportsView = () => {
               <div className="space-y-1">
                  <label className="text-[10px] uppercase font-mono tracking-widest text-white/20">Send To Role *</label>
                  <select 
-                    className="w-full bg-[#0B0C10] border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-cyan-primary outline-none transition-all uppercase font-mono tracking-widest text-[10px]"
+                    className="w-full bg-[#262B25] border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-cyan-primary outline-none transition-all uppercase font-mono tracking-widest text-[10px]"
                     value={reportForm.toRole}
                     onChange={(e) => setReportForm({...reportForm, toRole: e.target.value})}
                  >
@@ -127,7 +127,7 @@ const ReportsView = () => {
                  <label className="text-[10px] uppercase font-mono tracking-widest text-white/20">Subject *</label>
                  <input 
                    required type="text"
-                   className="w-full bg-[#0B0C10] border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-cyan-primary outline-none transition-all"
+                   className="w-full bg-[#262B25] border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-cyan-primary outline-none transition-all"
                    placeholder="Short summary..."
                    value={reportForm.subject}
                    onChange={(e) => setReportForm({...reportForm, subject: e.target.value})}
@@ -137,7 +137,7 @@ const ReportsView = () => {
                  <label className="text-[10px] uppercase font-mono tracking-widest text-white/20">Details *</label>
                  <textarea 
                     required
-                    className="w-full bg-[#0B0C10] border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-cyan-primary outline-none min-h-[120px] resize-none transition-all"
+                    className="w-full bg-[#262B25] border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-cyan-primary outline-none min-h-[120px] resize-none transition-all"
                     placeholder="Describe the issue, order IDs, or evidence details..."
                     value={reportForm.details}
                     onChange={(e) => setReportForm({...reportForm, details: e.target.value})}
@@ -145,7 +145,7 @@ const ReportsView = () => {
               </div>
               <button 
                 disabled={isSubmitting}
-                className="w-full py-4 bg-cyan-primary text-primary-dark font-black text-sm uppercase tracking-widest rounded-xl hover:scale-[1.02] active:scale-95 transition-all shadow-[0_0_20px_rgba(102,252,241,0.2)] disabled:opacity-50"
+                className="w-full py-4 bg-cyan-primary text-primary-dark font-black text-sm uppercase tracking-widest rounded-xl hover:scale-[1.02] active:scale-95 transition-all shadow-[0_0_20px_rgba(103, 248, 29,0.2)] disabled:opacity-50"
               >
                 {isSubmitting ? 'Submitting encrypted data...' : 'Submit Final Report'}
               </button>
@@ -212,7 +212,7 @@ const ReportsView = () => {
               </div>
               <div className="overflow-x-auto">
                  <table className="w-full text-left">
-                    <thead className="bg-[#0B0C10] text-[9px] font-mono uppercase tracking-widest text-white/20">
+                    <thead className="bg-[#262B25] text-[9px] font-mono uppercase tracking-widest text-white/20">
                        <tr>
                           <th className="px-6 py-4">ID / Subject</th>
                           <th className="px-6 py-4">To Role</th>

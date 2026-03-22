@@ -200,7 +200,7 @@ const UsersView = () => {
                     <td className="px-6 py-4">
                        <select 
                          disabled={u.id === currentUser.uid}
-                         className="bg-[#0B0C10] border border-white/10 rounded-lg px-3 py-1.5 text-[9px] font-mono uppercase tracking-widest outline-none focus:border-cyan-primary cursor-pointer disabled:opacity-20 disabled:cursor-not-allowed"
+                         className="bg-[#262B25] border border-white/10 rounded-lg px-3 py-1.5 text-[9px] font-mono uppercase tracking-widest outline-none focus:border-cyan-primary cursor-pointer disabled:opacity-20 disabled:cursor-not-allowed"
                          value={u.role}
                          onChange={(e) => handlePromote(u.id, e.target.value)}
                        >

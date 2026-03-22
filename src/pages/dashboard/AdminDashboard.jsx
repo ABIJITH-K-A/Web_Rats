@@ -96,7 +96,7 @@ const OverviewTab = () => {
            <button className="px-6 py-3 bg-white/5 border border-white/10 rounded-xl text-[10px] font-mono uppercase tracking-widest hover:bg-white/10 transition-all flex items-center gap-2">
               <Calendar size={14} /> Analytics Range
            </button>
-           <button className="px-6 py-3 bg-cyan-primary/10 border border-cyan-primary/20 rounded-xl text-[10px] font-mono uppercase tracking-widest text-cyan-primary shadow-[0_0_20px_rgba(102,252,241,0.05)] hover:bg-cyan-primary/20 transition-all">
+           <button className="px-6 py-3 bg-cyan-primary/10 border border-cyan-primary/20 rounded-xl text-[10px] font-mono uppercase tracking-widest text-cyan-primary shadow-[0_0_20px_rgba(103, 248, 29,0.05)] hover:bg-cyan-primary/20 transition-all">
               Export Database
            </button>
         </div>
@@ -142,7 +142,7 @@ const OverviewTab = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
-                <tr className="bg-[#0B0C10] text-[9px] font-mono uppercase tracking-widest text-white/20 border-b border-white/5">
+                <tr className="bg-[#262B25] text-[9px] font-mono uppercase tracking-widest text-white/20 border-b border-white/5">
                   <th className="px-8 py-5">Intel ID</th>
                   <th className="px-8 py-5">Project Scope</th>
                   <th className="px-8 py-5">Protocol Value</th>
@@ -153,7 +153,7 @@ const OverviewTab = () => {
                 {loading ? (
                    Array(6).fill(0).map((_, i) => (
                     <tr key={i} className="animate-pulse">
-                      <td colSpan="4" className="px-8 py-6 h-12 bg-white/5 border-b border-[#0B0C10]"></td>
+                      <td colSpan="4" className="px-8 py-6 h-12 bg-white/5 border-b border-[#262B25]"></td>
                     </tr>
                   ))
                 ) : recentOrders.length === 0 ? (
@@ -171,7 +171,7 @@ const OverviewTab = () => {
                       <td className="px-8 py-6 font-black text-cyan-primary italic">₹{order.finalPrice?.toLocaleString()}</td>
                       <td className="px-8 py-6">
                          <div className="flex justify-center">
-                            <span className="px-3 py-1 rounded-full text-[8px] font-mono font-black uppercase tracking-[0.2em] border border-cyan-primary/20 bg-cyan-primary/5 text-cyan-primary shadow-[0_0_10px_rgba(102,252,241,0.1)]">
+                            <span className="px-3 py-1 rounded-full text-[8px] font-mono font-black uppercase tracking-[0.2em] border border-cyan-primary/20 bg-cyan-primary/5 text-cyan-primary shadow-[0_0_10px_rgba(103, 248, 29,0.1)]">
                               {order.status || 'NEW'}
                             </span>
                          </div>
@@ -198,7 +198,7 @@ const OverviewTab = () => {
                    { t: 'Emergency bug report in Samples', time: '2d ago', color: 'bg-red-500' },
                  ].map((a, i) => (
                    <div key={i} className="flex gap-5 items-start relative group cursor-pointer">
-                      <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${a.color} shadow-[0_0_10px_rgba(102,252,241,0.2)] group-hover:scale-150 transition-transform`} />
+                      <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${a.color} shadow-[0_0_10px_rgba(103, 248, 29,0.2)] group-hover:scale-150 transition-transform`} />
                       <div>
                          <div className="text-xs font-bold text-white/70 group-hover:text-white transition-colors leading-tight">{a.t}</div>
                          <div className="text-[9px] font-mono text-white/20 mt-1 uppercase tracking-widest font-bold">{a.time}</div>
@@ -210,7 +210,7 @@ const OverviewTab = () => {
               </div>
            </div>
            
-           <div className="bg-gradient-to-br from-[#121417] to-[#0B0C10] border border-white/5 p-10 rounded-[2.5rem] relative overflow-hidden group shadow-2xl">
+           <div className="bg-gradient-to-br from-[#121417] to-[#262B25] border border-white/5 p-10 rounded-[2.5rem] relative overflow-hidden group shadow-2xl">
               <div className="absolute -right-8 -bottom-8 text-cyan-primary/5 group-hover:scale-110 transition-transform duration-700 -rotate-12">
                 <Box size={180} />
               </div>
