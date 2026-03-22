@@ -188,11 +188,8 @@ const BookService = () => {
 
       <Stepper 
         currentStep={step} 
-        onStepChange={(s, d) => {
-          setStep(s);
-          if (d !== undefined) setDirection(d);
-        }}
         showButtons={false}
+        disableStepIndicators={true}
         className="min-h-[600px]"
       >
         {/* Step 1: Service */}

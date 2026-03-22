@@ -91,9 +91,9 @@ const Home = () => {
               glowIntensity={1.2}
             >
               <img
-                src="/Images/Icons/WebRatBanner.png"
+                src="./Images/Icons/WebRatBannerDark.png"
                 alt="Hero Visual"
-                className="relative rounded-[32px] shadow-2xl"
+                className="relative rounded-4xl shadow-2xl"
               />
             </BorderGlow>
           </motion.div>

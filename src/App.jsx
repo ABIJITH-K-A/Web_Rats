@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import RootLayout from './components/layout/RootLayout';
 import Home from './pages/public/Home';
 import Services from './pages/public/Services';
+import ServiceDetail from './pages/public/ServiceDetail';
 import About from './pages/public/About';
 import Projects from './pages/public/Projects';
 import Help from './pages/public/Help';
@@ -25,6 +26,7 @@ function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/services" element={<Services />} />
+              <Route path="/service/:serviceId" element={<ServiceDetail />} />
               <Route path="/about" element={<About />} />
               <Route path="/projects" element={<Projects />} />
               <Route path="/help" element={<Help />} />

@@ -27,9 +27,13 @@ export const DashboardProvider = ({ children }) => {
         limit(20)
       );
     } else {
+      const recipientIds = [user.uid, 'all'];
+      if (userData?.role) {
+        recipientIds.push(userData.role);
+      }
       q = query(
         collection(db, 'notifications'),
-        where('recipientId', 'in', [user.uid, 'all', userData?.role]),
+        where('recipientId', 'in', recipientIds),
         orderBy('createdAt', 'desc'),
         limit(20)
       );
