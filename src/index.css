@@ -1,11 +1,12 @@
 @import "tailwindcss";
+@import "./styles/theme.css";
 
 @theme {
-  --color-primary-dark: #262B25;
-  --color-secondary-dark: #000000;
-  --color-light-gray: #FFFFFF;
-  --color-cyan-primary: #67F81D;
-  --color-teal-primary: #62CB2C;
+  --color-primary-dark: var(--color-primary-dark);
+  --color-secondary-dark: var(--color-secondary-dark);
+  --color-light-gray: var(--color-light-gray);
+  --color-cyan-primary: var(--color-cyan-primary);
+  --color-teal-primary: var(--color-teal-primary);
 
   --font-mono: "Share Tech Mono", monospace;
   --font-sans: "Rajdhani", sans-serif;
