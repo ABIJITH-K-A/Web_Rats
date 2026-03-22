@@ -101,7 +101,7 @@ const SamplesView = () => {
               <div className="space-y-1">
                  <label className="text-[10px] uppercase font-mono tracking-widest text-white/20">Movement Type *</label>
                  <select 
-                    className="w-full bg-[#0B0C10] border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-cyan-primary outline-none transition-all uppercase font-mono tracking-widest text-[10px]"
+                    className="w-full bg-[#262B25] border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-cyan-primary outline-none transition-all uppercase font-mono tracking-widest text-[10px]"
                     value={sampleForm.type}
                     onChange={(e) => setSampleForm({...sampleForm, type: e.target.value})}
                  >
@@ -114,7 +114,7 @@ const SamplesView = () => {
                     <label className="text-[10px] uppercase font-mono tracking-widest text-white/20">Client Name *</label>
                     <input 
                       required type="text"
-                      className="w-full bg-[#0B0C10] border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-cyan-primary outline-none transition-all"
+                      className="w-full bg-[#262B25] border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-cyan-primary outline-none transition-all"
                       placeholder="Full Name"
                       value={sampleForm.clientName}
                       onChange={(e) => setSampleForm({...sampleForm, clientName: e.target.value})}
@@ -125,14 +125,14 @@ const SamplesView = () => {
                     <div className="grid grid-cols-2 gap-2">
                        <input 
                          required type="email"
-                         className="w-full bg-[#0B0C10] border border-white/10 rounded-xl px-4 py-3 text-[10px] focus:border-cyan-primary outline-none transition-all"
+                         className="w-full bg-[#262B25] border border-white/10 rounded-xl px-4 py-3 text-[10px] focus:border-cyan-primary outline-none transition-all"
                          placeholder="Email Address"
                          value={sampleForm.clientEmail}
                          onChange={(e) => setSampleForm({...sampleForm, clientEmail: e.target.value})}
                        />
                        <input 
                          type="tel"
-                         className="w-full bg-[#0B0C10] border border-white/10 rounded-xl px-4 py-3 text-[10px] focus:border-cyan-primary outline-none transition-all"
+                         className="w-full bg-[#262B25] border border-white/10 rounded-xl px-4 py-3 text-[10px] focus:border-cyan-primary outline-none transition-all"
                          placeholder="Phone (Optional)"
                          value={sampleForm.clientPhone}
                          onChange={(e) => setSampleForm({...sampleForm, clientPhone: e.target.value})}
@@ -145,7 +145,7 @@ const SamplesView = () => {
                     <label className="text-[10px] uppercase font-mono tracking-widest text-white/20">Order ID</label>
                     <input 
                       type="text"
-                      className="w-full bg-[#0B0C10] border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-cyan-primary outline-none transition-all"
+                      className="w-full bg-[#262B25] border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-cyan-primary outline-none transition-all"
                       placeholder="#DE23..."
                       value={sampleForm.orderId}
                       onChange={(e) => setSampleForm({...sampleForm, orderId: e.target.value})}
@@ -155,7 +155,7 @@ const SamplesView = () => {
                     <label className="text-[10px] uppercase font-mono tracking-widest text-white/20">Expected Date</label>
                     <input 
                       type="date"
-                      className="w-full bg-[#0B0C10] border border-white/10 rounded-xl px-4 py-3 text-xs focus:border-cyan-primary outline-none transition-all text-white/40"
+                      className="w-full bg-[#262B25] border border-white/10 rounded-xl px-4 py-3 text-xs focus:border-cyan-primary outline-none transition-all text-white/40"
                       value={sampleForm.expectedDate}
                       onChange={(e) => setSampleForm({...sampleForm, expectedDate: e.target.value})}
                     />
@@ -164,7 +164,7 @@ const SamplesView = () => {
               <div className="space-y-1">
                  <label className="text-[10px] uppercase font-mono tracking-widest text-white/20">Logistics Notes</label>
                  <textarea 
-                    className="w-full bg-[#0B0C10] border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-cyan-primary outline-none min-h-[80px] resize-none transition-all"
+                    className="w-full bg-[#262B25] border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-cyan-primary outline-none min-h-[80px] resize-none transition-all"
                     placeholder="Address, Tracking ID, or descriptions..."
                     value={sampleForm.notes}
                     onChange={(e) => setSampleForm({...sampleForm, notes: e.target.value})}
@@ -172,7 +172,7 @@ const SamplesView = () => {
               </div>
               <button 
                 disabled={isSubmitting}
-                className="w-full py-4 bg-cyan-primary text-primary-dark font-black text-sm uppercase tracking-widest rounded-xl hover:scale-[1.02] active:scale-95 transition-all shadow-[0_0_20px_rgba(102,252,241,0.2)] disabled:opacity-50"
+                className="w-full py-4 bg-cyan-primary text-primary-dark font-black text-sm uppercase tracking-widest rounded-xl hover:scale-[1.02] active:scale-95 transition-all shadow-[0_0_20px_rgba(103, 248, 29,0.2)] disabled:opacity-50"
               >
                 {isSubmitting ? 'Recording Log...' : 'Confirm Shipment Log'}
               </button>
@@ -191,7 +191,7 @@ const SamplesView = () => {
            </div>
            <div className="overflow-x-auto">
               <table className="w-full text-left">
-                 <thead className="bg-[#0B0C10] text-[9px] font-mono uppercase tracking-widest text-white/20">
+                 <thead className="bg-[#262B25] text-[9px] font-mono uppercase tracking-widest text-white/20">
                     <tr>
                        <th className="px-6 py-4">Status / Type</th>
                        <th className="px-6 py-4">Client Detail</th>

@@ -127,13 +127,13 @@ const JoinHub = () => {
           <div className="flex bg-primary-dark/50 border border-white/10 rounded-xl p-1 mb-8">
             <button
               onClick={() => setActiveTab('register')}
-              className={`flex-1 py-3 rounded-lg flex items-center justify-center gap-2 font-bold text-sm transition-all ${activeTab === 'register' ? 'bg-cyan-primary/10 text-cyan-primary shadow-[inset_0_0_20px_rgba(102,252,241,0.05)]' : 'text-white/30 hover:text-white/60'}`}
+              className={`flex-1 py-3 rounded-lg flex items-center justify-center gap-2 font-bold text-sm transition-all ${activeTab === 'register' ? 'bg-cyan-primary/10 text-cyan-primary shadow-[inset_0_0_20px_rgba(103, 248, 29,0.05)]' : 'text-white/30 hover:text-white/60'}`}
             >
               <UserPlus size={16} /> Create Account
             </button>
             <button
               onClick={() => setActiveTab('login')}
-              className={`flex-1 py-3 rounded-lg flex items-center justify-center gap-2 font-bold text-sm transition-all ${activeTab === 'login' ? 'bg-cyan-primary/10 text-cyan-primary shadow-[inset_0_0_20px_rgba(102,252,241,0.05)]' : 'text-white/30 hover:text-white/60'}`}
+              className={`flex-1 py-3 rounded-lg flex items-center justify-center gap-2 font-bold text-sm transition-all ${activeTab === 'login' ? 'bg-cyan-primary/10 text-cyan-primary shadow-[inset_0_0_20px_rgba(103, 248, 29,0.05)]' : 'text-white/30 hover:text-white/60'}`}
             >
               <LogIn size={16} /> Sign In
             </button>

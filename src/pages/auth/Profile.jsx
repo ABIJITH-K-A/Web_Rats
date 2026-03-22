@@ -110,7 +110,7 @@ const Profile = () => {
            animate={{ scale: 1, opacity: 1 }}
            className="relative inline-block mb-6"
          >
-           <div className="w-24 h-24 rounded-full border-2 border-cyan-primary bg-cyan-primary/5 flex items-center justify-center text-4xl font-black text-cyan-primary shadow-[0_0_30px_rgba(102,252,241,0.2)]">
+           <div className="w-24 h-24 rounded-full border-2 border-cyan-primary bg-cyan-primary/5 flex items-center justify-center text-4xl font-black text-cyan-primary shadow-[0_0_30px_rgba(103, 248, 29,0.2)]">
              {userData?.name?.charAt(0).toUpperCase() || '?'}
              <button className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-cyan-primary text-primary-dark flex items-center justify-center border-4 border-primary-dark hover:scale-110 transition-transform">
                <Edit3 size={14} />

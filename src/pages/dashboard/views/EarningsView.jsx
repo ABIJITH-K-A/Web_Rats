@@ -127,7 +127,7 @@ const EarningsView = () => {
                ) : (
                   recentReviews.map(r => (
                      <div key={r.id} className="flex gap-4 group cursor-help">
-                        <div className="w-1.5 h-1.5 rounded-full bg-cyan-primary mt-1.5 group-hover:scale-150 transition-transform shadow-[0_0_10px_rgba(102,252,241,0.5)]" />
+                        <div className="w-1.5 h-1.5 rounded-full bg-cyan-primary mt-1.5 group-hover:scale-150 transition-transform shadow-[0_0_10px_rgba(103, 248, 29,0.5)]" />
                         <div>
                            <div className="flex items-center gap-2 mb-1">
                               <span className="text-[10px] font-black italic text-white/50">{r.rating}.0</span>

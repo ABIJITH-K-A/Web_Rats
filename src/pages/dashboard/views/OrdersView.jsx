@@ -338,7 +338,7 @@ const OrdersView = () => {
                     </button>
                     <button 
                       onClick={handleSaveAssignment}
-                      className="flex-1 py-3 bg-cyan-primary text-primary-dark rounded-xl font-black text-sm hover:scale-[1.02] active:scale-95 transition-all shadow-[0_0_20px_rgba(102,252,241,0.2)]"
+                      className="flex-1 py-3 bg-cyan-primary text-primary-dark rounded-xl font-black text-sm hover:scale-[1.02] active:scale-95 transition-all shadow-[0_0_20px_rgba(103, 248, 29,0.2)]"
                     >
                       Save Assignment
                     </button>

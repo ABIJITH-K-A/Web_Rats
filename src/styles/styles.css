@@ -1,11 +1,11 @@
 /* styles.css - Professional Theme with Your Colors */
 @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&display=swap');
 :root {
-    --primary-dark: #0B0C10;
-    --secondary-dark: #1F2833;
-    --light-gray: #C5C6C7;
-    --cyan: #66FCF1;
-    --teal: #45A29E;
+    --primary-dark: #262B25;
+    --secondary-dark: #000000;
+    --light-gray: #FFFFFF;
+    --cyan: #67F81D;
+    --teal: #62CB2C;
     --mono: 'Share Tech Mono', monospace;
     --sans: 'Rajdhani', sans-serif;
 }
@@ -23,7 +23,7 @@ html {
 }
 
 body {
-     background: rgba(11, 12, 16, 0.85);
+     background: rgba(38, 43, 37, 0.85);
     font-family: var(--sans);
     color: var(--light-gray);
     line-height: 1.6;
@@ -37,8 +37,8 @@ body::after {
     position: fixed;
     inset: 0;
     background-image:
-        linear-gradient(rgba(102,252,241,0.04) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(102,252,241,0.04) 1px, transparent 1px);
+        linear-gradient(rgba(103, 248, 29,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(103, 248, 29,0.04) 1px, transparent 1px);
     background-size: 40px 40px;
     pointer-events: none;
     z-index: -1;
@@ -80,7 +80,7 @@ body::after {
     z-index: 5;
 }
 .ui span {
-    color: rgba(102,252,241,0.3);
+    color: rgba(103, 248, 29,0.3);
     font: 600 0.62rem/1 'Courier New', monospace;
     letter-spacing: 0.22em;
     text-transform: uppercase;
@@ -98,18 +98,18 @@ body::after {
 }
 .title h1 {
     font: 900 clamp(2.5rem,7vw,5.5rem)/1 'Courier New', monospace;
-    color: #C5C6C7;
+    color: #FFFFFF;
     letter-spacing: 0.2em;
     text-transform: uppercase;
 }
 .title h1 em {
-    color: #66FCF1;
+    color: #67F81D;
     font-style: normal;
-    text-shadow: 0 0 40px rgba(102,252,241,0.6);
+    text-shadow: 0 0 40px rgba(103, 248, 29,0.6);
 }
 .title p {
     margin-top: 14px;
-    color: rgba(197,198,199,0.35);
+    color: rgba(255, 255, 255,0.35);
     font: 0.65rem/1 'Courier New', monospace;
     letter-spacing: 0.55em;
     text-transform: uppercase;
@@ -154,7 +154,7 @@ body::after {
 
 /* Hero Section */
 .hero-section {
-    background: linear-gradient(135deg, rgba(31, 40, 51, 0.493) 0%, rgba(11, 12, 16, 0.7) 100%); /* 30% Transparent gradient */
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.493) 0%, rgba(38, 43, 37, 0.7) 100%); /* 30% Transparent gradient */
     padding: 120px 0 80px;
     min-height: 100vh;
     display: flex;
@@ -225,7 +225,7 @@ body::after {
 .services-preview, .portfolio-section, .quick-contact, .faq-section, .how-it-works, .pricing-section {
     position: relative;
     z-index: 8;
-    background-color: rgba(11, 12, 16, 0.7); /* Primary dark with 30% transparency */
+    background-color: rgba(38, 43, 37, 0.7); /* Primary dark with 30% transparency */
 }
 
 /* Other sections remain solid */
@@ -237,7 +237,7 @@ body::after {
 
 /* Specific background for portfolio-section if needed to override */
 .portfolio-section {
-    background-color: rgba(31, 40, 51, 0.7); /* Secondary dark with 30% transparency */
+    background-color: rgba(0, 0, 0, 0.7); /* Secondary dark with 30% transparency */
 }
 
 
@@ -305,7 +305,7 @@ body::after {
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(45deg, rgba(11,12,16,0.95), rgba(102,252,241,0.9));
+    background: linear-gradient(45deg, rgba(38, 43, 37,0.95), rgba(103, 248, 29,0.9));
     display: flex;
     align-items: center;
     justify-content: center;
@@ -337,13 +337,13 @@ body::after {
     font-size: 0.9rem;
     text-decoration: none;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(102, 252, 241, 0.3);
+    box-shadow: 0 4px 15px rgba(103, 248, 29, 0.3);
     margin-bottom: 12px;
 }
 
 .portfolio-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 25px rgba(102, 252, 241, 0.5);
+    box-shadow: 0 6px 25px rgba(103, 248, 29, 0.5);
     color: var(--primary-dark);
 }
 
@@ -367,22 +367,22 @@ body::after {
 
 /* ── ANALYTICS ── */
 .analytics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:28px;}
-.analytics-card{background:rgba(31,40,51,.85);border:1px solid rgba(102,252,241,.1);border-radius:14px;padding:20px 22px;position:relative;overflow:hidden;transition:border-color .3s;}
-.analytics-card:hover{border-color:rgba(102,252,241,.28);}
+.analytics-card{background:rgba(0, 0, 0,.85);border:1px solid rgba(103, 248, 29,.1);border-radius:14px;padding:20px 22px;position:relative;overflow:hidden;transition:border-color .3s;}
+.analytics-card:hover{border-color:rgba(103, 248, 29,.28);}
 .analytics-card::before{content:'';position:absolute;top:-20px;right:-20px;width:80px;height:80px;border-radius:50%;opacity:.06;}
-.analytics-card.c1{background:linear-gradient(135deg,rgba(37,211,102,.09) 0%, rgba(11,12,16,.09) 100%);}
+.analytics-card.c1{background:linear-gradient(135deg,rgba(37,211,102,.09) 0%, rgba(38, 43, 37,.09) 100%);}
 .analytics-card.c2{background:linear-gradient(135deg,rgba(255,169,77,.09) 0%, rgba(255,169,77,.09) 100%);}
 .analytics-card.c3{background:linear-gradient(135deg,rgba(105,219,124,.09) 0%, rgba(105,219,124,.09) 100%);}
 .analytics-card.c4{background:linear-gradient(135deg,rgba(255,77,109,.09) 0%, rgba(255,77,109,.09) 100%);}
 .analytics-icon{font-size:1.1rem;margin-bottom:12px;}
 .analytics-num{font-size:2rem;font-weight:700;color:var(--gray);font-family:var(--mono);line-height:1;}
-.analytics-label{font-family:var(--mono);font-size:.62rem;letter-spacing:.15em;text-transform:uppercase;color:rgba(197,198,199,.38);margin-top:6px;}
+.analytics-label{font-family:var(--mono);font-size:.62rem;letter-spacing:.15em;text-transform:uppercase;color:rgba(255, 255, 255,.38);margin-top:6px;}
 .analytics-activity{margin-top:24px;}
 .analytics-activity h3{color:var(--cyan);font-size:1.1rem;margin-bottom:16px;font-family:var(--sans);}
 .analytics-activity table{width:100%;color:var(--gray);font-family:var(--mono);font-size:.75rem;border-collapse:collapse;}
-.analytics-activity th{padding:12px;text-align:left;background:rgba(102,252,241,.1);color:var(--gray);}
+.analytics-activity th{padding:12px;text-align:left;background:rgba(103, 248, 29,.1);color:var(--gray);}
 .analytics-activity td{padding:20px;text-align:left;color:var(--gray);}
-.analytics-activity tr:hover{background:rgba(102,252,241,0.05);}
+.analytics-activity tr:hover{background:rgba(103, 248, 29,0.05);}
 
 .btn-seen{display:flex;align-items:center;justify-content:center;gap:10px;padding:12px;background:rgba(37,211,102,.09);border:1px solid rgba(37,211,102,.26);border-radius:10px;color:#25D366;font-family:var(--sans);font-size:.88rem;font-weight:600;text-decoration:none;transition:all .25s;}
 .btn-seen:hover{background:rgba(37,211,102,.16);color:#25D366;}
@@ -454,7 +454,7 @@ body::after {
 
 /* Booking Page Additions */
 .booking-hero {
-    background: linear-gradient(135deg, rgba(31, 40, 51, 0.7) 0%, rgba(11, 12, 16, 0.7) 100%); /* 30% Transparent gradient */
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.7) 0%, rgba(38, 43, 37, 0.7) 100%); /* 30% Transparent gradient */
     padding: 150px 0;
     min-height: 60vh;
     display: flex;
@@ -473,21 +473,21 @@ body::after {
 
 /* Apply transparency to the main form card itself */
 .booking-form .card {
-    background-color: rgba(31, 40, 51, 0.7); /* Secondary dark with 30% transparency */
+    background-color: rgba(0, 0, 0, 0.7); /* Secondary dark with 30% transparency */
 }
 
 .booking-form .form-control,
 .booking-form .form-select {
-    background-color: rgba(31, 40, 51, 0.7); /* Keep transparent form controls */
-    border: 1px solid rgba(69, 162, 158, 0.7); /* Keep transparent border */
+    background-color: rgba(0, 0, 0, 0.7); /* Keep transparent form controls */
+    border: 1px solid rgba(98, 203, 44, 0.7); /* Keep transparent border */
     color: var(--light-gray);
 }
 
 .booking-form .form-control:focus,
 .booking-form .form-select:focus {
-    background-color: rgba(31, 40, 51, 0.9); /* Slightly more opaque on focus */
+    background-color: rgba(0, 0, 0, 0.9); /* Slightly more opaque on focus */
     border-color: var(--cyan);
-    box-shadow: 0 0 0 0.2rem rgba(102, 252, 241, 0.25);
+    box-shadow: 0 0 0 0.2rem rgba(103, 248, 29, 0.25);
 }
 
 .btn-whatsapp {
@@ -505,8 +505,8 @@ body::after {
 .pricing-section {
     background: linear-gradient(
         180deg,
-        rgba(31, 40, 51, 0.95),
-        rgba(11, 12, 16, 1)
+        rgba(0, 0, 0, 0.95),
+        rgba(38, 43, 37, 1)
     );
     position: relative;
     overflow: hidden;
@@ -518,26 +518,26 @@ body::after {
     inset: 0;
     background: radial-gradient(
         circle at 30% 40%,
-        rgba(102,252,241,0.08),
+        rgba(103, 248, 29,0.08),
         transparent 60%
     );
     pointer-events: none;
 }
 
 .price-card {
-    background: rgba(31, 40, 51, 0.85);
+    background: rgba(0, 0, 0, 0.85);
     border-radius: 20px;
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(102,252,241,0.15);
+    border: 1px solid rgba(103, 248, 29,0.15);
     transition: all 0.4s cubic-bezier(.2,.8,.2,1);
     position: relative;
     overflow: hidden;
 }
 
 .price-card.popular {
-    border: 2px solid #66FCF1;
+    border: 2px solid #67F81D;
     box-shadow:
-        0 0 25px rgba(102,252,241,0.4),
+        0 0 25px rgba(103, 248, 29,0.4),
         0 20px 50px rgba(0,0,0,0.6);
     transform: scale(1.05);
 }
@@ -549,7 +549,7 @@ body::after {
     background: linear-gradient(
         120deg,
         transparent,
-        rgba(102,252,241,0.3),
+        rgba(103, 248, 29,0.3),
         transparent
     );
     opacity: 0;
@@ -562,10 +562,10 @@ body::after {
 
 .price-card:hover {
     transform: translateY(-10px) scale(1.03);
-    border-color: rgba(102,252,241,0.4);
+    border-color: rgba(103, 248, 29,0.4);
     box-shadow:
         0 20px 40px rgba(0,0,0,0.6),
-        0 0 30px rgba(102,252,241,0.2);
+        0 0 30px rgba(103, 248, 29,0.2);
 }
 
 .price-card .price {
@@ -592,7 +592,7 @@ body::after {
 
 /* Help Page Styles */
 .help-hero {
-    background: linear-gradient(135deg, rgba(11, 12, 16, 0.7) 0%, rgba(31, 40, 51, 0.7) 100%); /* 30% Transparent gradient */
+    background: linear-gradient(135deg, rgba(38, 43, 37, 0.7) 0%, rgba(0, 0, 0, 0.7) 100%); /* 30% Transparent gradient */
     padding: 150px 0 100px;
     min-height: 60vh;
     display: flex;
@@ -604,7 +604,7 @@ body::after {
 /* Quick Contact section background */
 .quick-contact {
     padding: 100px 0;
-    background-color: rgba(11, 12, 16, 0.7); /* Primary dark with 30% transparency */
+    background-color: rgba(38, 43, 37, 0.7); /* Primary dark with 30% transparency */
     position: relative;
     z-index: 8;
 }
@@ -658,7 +658,7 @@ body::after {
 }
 
 .faq-section .accordion-button:focus {
-    box-shadow: 0 0 0 0.2rem rgba(102, 252, 241, 0.25);
+    box-shadow: 0 0 0 0.2rem rgba(103, 248, 29, 0.25);
 }
 
 .step-card {
@@ -786,11 +786,11 @@ body::after {
     background-color: var(--secondary-dark);
     border-color: var(--cyan);
     color: var(--light-gray);
-    box-shadow: 0 0 0 0.2rem rgba(102,252,241,0.25);
+    box-shadow: 0 0 0 0.2rem rgba(103, 248, 29,0.25);
 }
 
 .form-control::placeholder {
-    color: rgba(197,198,199,0.4);
+    color: rgba(255, 255, 255,0.4);
 }
 
 /* Accordion toggle icon — Bootstrap's default is dark, invert for dark bg */
@@ -852,7 +852,7 @@ body::after {
     top: -50%;
     left: -50%;
     background: radial-gradient(circle at center,
-        rgba(102,252,241,0.08),
+        rgba(103, 248, 29,0.08),
         transparent 60%);
     transform: rotate(0deg);
     transition: opacity 0.4s ease;

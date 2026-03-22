@@ -65,7 +65,7 @@ const Navbar = () => {
           {user ? (
             <Link
               to={getDashboardPath()}
-              className="flex items-center gap-2 px-6 py-2 rounded-full bg-cyan-primary text-primary-dark font-bold hover:shadow-[0_0_15px_#66FCF1] transition-all"
+              className="flex items-center gap-2 px-6 py-2 rounded-full bg-cyan-primary text-primary-dark font-bold hover:shadow-[0_0_15px_#67F81D] transition-all"
             >
               <User size={18} />
               Dashboard
@@ -73,7 +73,7 @@ const Navbar = () => {
           ) : (
             <Link
               to="/signup"
-              className="flex items-center gap-2 px-6 py-2 rounded-full bg-cyan-primary text-primary-dark font-bold hover:shadow-[0_0_15px_#66FCF1] transition-all"
+              className="flex items-center gap-2 px-6 py-2 rounded-full bg-cyan-primary text-primary-dark font-bold hover:shadow-[0_0_15px_#67F81D] transition-all"
             >
               Sign Up
             </Link>

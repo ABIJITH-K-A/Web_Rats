@@ -154,7 +154,7 @@ const BookService = () => {
             initial={{ scale: 0, rotate: -180 }}
             animate={{ scale: 1, rotate: 0 }}
             transition={{ type: "spring", stiffness: 200, damping: 15, delay: 0.2 }}
-            className="w-24 h-24 rounded-full border-2 border-cyan-primary flex items-center justify-center text-cyan-primary mx-auto mb-8 shadow-[0_0_50px_rgba(102,252,241,0.4)] bg-cyan-primary/10"
+            className="w-24 h-24 rounded-full border-2 border-cyan-primary flex items-center justify-center text-cyan-primary mx-auto mb-8 shadow-[0_0_50px_rgba(103, 248, 29,0.4)] bg-cyan-primary/10"
           >
             <Check size={40} />
           </motion.div>
