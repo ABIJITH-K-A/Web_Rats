@@ -1,4 +1,4 @@
-﻿/* ════════════════════════════════════════════════════════
+/* ════════════════════════════════════════════════════════
    TN WEB RATS — ADMIN DASHBOARD
    Design system exact-match to rest of site.
 ════════════════════════════════════════════════════════ */
@@ -279,5 +279,4 @@ body{background:var(--bg);font-family:var(--sans);color:var(--gray);min-height:1
 .assign-actions{display:flex;gap:8px;flex-wrap:wrap;}
 
 /* ?????? ROLE PILL ??? OWNER ?????? */
-.pill-owner{background:rgba(69,162,158,.12);color:var(--teal);border:1px solid rgba(69,162,158,.3);} 
-=======
+.pill-owner{background:rgba(98, 203, 44,.12);color:var(--teal);border:1px solid rgba(98, 203, 44,.3);}

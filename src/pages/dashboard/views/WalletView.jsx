@@ -111,7 +111,7 @@ const WalletView = () => {
                     <label className="text-[10px] uppercase font-mono tracking-widest text-white/20">Amount (INR) *</label>
                     <input 
                       required type="number" 
-                      className="w-full bg-[#0B0C10] border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-cyan-primary outline-none transition-all"
+                      className="w-full bg-[#262B25] border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-cyan-primary outline-none transition-all"
                       placeholder="e.g. 5000"
                       value={payoutForm.amount}
                       onChange={(e) => setPayoutForm({...payoutForm, amount: e.target.value})}
@@ -120,7 +120,7 @@ const WalletView = () => {
                  <div className="space-y-1">
                     <label className="text-[10px] uppercase font-mono tracking-widest text-white/20">Method *</label>
                     <select 
-                      className="w-full bg-[#0B0C10] border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-cyan-primary outline-none transition-all uppercase font-mono tracking-widest text-[10px]"
+                      className="w-full bg-[#262B25] border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-cyan-primary outline-none transition-all uppercase font-mono tracking-widest text-[10px]"
                       value={payoutForm.method}
                       onChange={(e) => setPayoutForm({...payoutForm, method: e.target.value})}
                     >
@@ -133,7 +133,7 @@ const WalletView = () => {
               <div className="space-y-1">
                  <label className="text-[10px] uppercase font-mono tracking-widest text-white/20">Payment Details / Notes</label>
                  <textarea 
-                   className="w-full bg-[#0B0C10] border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-cyan-primary outline-none min-h-[100px] resize-none transition-all"
+                   className="w-full bg-[#262B25] border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-cyan-primary outline-none min-h-[100px] resize-none transition-all"
                    placeholder="Enter UPI ID or Bank details (A/C Name, Number, IFSC)"
                    value={payoutForm.note}
                    onChange={(e) => setPayoutForm({...payoutForm, note: e.target.value})}
@@ -141,7 +141,7 @@ const WalletView = () => {
               </div>
               <button 
                 disabled={isSubmitting}
-                className="w-full py-4 bg-cyan-primary text-primary-dark font-black text-sm uppercase tracking-widest rounded-xl hover:scale-[1.02] active:scale-95 transition-all shadow-[0_0_20px_rgba(102,252,241,0.2)] disabled:opacity-50"
+                className="w-full py-4 bg-cyan-primary text-primary-dark font-black text-sm uppercase tracking-widest rounded-xl hover:scale-[1.02] active:scale-95 transition-all shadow-[0_0_20px_rgba(103, 248, 29,0.2)] disabled:opacity-50"
               >
                 {isSubmitting ? 'Processing Transaction...' : 'Submit Withdrawal Request'}
               </button>
@@ -158,7 +158,7 @@ const WalletView = () => {
            </div>
            <div className="overflow-x-auto">
               <table className="w-full text-left">
-                 <thead className="bg-[#0B0C10] text-[9px] font-mono uppercase tracking-widest text-white/20">
+                 <thead className="bg-[#262B25] text-[9px] font-mono uppercase tracking-widest text-white/20">
                     <tr>
                        <th className="px-6 py-4">Request ID</th>
                        <th className="px-6 py-4">Amount</th>

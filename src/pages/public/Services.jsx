@@ -129,7 +129,7 @@ const Services = () => {
                       transition={{ duration: 0.5, delay: pidx * 0.1 }}
                       className="h-full"
                     >
-                      <Card className={`flex flex-col relative group h-full max-w-sm mx-auto w-full transition-all duration-500 hover:border-cyan-primary/40 ${pkg.badge === 'Most Popular' ? 'border-cyan-primary/30 ring-1 ring-cyan-primary/20 scale-[1.03] shadow-[0_0_40px_rgba(102,252,241,0.1)]' : ''}`}>
+                      <Card className={`flex flex-col relative group h-full max-w-sm mx-auto w-full transition-all duration-500 hover:border-cyan-primary/40 ${pkg.badge === 'Most Popular' ? 'border-cyan-primary/30 ring-1 ring-cyan-primary/20 scale-[1.03] shadow-[0_0_40px_rgba(103, 248, 29,0.1)]' : ''}`}>
                         <div className="absolute top-4 right-4 text-[10px] font-mono px-3 py-1 rounded-full bg-cyan-primary/10 border border-cyan-primary/20 text-cyan-primary uppercase tracking-tighter">
                           {pkg.badge}
                         </div>

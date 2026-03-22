@@ -113,7 +113,7 @@ const ApprovalsView = () => {
                            <div className="text-[9px] font-mono text-white/20 uppercase tracking-widest mb-2 italic">Target Workers:</div>
                            <div className="flex flex-wrap gap-2">
                               {r.requestedWorkers?.map((wId, i) => (
-                                 <span key={i} className="px-2 py-1 bg-[#0B0C10] border border-white/5 rounded-lg text-[9px] font-mono text-cyan-primary/60">ID: {wId.slice(0, 10)}...</span>
+                                 <span key={i} className="px-2 py-1 bg-[#262B25] border border-white/5 rounded-lg text-[9px] font-mono text-cyan-primary/60">ID: {wId.slice(0, 10)}...</span>
                               ))}
                            </div>
                         </div>
@@ -122,7 +122,7 @@ const ApprovalsView = () => {
                      <div className="flex gap-3 lg:shrink-0">
                         <button 
                            onClick={() => handleAction(r.id, r.orderId, r.requestedWorkers, 'approved')}
-                           className="flex-grow lg:flex-none px-6 py-3 bg-cyan-primary text-primary-dark font-black text-[10px] uppercase tracking-[0.2em] rounded-xl hover:scale-105 transition-all shadow-[0_0_20px_rgba(102,252,241,0.2)] flex items-center gap-2"
+                           className="flex-grow lg:flex-none px-6 py-3 bg-cyan-primary text-primary-dark font-black text-[10px] uppercase tracking-[0.2em] rounded-xl hover:scale-105 transition-all shadow-[0_0_20px_rgba(103, 248, 29,0.2)] flex items-center gap-2"
                         >
                            <CheckCircle size={14} /> Approve
                         </button>

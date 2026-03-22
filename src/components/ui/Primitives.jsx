@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 
 const Button = ({ children, variant = 'primary', className = '', ...props }) => {
   const variants = {
-    primary: 'bg-cyan-primary text-primary-dark hover:shadow-[0_0_15px_#66FCF1] active:scale-95',
+    primary: 'bg-cyan-primary text-primary-dark hover:shadow-[0_0_15px_#67F81D] active:scale-95',
     outline: 'border border-cyan-primary text-cyan-primary hover:bg-cyan-primary/10 active:scale-95',
     ghost: 'text-light-gray hover:text-cyan-primary active:scale-95',
   };

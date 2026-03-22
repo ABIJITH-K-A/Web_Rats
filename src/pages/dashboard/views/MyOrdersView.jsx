@@ -72,7 +72,7 @@ const MyOrdersView = () => {
               <button 
                 key={s}
                 onClick={() => setStatusFilter(s)}
-                className={`px-6 py-2.5 rounded-xl border text-[10px] font-mono uppercase tracking-[0.2em] transition-all ${statusFilter === s ? 'bg-cyan-primary text-primary-dark border-cyan-primary font-black shadow-[0_0_20px_rgba(102,252,241,0.2)]' : 'bg-white/5 border-white/5 text-white/30 hover:border-white/20'}`}
+                className={`px-6 py-2.5 rounded-xl border text-[10px] font-mono uppercase tracking-[0.2em] transition-all ${statusFilter === s ? 'bg-cyan-primary text-primary-dark border-cyan-primary font-black shadow-[0_0_20px_rgba(103, 248, 29,0.2)]' : 'bg-white/5 border-white/5 text-white/30 hover:border-white/20'}`}
               >
                 {s.replace('_', ' ')}
               </button>
@@ -106,14 +106,14 @@ const MyOrdersView = () => {
 
                   <div className="space-y-4 mb-10 mt-auto">
                      <div className="flex items-center gap-4 p-4 bg-white/5 rounded-2xl border border-white/5">
-                        <div className="w-10 h-10 rounded-xl bg-[#0B0C10] flex items-center justify-center text-white/20"><Calendar size={18} /></div>
+                        <div className="w-10 h-10 rounded-xl bg-[#262B25] flex items-center justify-center text-white/20"><Calendar size={18} /></div>
                         <div>
                            <div className="text-[9px] font-mono text-white/20 uppercase tracking-widest">Target Deadline</div>
                            <div className="text-xs font-bold text-white/80">{o.deadline || 'Flexible Protocol'}</div>
                         </div>
                      </div>
                      <div className="flex items-center gap-4 p-4 bg-white/5 rounded-2xl border border-white/5">
-                        <div className="w-10 h-10 rounded-xl bg-[#0B0C10] flex items-center justify-center text-white/20"><MapPin size={18} /></div>
+                        <div className="w-10 h-10 rounded-xl bg-[#262B25] flex items-center justify-center text-white/20"><MapPin size={18} /></div>
                         <div>
                            <div className="text-[9px] font-mono text-white/20 uppercase tracking-widest">Deployment Link</div>
                            <div className="text-xs font-bold text-cyan-primary hover:underline truncate max-w-[140px] cursor-pointer">
@@ -139,7 +139,7 @@ const MyOrdersView = () => {
                      {o.status !== 'complete' && (
                         <button 
                           onClick={() => handleUpdateStatus(o.id, 'complete')}
-                          className="py-4 bg-cyan-primary text-primary-dark rounded-2xl text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-[0_0_20px_rgba(102,252,241,0.1)] flex items-center justify-center gap-2"
+                          className="py-4 bg-cyan-primary text-primary-dark rounded-2xl text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-[0_0_20px_rgba(103, 248, 29,0.1)] flex items-center justify-center gap-2"
                         >
                            <CheckCircle size={14} /> Mark Complete
                         </button>
