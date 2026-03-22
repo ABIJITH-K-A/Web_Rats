@@ -1,11 +1,11 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary-dark: #0B0C10;
-  --color-secondary-dark: #1F2833;
-  --color-light-gray: #C5C6C7;
-  --color-cyan-primary: #66FCF1;
-  --color-teal-primary: #45A29E;
+  --color-primary-dark: #262B25;
+  --color-secondary-dark: #000000;
+  --color-light-gray: #FFFFFF;
+  --color-cyan-primary: #67F81D;
+  --color-teal-primary: #62CB2C;
 
   --font-mono: "Share Tech Mono", monospace;
   --font-sans: "Rajdhani", sans-serif;
@@ -16,7 +16,7 @@
 
   body {
     @apply bg-primary-dark text-light-gray font-sans cursor-default overflow-x-hidden m-0 p-0;
-    background: rgba(11, 12, 16, 0.85);
+    background: rgba(38, 43, 37, 0.85);
   }
 
   /* Grid overlay from original styles.css */
@@ -24,8 +24,8 @@
     content: "";
     @apply fixed inset-0 pointer-events-none z-[-1];
     background-image:
-      linear-gradient(rgba(102, 252, 241, 0.04) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(102, 252, 241, 0.04) 1px, transparent 1px);
+      linear-gradient(rgba(103, 248, 29, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(103, 248, 29, 0.04) 1px, transparent 1px);
     background-size: 40px 40px;
     animation: gridMove 30s linear infinite;
   }
@@ -54,7 +54,7 @@
   }
 
   .btn-primary:hover {
-    @apply shadow-[0_0_5px_#66FCF1,0_0_25px_#66FCF1,0_0_50px_#66FCF1];
+    @apply shadow-[0_0_5px_#67F81D,0_0_25px_#67F81D,0_0_50px_#67F81D];
   }
 
   .service-card {

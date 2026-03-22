@@ -74,7 +74,7 @@ const AnalyticsView = () => {
     fetchAnalytics();
   }, []);
 
-  const COLORS = ['#66FCF1', '#45A29E', '#1F2833', '#C5C6C7'];
+  const COLORS = ['#67F81D', '#62CB2C', '#000000', '#FFFFFF'];
 
   if (loading) {
     return (
@@ -134,18 +134,18 @@ const AnalyticsView = () => {
             <AreaChart data={data.revenue}>
               <defs>
                 <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#66FCF1" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#66FCF1" stopOpacity={0}/>
+                  <stop offset="5%" stopColor="#67F81D" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#67F81D" stopOpacity={0}/>
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
               <XAxis dataKey="date" stroke="rgba(255,255,255,0.2)" fontSize={10} axisLine={false} tickLine={false} />
               <YAxis stroke="rgba(255,255,255,0.2)" fontSize={10} axisLine={false} tickLine={false} />
               <Tooltip 
-                contentStyle={{ backgroundColor: '#0B0C10', border: '1px solid rgba(102,252,241,0.2)', borderRadius: '12px' }}
-                itemStyle={{ color: '#66FCF1', fontSize: '12px' }}
+                contentStyle={{ backgroundColor: '#262B25', border: '1px solid rgba(103, 248, 29,0.2)', borderRadius: '12px' }}
+                itemStyle={{ color: '#67F81D', fontSize: '12px' }}
               />
-              <Area type="monotone" dataKey="amount" stroke="#66FCF1" fillOpacity={1} fill="url(#colorRev)" strokeWidth={3} />
+              <Area type="monotone" dataKey="amount" stroke="#67F81D" fillOpacity={1} fill="url(#colorRev)" strokeWidth={3} />
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -171,7 +171,7 @@ const AnalyticsView = () => {
                 ))}
               </Pie>
               <Tooltip 
-                contentStyle={{ backgroundColor: '#0B0C10', border: '1px solid rgba(102,252,241,0.2)', borderRadius: '12px' }}
+                contentStyle={{ backgroundColor: '#262B25', border: '1px solid rgba(103, 248, 29,0.2)', borderRadius: '12px' }}
               />
               <Legend verticalAlign="bottom" height={36} iconType="circle" />
             </PieChart>
@@ -190,9 +190,9 @@ const AnalyticsView = () => {
                 <YAxis stroke="rgba(255,255,255,0.2)" fontSize={10} axisLine={false} tickLine={false} />
                 <Tooltip 
                   cursor={{fill: 'rgba(255,255,255,0.02)'}}
-                  contentStyle={{ backgroundColor: '#0B0C10', border: '1px solid rgba(102,252,241,0.2)', borderRadius: '12px' }}
+                  contentStyle={{ backgroundColor: '#262B25', border: '1px solid rgba(103, 248, 29,0.2)', borderRadius: '12px' }}
                 />
-                <Bar dataKey="amount" fill="#66FCF1" radius={[10, 10, 0, 0]} barSize={40} />
+                <Bar dataKey="amount" fill="#67F81D" radius={[10, 10, 0, 0]} barSize={40} />
              </BarChart>
            </ResponsiveContainer>
         </div>

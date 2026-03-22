@@ -149,7 +149,7 @@ const TeamPayView = () => {
             </div>
             <div className="overflow-x-auto">
                <table className="w-full text-left">
-                  <thead className="bg-[#0B0C10] text-[9px] font-mono uppercase tracking-widest text-white/20">
+                  <thead className="bg-[#262B25] text-[9px] font-mono uppercase tracking-widest text-white/20">
                      <tr>
                         <th className="px-6 py-5">Period</th>
                         <th className="px-6 py-5">Your Budget</th>
@@ -188,7 +188,7 @@ const TeamPayView = () => {
             </div>
          </div>
       ) : (
-         <div className="bg-[#121417] border border-cyan-primary/20 rounded-3xl p-8 animate-in slide-in-from-bottom-4 duration-300 shadow-[0_0_40px_rgba(102,252,241,0.05)]">
+         <div className="bg-[#121417] border border-cyan-primary/20 rounded-3xl p-8 animate-in slide-in-from-bottom-4 duration-300 shadow-[0_0_40px_rgba(103, 248, 29,0.05)]">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10 border-b border-white/5 pb-8">
                <div>
                   <h3 className="text-sm font-black text-cyan-primary uppercase tracking-widest mb-1 flex items-center gap-2">
@@ -208,7 +208,7 @@ const TeamPayView = () => {
                {workers.map(w => {
                   const s = workerStats[w.id] || { orders:0, rating:0, refs:0, suggested:0 };
                   return (
-                    <div key={w.id} className="bg-[#0B0C10] border border-white/5 p-6 rounded-2xl flex flex-col md:flex-row items-center gap-6 group hover:border-white/10 transition-all">
+                    <div key={w.id} className="bg-[#262B25] border border-white/5 p-6 rounded-2xl flex flex-col md:flex-row items-center gap-6 group hover:border-white/10 transition-all">
                        <div className="flex items-center gap-4 flex-grow w-full md:w-auto">
                           <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center font-bold text-xs border border-white/5 group-hover:bg-cyan-primary group-hover:text-primary-dark transition-all">
                              {w.name?.charAt(0)}
@@ -245,7 +245,7 @@ const TeamPayView = () => {
                <button 
                  disabled={isSubmitting}
                  onClick={handleSavePayments} 
-                 className="flex-grow py-4 bg-cyan-primary text-primary-dark font-black font-mono text-[10px] uppercase tracking-[0.2em] rounded-xl hover:scale-[1.01] shadow-[0_0_20px_rgba(102,252,241,0.1)] flex items-center justify-center gap-3 disabled:opacity-50"
+                 className="flex-grow py-4 bg-cyan-primary text-primary-dark font-black font-mono text-[10px] uppercase tracking-[0.2em] rounded-xl hover:scale-[1.01] shadow-[0_0_20px_rgba(103, 248, 29,0.1)] flex items-center justify-center gap-3 disabled:opacity-50"
                >
                   {isSubmitting ? 'Syncing Team Data...' : 'Commit Team Payroll'}
                </button>

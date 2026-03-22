@@ -7,8 +7,8 @@
 
 /* ── Token shorthand ──────────────────────────────────────── */
 :root {
-  --bg:   #0B0C10; --dark:  #1F2833;
-  --gray: #C5C6C7; --cyan:  #66FCF1; --teal: #45A29E;
+  --bg:   #262B25; --dark:  #000000;
+  --gray: #FFFFFF; --cyan:  #67F81D; --teal: #62CB2C;
   --mono: 'Share Tech Mono', monospace;
   --sans: 'Rajdhani', sans-serif;
 }
@@ -52,7 +52,7 @@ img  { max-width: 100%; }
 .auth-box, .review-box {
   width: 100%; max-width: 460px;
   background: rgba(11, 14, 22, .97);
-  border: 1px solid rgba(102, 252, 241, .18);
+  border: 1px solid rgba(103, 248, 29, .18);
   border-radius: 20px; padding: 40px 36px;
   max-height: 90vh; overflow-y: auto;
   position: relative; animation: tnwr-in .28s ease;
@@ -62,7 +62,7 @@ img  { max-width: 100%; }
 .auth-close {
   position: absolute; top: 14px; right: 16px;
   background: none; border: none;
-  color: rgba(197, 198, 199, .35); font-size: 1.3rem;
+  color: rgba(255, 255, 255, .35); font-size: 1.3rem;
   cursor: pointer; min-width: 44px; min-height: 44px;
   display: flex; align-items: center; justify-content: center;
   border-radius: 50%; transition: color .2s;
@@ -73,27 +73,27 @@ img  { max-width: 100%; }
 .ref-feedback { font-family: var(--mono); font-size: .62rem; letter-spacing: .08em; margin-top: 5px; min-height: 16px; }
 .ref-feedback.valid   { color: var(--cyan); }
 .ref-feedback.invalid { color: #ff4d6d; }
-.ref-feedback.checking{ color: rgba(197, 198, 199, .35); }
+.ref-feedback.checking{ color: rgba(255, 255, 255, .35); }
 
 /* ═══════════════════════════════════════════════════════════
    STAR RATING BUTTONS
 ════════════════════════════════════════════════════════════ */
 .star-btn {
-  font-size: 2.2rem; color: rgba(102, 252, 241, .2);
+  font-size: 2.2rem; color: rgba(103, 248, 29, .2);
   cursor: pointer; transition: color .2s;
   background: none; border: none; line-height: 1;
   min-width: 44px; min-height: 44px;
   display: inline-flex; align-items: center; justify-content: center;
 }
 .star-btn.lit  { color: var(--cyan); }
-.star-btn:hover{ color: rgba(102, 252, 241, .65); }
+.star-btn:hover{ color: rgba(103, 248, 29, .65); }
 
 /* ═══════════════════════════════════════════════════════════
    ORDER SUMMARY CARD
 ════════════════════════════════════════════════════════════ */
 .order-summary-card {
-  background: rgba(31, 40, 51, .84);
-  border: 1px solid rgba(102, 252, 241, .1);
+  background: rgba(0, 0, 0, .84);
+  border: 1px solid rgba(103, 248, 29, .1);
   border-radius: 16px; padding: 32px 28px;
 }
 @media (max-width: 767px) { .order-summary-card { padding: 22px 18px; } }
@@ -118,7 +118,7 @@ img  { max-width: 100%; }
   position: fixed; bottom: 24px; left: 50%;
   transform: translateX(-50%) translateY(120%);
   background: rgba(15, 17, 23, .97);
-  border: 1px solid rgba(102, 252, 241, .18);
+  border: 1px solid rgba(103, 248, 29, .18);
   color: var(--gray); padding: 11px 24px;
   border-radius: 100px; font-family: var(--mono);
   font-size: .7rem; letter-spacing: .08em;
@@ -126,7 +126,7 @@ img  { max-width: 100%; }
   pointer-events: none; white-space: nowrap;
 }
 .tnwr-toast.show { transform: translateX(-50%) translateY(0); }
-.tnwr-toast.ok   { border-color: rgba(102, 252, 241, .5); color: var(--cyan); }
+.tnwr-toast.ok   { border-color: rgba(103, 248, 29, .5); color: var(--cyan); }
 .tnwr-toast.err  { border-color: rgba(220,  53,  69, .5); color: #ff6b7a; }
 
 /* ═══════════════════════════════════════════════════════════
@@ -139,7 +139,7 @@ img  { max-width: 100%; }
 }
 .pill-pending     { background: rgba(255,193,7,.1);  color: #ffc107; border: 1px solid rgba(255,193,7,.22); }
 .pill-in_progress { background: rgba(13,202,240,.1); color: #0dcaf0; border: 1px solid rgba(13,202,240,.22); }
-.pill-complete    { background: rgba(102,252,241,.1);color: var(--cyan); border: 1px solid rgba(102,252,241,.22); }
+.pill-complete    { background: rgba(103, 248, 29,.1);color: var(--cyan); border: 1px solid rgba(103, 248, 29,.22); }
 .pill-cancelled   { background: rgba(220,53,69,.08); color: #ff6b7a; border: 1px solid rgba(220,53,69,.18); }
 
 /* ── Role pills ──────────────────────────────────────────── */
@@ -148,8 +148,8 @@ img  { max-width: 100%; }
   font-size: .58rem; letter-spacing: .07em;
   padding: 2px 9px; border-radius: 20px; text-transform: uppercase;
 }
-.role-customer   { background: rgba(197,198,199,.07); color: rgba(197,198,199,.5); border: 1px solid rgba(197,198,199,.12); }
-.role-worker     { background: rgba(102,252,241,.08); color: var(--cyan);   border: 1px solid rgba(102,252,241,.18); }
+.role-customer   { background: rgba(255, 255, 255,.07); color: rgba(255, 255, 255,.5); border: 1px solid rgba(255, 255, 255,.12); }
+.role-worker     { background: rgba(103, 248, 29,.08); color: var(--cyan);   border: 1px solid rgba(103, 248, 29,.18); }
 .role-manager    { background: rgba(255,193,7,.08);   color: #ffc107;       border: 1px solid rgba(255,193,7,.18); }
 .role-admin      { background: rgba(220,53,69,.08);   color: #ff6b7a;       border: 1px solid rgba(220,53,69,.18); }
 .role-superadmin { background: rgba(111,66,193,.12);  color: #c59dff;       border: 1px solid rgba(111,66,193,.25); }
@@ -158,33 +158,33 @@ img  { max-width: 100%; }
    DASHBOARD SHARED COMPONENTS
 ════════════════════════════════════════════════════════════ */
 .dash-input {
-  background: rgba(11,12,16,.8); border: 1px solid rgba(102,252,241,.14);
+  background: rgba(38, 43, 37,.8); border: 1px solid rgba(103, 248, 29,.14);
   border-radius: 8px; color: var(--gray); font-family: var(--sans);
   font-size: .9rem; padding: 9px 13px; width: 100%;
   outline: none; transition: border-color .25s;
 }
-.dash-input:focus { border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(102,252,241,.08); }
-.dash-input::placeholder { color: rgba(197,198,199,.2); }
+.dash-input:focus { border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(103, 248, 29,.08); }
+.dash-input::placeholder { color: rgba(255, 255, 255,.2); }
 select.dash-input option { background: var(--dark); }
 
 .code-tag {
   font-family: var(--mono); font-size: .78rem;
-  background: rgba(102,252,241,.08); color: var(--cyan);
+  background: rgba(103, 248, 29,.08); color: var(--cyan);
   padding: 4px 10px; border-radius: 6px;
-  border: 1px solid rgba(102,252,241,.18); display: inline-block;
+  border: 1px solid rgba(103, 248, 29,.18); display: inline-block;
 }
 
 /* ── Payroll alloc rows ───────────────────────────────────── */
 .alloc-row {
   display: flex; align-items: center; gap: 14px;
-  padding: 10px 0; border-bottom: 1px solid rgba(102,252,241,.06);
+  padding: 10px 0; border-bottom: 1px solid rgba(103, 248, 29,.06);
 }
 .alloc-row:last-child { border-bottom: none; }
 
 /* ── Success card ─────────────────────────────────────────── */
 .success-card {
-  background: rgba(31,40,51,.84);
-  border: 1px solid rgba(102,252,241,.2);
+  background: rgba(0, 0, 0,.84);
+  border: 1px solid rgba(103, 248, 29,.2);
   border-radius: 20px; padding: 48px 36px;
   animation: tnwr-in .4s ease;
 }
@@ -219,7 +219,7 @@ select.dash-input option { background: var(--dark); }
 .empty-state {
   text-align: center; padding: 40px 20px;
   font-family: var(--mono); font-size: .65rem;
-  letter-spacing: .12em; color: rgba(197,198,199,.22);
+  letter-spacing: .12em; color: rgba(255, 255, 255,.22);
   text-transform: uppercase;
 }
 

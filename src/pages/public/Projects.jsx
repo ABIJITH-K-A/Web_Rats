@@ -127,7 +127,7 @@ const Projects = () => {
                   >
                     <h4 className="text-3xl font-black text-cyan-primary mb-2 tracking-tight">{item.title}</h4>
                     <p className="text-light-gray text-sm mb-6 opacity-80 italic font-mono uppercase tracking-widest text-[10px]">Vault Content // Google Drive</p>
-                    <div className="mx-auto w-fit px-8 py-3 rounded-2xl border-2 border-cyan-primary text-cyan-primary flex items-center gap-3 group-hover:bg-cyan-primary group-hover:text-primary-dark transition-all font-black text-xs uppercase tracking-widest shadow-[0_0_30px_rgba(102,252,241,0.2)]">
+                    <div className="mx-auto w-fit px-8 py-3 rounded-2xl border-2 border-cyan-primary text-cyan-primary flex items-center gap-3 group-hover:bg-cyan-primary group-hover:text-primary-dark transition-all font-black text-xs uppercase tracking-widest shadow-[0_0_30px_rgba(103, 248, 29,0.2)]">
                       <ExternalLink size={18} />
                       Access Project
                     </div>

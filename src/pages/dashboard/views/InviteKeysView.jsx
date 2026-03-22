@@ -99,7 +99,7 @@ const InviteKeysView = () => {
               <div className="space-y-1">
                  <label className="text-[10px] uppercase font-mono tracking-widest text-white/20">Assign Entry Role *</label>
                  <select 
-                   className="w-full bg-[#0B0C10] border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-cyan-primary outline-none transition-all uppercase font-mono tracking-widest text-[10px]"
+                   className="w-full bg-[#262B25] border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-cyan-primary outline-none transition-all uppercase font-mono tracking-widest text-[10px]"
                    value={selectedRole}
                    onChange={(e) => setSelectedRole(e.target.value)}
                  >
@@ -119,7 +119,7 @@ const InviteKeysView = () => {
               <button 
                 disabled={isGenerating}
                 onClick={handleGenerate}
-                className="w-full py-4 bg-cyan-primary text-primary-dark font-black text-[10px] uppercase tracking-[0.2em] rounded-xl hover:scale-[1.02] active:scale-95 transition-all shadow-[0_0_20px_rgba(102,252,241,0.2)] flex items-center justify-center gap-3"
+                className="w-full py-4 bg-cyan-primary text-primary-dark font-black text-[10px] uppercase tracking-[0.2em] rounded-xl hover:scale-[1.02] active:scale-95 transition-all shadow-[0_0_20px_rgba(103, 248, 29,0.2)] flex items-center justify-center gap-3"
               >
                 {isGenerating ? <RefreshCw className="animate-spin" size={16} /> : <Key size={16} />} 
                 {isGenerating ? 'Forging Token...' : 'Generate New Key'}
