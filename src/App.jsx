@@ -32,6 +32,7 @@ function App() {
               <Route path="/help" element={<Help />} />
               <Route path="/book" element={<BookService />} />
               <Route path="/join" element={<JoinHub />} />
+              <Route path="/signup" element={<JoinHub />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/profile" element={<Profile />} />
               <Route 

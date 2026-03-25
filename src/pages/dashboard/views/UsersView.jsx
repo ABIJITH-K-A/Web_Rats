@@ -14,7 +14,7 @@ import { useDashboard } from '../../../context/DashboardContext';
 
 const UsersView = () => {
   const { user: currentUser, userData: currentUserData } = useAuth();
-  const { searchQuery } = useDashboard();
+  const { searchQuery, setSearchQuery } = useDashboard();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [roleFilter, setRoleFilter] = useState('');
@@ -101,14 +101,15 @@ const UsersView = () => {
       case 'admin': return 'text-blue-500 bg-blue-500/10 border-blue-500/20';
       case 'manager': return 'text-teal-500 bg-teal-500/10 border-teal-500/20';
       case 'worker': return 'text-cyan-primary bg-cyan-primary/10 border-cyan-primary/20';
+      case 'client': return 'text-white/40 bg-white/5 border-white/10';
       default: return 'text-white/40 bg-white/5 border-white/10';
     }
   };
 
   const canPromoteTo = (myRole) => {
-    if (myRole === 'owner') return ["superadmin", "admin", "manager", "worker", "customer"];
-    if (myRole === 'superadmin') return ["admin", "manager", "worker", "customer"];
-    if (myRole === 'admin') return ["manager", "worker", "customer"];
+    if (myRole === 'owner') return ["superadmin", "admin", "manager", "worker", "client"];
+    if (myRole === 'superadmin') return ["admin", "manager", "worker", "client"];
+    if (myRole === 'admin') return ["manager", "worker", "client"];
     return [];
   };
 
@@ -136,7 +137,7 @@ const UsersView = () => {
              onChange={(e) => setRoleFilter(e.target.value)}
            >
               <option value="">All Roles</option>
-              <option value="customer">Customer</option>
+              <option value="client">Client</option>
               <option value="worker">Worker</option>
               <option value="manager">Manager</option>
               <option value="admin">Admin</option>

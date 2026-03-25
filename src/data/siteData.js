@@ -1,237 +1,926 @@
-﻿export const CONTACT_INFO = {
-  email: "[EMAIL_ADDRESS]",
+export const CONTACT_INFO = {
+  email: "unofficials113@gmail.com",
   whatsappNumber: "918300920680",
   whatsappDisplay: "+91 8300920680",
   instagramHandle: "@tn_web_rats",
-  instagramUrl: "https://www.instagram.com/tn_web_rats"
+  instagramUrl: "https://www.instagram.com/tn_web_rats",
 };
 
-export const SERVICE_MAP = {
-  ppt: {
-    name: "PowerPoint Presentations",
-    shortName: "PPTs",
-    summary: "Presentation design for seminars, project reviews, client meetings, and investor decks.",
-    packages: [
-      {
-        id: "elite",
-        label: "Elite",
-        price: 499,
-        delivery: "24 hrs",
-        badge: "Best Value",
-        features: [
-          "20 custom-branded slides",
-          "Full animations and transitions",
-          "Coaching notes",
-          "2 revisions",
-          "Source file (PPTX)",
-          "24-hour delivery"
-        ]
-      },
-      {
-        id: "pro",
-        label: "Pro",
-        price: 299,
-        delivery: "48 hrs",
-        badge: "Most Popular",
-        features: [
-          "12 slides with template",
-          "Smooth animations",
-          "1 revision",
-          "Source file (PPTX)",
-          "48-hour delivery"
-        ]
-      },
-      {
-        id: "starter",
-        label: "Starter",
-        price: 149,
-        delivery: "72 hrs",
-        badge: "Starter",
-        features: [
-          "6 slides clean template",
-          "Professional layout",
-          "72-hour delivery"
-        ]
-      }
-    ]
+export const VALUE_POINTS = [
+  {
+    id: "purpose",
+    title: "Built With Purpose",
+    summary:
+      "No lazy templates. No copy-paste work. Every project is shaped around the idea you are trying to put into the world.",
   },
-  poster: {
-    name: "Posters and Graphics",
-    shortName: "Posters",
-    summary: "Poster systems for events, campaigns, social content, and branded print-ready graphics.",
-    packages: [
-      {
-        id: "brand_kit",
-        label: "Brand Kit",
-        price: 799,
-        delivery: "48 hrs",
-        badge: "Best Value",
-        features: [
-          "5 custom poster designs",
-          "Logo included",
-          "Social media kit (8 sizes)",
-          "Brand colour palette",
-          "3 revisions",
-          "Source files",
-          "Commercial licence"
-        ]
-      },
-      {
-        id: "campaign",
-        label: "Campaign",
-        price: 399,
-        delivery: "36 hrs",
-        badge: "Most Popular",
-        features: [
-          "3 poster designs",
-          "Social media sizes",
-          "2 revisions",
-          "PNG and PDF delivery"
-        ]
-      },
-      {
-        id: "single",
-        label: "Single",
-        price: 149,
-        delivery: "72 hrs",
-        badge: "Single",
-        features: [
-          "1 poster design",
-          "1 revision",
-          "PNG and PDF delivery"
-        ]
-      }
-    ]
+  {
+    id: "speed",
+    title: "Fast And Reliable",
+    summary:
+      "Deadlines are real. We keep communication direct, move quickly, and still keep the output polished.",
   },
-  website: {
-    name: "Website Development",
-    shortName: "Websites",
-    summary: "Landing pages and business websites with responsive layouts, forms, and launch support.",
-    packages: [
-      {
-        id: "business_pro",
-        label: "Business Pro",
-        price: 4999,
-        delivery: "7 days",
-        badge: "Best Value",
-        features: [
-          "8-page custom design",
-          "Fully responsive",
-          "Contact forms",
-          "Google Analytics",
-          "On-page SEO",
-          "3 revisions",
-          "1-month support",
-          "Domain guidance"
-        ]
-      },
-      {
-        id: "standard",
-        label: "Standard",
-        price: 2499,
-        delivery: "5 days",
-        badge: "Most Popular",
-        features: [
-          "4-page template",
-          "Fully responsive",
-          "Contact form",
-          "2 revisions",
-          "2-week support"
-        ]
-      },
-      {
-        id: "landing",
-        label: "Landing Page",
-        price: 999,
-        delivery: "3 days",
-        badge: "Landing",
-        features: [
-          "Single landing page",
-          "Fully responsive",
-          "Contact form",
-          "1 revision"
-        ]
-      }
-    ]
-  }
-};
+  {
+    id: "direct",
+    title: "You Work With Us Directly",
+    summary:
+      "No middle layers. No getting passed around. You talk to the two people actually building the work.",
+  },
+];
 
-export const SERVICE_LIST = Object.entries(SERVICE_MAP).map(([id, service]) => ({ id, ...service }));
+const buildPlans = (basic, standard, premium) => [
+  {
+    id: "basic",
+    label: "Basic",
+    badge: "Starter",
+    price: basic.price,
+    delivery: basic.delivery,
+    features: basic.features,
+  },
+  {
+    id: "standard",
+    label: "Standard",
+    badge: "Best Value",
+    price: standard.price,
+    delivery: standard.delivery,
+    features: standard.features,
+  },
+  {
+    id: "premium",
+    label: "Premium",
+    badge: "Premium",
+    price: premium.price,
+    delivery: premium.delivery,
+    features: premium.features,
+  },
+];
+
+export const SERVICE_CATEGORIES = [
+  {
+    id: "presentation-design",
+    name: "Presentation & Design",
+    shortName: "Design",
+    navLabel: "Design",
+    pricingHint: "Starting from Rs 99",
+    cta: "Get Design Service",
+    description:
+      "Professional designs for academic, business, and social media needs.",
+    heroDescription:
+      "Slides, posters, and social assets that help your message land cleanly and look intentional.",
+    bestFor: [
+      "Students, founders, event teams, and personal brands.",
+      "Fast-turnaround work that still needs a sharp visual finish.",
+    ],
+    services: [
+      {
+        id: "ppt-creation",
+        name: "PPT Creation",
+        shortName: "PPT",
+        summary:
+          "Clean, modern slide decks for academic reviews, pitches, proposals, and presentations that need a stronger visual voice.",
+        bestFor:
+          "Students, entrepreneurs, college projects, business pitches",
+        deliverables: [
+          "Structured slides with modern layouts",
+          "Business, academic, and competition deck support",
+          "Custom design direction for your message",
+          "Fast delivery with revision room",
+        ],
+        image: "/Images/Project_Preview/Project_Preview_1.png",
+        plans: buildPlans(
+          {
+            price: 99,
+            delivery: "3 days",
+            features: [
+              "Up to 8 polished slides",
+              "Clean academic or business layout",
+              "One revision round",
+            ],
+          },
+          {
+            price: 249,
+            delivery: "48 hrs",
+            features: [
+              "Up to 15 custom slides",
+              "Stronger visual hierarchy",
+              "Animations and speaker notes support",
+            ],
+          },
+          {
+            price: 499,
+            delivery: "24 hrs",
+            features: [
+              "Premium pitch deck finish",
+              "Brand-aware slide styling",
+              "Priority revision support",
+            ],
+          }
+        ),
+      },
+      {
+        id: "poster-design",
+        name: "Poster Design",
+        shortName: "Poster",
+        summary:
+          "Posters, flyers, and promo visuals that feel bold, readable, and built to stop the scroll.",
+        bestFor: "Events, college fests, businesses, personal branding",
+        deliverables: [
+          "Event posters and promotional flyers",
+          "Digital and print-ready output",
+          "Bold composition with readable hierarchy",
+          "Custom visual direction for your audience",
+        ],
+        image: "/Images/Project_Preview/Project_Preview_7.png",
+        plans: buildPlans(
+          {
+            price: 149,
+            delivery: "72 hrs",
+            features: [
+              "One poster concept",
+              "Digital export set",
+              "One revision round",
+            ],
+          },
+          {
+            price: 299,
+            delivery: "48 hrs",
+            features: [
+              "Two visual directions",
+              "Social and print sizes",
+              "Two revision rounds",
+            ],
+          },
+          {
+            price: 549,
+            delivery: "24 hrs",
+            features: [
+              "Campaign-ready hero poster",
+              "Multiple export sizes",
+              "Priority turnaround and updates",
+            ],
+          },
+        ),
+      },
+      {
+        id: "social-media-posts",
+        name: "Social Media Posts",
+        shortName: "Social",
+        summary:
+          "Post packs and branded content systems that keep your feed consistent without looking repetitive.",
+        bestFor: "Creators, clubs, launch campaigns, small businesses",
+        deliverables: [
+          "Instagram post packs and promos",
+          "Consistent brand styling",
+          "Feed-ready and story-ready exports",
+          "Monthly content pack options",
+        ],
+        image: "/Images/Project_Preview/Project_Preview_3.png",
+        plans: buildPlans(
+          {
+            price: 199,
+            delivery: "4 days",
+            features: [
+              "Three-post mini pack",
+              "Reusable visual direction",
+              "Exported for standard social sizes",
+            ],
+          },
+          {
+            price: 399,
+            delivery: "72 hrs",
+            features: [
+              "Seven-post campaign pack",
+              "Caption cue support",
+              "Story variants included",
+            ],
+          },
+          {
+            price: 799,
+            delivery: "48 hrs",
+            features: [
+              "Monthly social starter pack",
+              "Brand system consistency",
+              "Priority design queue",
+            ],
+          },
+        ),
+      },
+    ],
+  },
+  {
+    id: "web-development",
+    name: "Web Development",
+    shortName: "Web",
+    navLabel: "Web Development",
+    pricingHint: "Starting from Rs 999",
+    cta: "Build My Website",
+    description: "Modern, responsive websites tailored to your needs.",
+    heroDescription:
+      "Responsive web builds that look sharp, load fast, and feel clear on both desktop and mobile.",
+    bestFor: [
+      "Startups, small businesses, freelancers, student portfolios",
+      "Landing pages, portfolios, and multi-page company sites",
+    ],
+    services: [
+      {
+        id: "portfolio-website",
+        name: "Portfolio Websites",
+        shortName: "Portfolio",
+        summary:
+          "Personal and student portfolio websites with clean UI, responsive layouts, and enough character to stand out.",
+        bestFor: "Students, developers, freelancers, creatives",
+        deliverables: [
+          "Responsive portfolio structure",
+          "Project showcase sections",
+          "Contact and call-to-action blocks",
+          "Clean UI tuned for mobile first",
+        ],
+        image: "/Images/Project_Preview/Project_Preview_5.jpg",
+        plans: buildPlans(
+          {
+            price: 999,
+            delivery: "5 days",
+            features: [
+              "Single-page portfolio",
+              "Responsive layout",
+              "Basic contact section",
+            ],
+          },
+          {
+            price: 2499,
+            delivery: "7 days",
+            features: [
+              "Multi-section portfolio",
+              "Custom visual direction",
+              "Project filtering or highlight cards",
+            ],
+          },
+          {
+            price: 4999,
+            delivery: "10 days",
+            features: [
+              "Multi-page personal brand site",
+              "Case-study ready layout",
+              "Priority launch support",
+            ],
+          },
+        ),
+      },
+      {
+        id: "landing-pages",
+        name: "Landing Pages",
+        shortName: "Landing",
+        summary:
+          "Focused pages for launches, products, or events with strong hierarchy and conversion-minded structure.",
+        bestFor: "Startups, products, campaigns, event launches",
+        deliverables: [
+          "Conversion-focused one-page build",
+          "Responsive hero and CTA sections",
+          "Fast-loading structure",
+          "Clear copy hierarchy",
+        ],
+        image: "/Images/Project_Preview/Project_Preview_2.jpg",
+        plans: buildPlans(
+          {
+            price: 999,
+            delivery: "4 days",
+            features: [
+              "Single launch page",
+              "Responsive sections",
+              "Basic form integration",
+            ],
+          },
+          {
+            price: 1799,
+            delivery: "6 days",
+            features: [
+              "Custom section flow",
+              "More detailed CTA and proof blocks",
+              "Animation polish",
+            ],
+          },
+          {
+            price: 3499,
+            delivery: "8 days",
+            features: [
+              "Launch-ready premium landing page",
+              "Stronger storytelling layout",
+              "Priority revisions before go-live",
+            ],
+          },
+        ),
+      },
+      {
+        id: "business-websites",
+        name: "Business Websites",
+        shortName: "Business",
+        summary:
+          "Professional company websites with multiple pages, trust-building sections, and a clearer online presence.",
+        bestFor: "Small businesses, agencies, local brands, service teams",
+        deliverables: [
+          "Multi-page company site structure",
+          "Service pages and business sections",
+          "SEO-aware layout decisions",
+          "Professional visual consistency",
+        ],
+        image: "/Images/Project_Preview/Project_Preview_4.jpg",
+        plans: buildPlans(
+          {
+            price: 1999,
+            delivery: "7 days",
+            features: [
+              "Basic company website",
+              "Up to 4 key sections or pages",
+              "Responsive navigation and contact form",
+            ],
+          },
+          {
+            price: 4999,
+            delivery: "10 days",
+            features: [
+              "Expanded service architecture",
+              "Brand-matched layouts",
+              "Conversion and content guidance",
+            ],
+          },
+          {
+            price: 8999,
+            delivery: "14 days",
+            features: [
+              "Premium multi-page build",
+              "Advanced component polish",
+              "Priority delivery workflow",
+            ],
+          },
+        ),
+      },
+    ],
+  },
+  {
+    id: "fix-optimization",
+    name: "Fix & Optimization",
+    shortName: "Fix",
+    navLabel: "Fix & Optimization",
+    pricingHint: "Starting from Rs 199",
+    cta: "Fix My Website",
+    description:
+      "Improve and fix your existing website quickly and efficiently.",
+    heroDescription:
+      "Quick-turn support for websites that need cleanup, better UX, or faster performance without a full rebuild.",
+    bestFor: [
+      "Existing sites that need specific fixes instead of a full redesign",
+      "Teams that need quick support before launch or review",
+    ],
+    services: [
+      {
+        id: "bug-fixing",
+        name: "Bug Fixing",
+        shortName: "Bug Fix",
+        summary:
+          "Targeted debugging for broken interactions, layout issues, routing problems, and obvious frontend regressions.",
+        bestFor: "Launch prep, broken UI states, small urgent fixes",
+        deliverables: [
+          "Issue diagnosis and cleanup",
+          "Cross-device behavior checks",
+          "Focused fixes with a clear handoff",
+          "Short turnaround support",
+        ],
+        image: "/Images/Project_Preview/Project_Preview_6.png",
+        plans: buildPlans(
+          {
+            price: 199,
+            delivery: "48 hrs",
+            features: [
+              "One focused issue fix",
+              "Basic regression check",
+              "Short notes on the change",
+            ],
+          },
+          {
+            price: 499,
+            delivery: "36 hrs",
+            features: [
+              "Up to three related fixes",
+              "Responsive check across breakpoints",
+              "Implementation cleanup",
+            ],
+          },
+          {
+            price: 999,
+            delivery: "24 hrs",
+            features: [
+              "Urgent bug-fix batch",
+              "Priority queue handling",
+              "Polish pass after repair",
+            ],
+          },
+        ),
+      },
+      {
+        id: "ui-improvements",
+        name: "UI Improvements",
+        shortName: "UI Upgrade",
+        summary:
+          "Sharper layout, spacing, readability, and interaction polish for pages that feel unfinished or dated.",
+        bestFor: "Student sites, portfolio refreshes, pre-demo cleanup",
+        deliverables: [
+          "Visual cleanup and spacing polish",
+          "Stronger hierarchy and readability",
+          "Mobile-first improvement pass",
+          "Focused component refinements",
+        ],
+        image: "/Images/Project_Preview/Project_Preview_3.png",
+        plans: buildPlans(
+          {
+            price: 299,
+            delivery: "3 days",
+            features: [
+              "One page visual cleanup",
+              "Spacing and type polish",
+              "Basic responsive pass",
+            ],
+          },
+          {
+            price: 699,
+            delivery: "48 hrs",
+            features: [
+              "Multi-section UI refresh",
+              "Component styling updates",
+              "Motion and interaction polish",
+            ],
+          },
+          {
+            price: 1299,
+            delivery: "36 hrs",
+            features: [
+              "High-priority interface overhaul",
+              "Layout consistency review",
+              "Priority turnaround",
+            ],
+          },
+        ),
+      },
+      {
+        id: "speed-optimization",
+        name: "Speed Optimization",
+        shortName: "Performance",
+        summary:
+          "Frontend performance tuning for heavy pages that feel slower than they should during actual use.",
+        bestFor: "Pages with sluggish load, animation lag, or oversized assets",
+        deliverables: [
+          "Asset and rendering review",
+          "Performance-focused cleanup",
+          "Perceived speed improvements",
+          "Before-and-after recommendations",
+        ],
+        image: "/Images/Project_Preview/Project_Preview_5.jpg",
+        plans: buildPlans(
+          {
+            price: 399,
+            delivery: "3 days",
+            features: [
+              "Single-page optimization pass",
+              "Image and asset cleanup",
+              "Quick performance notes",
+            ],
+          },
+          {
+            price: 899,
+            delivery: "48 hrs",
+            features: [
+              "Multi-section optimization sweep",
+              "Render and asset tuning",
+              "Priority issue list",
+            ],
+          },
+          {
+            price: 1599,
+            delivery: "36 hrs",
+            features: [
+              "Priority performance sprint",
+              "Heavier frontend cleanup",
+              "Follow-up guidance after delivery",
+            ],
+          },
+        ),
+      },
+    ],
+  },
+  {
+    id: "templates-assets",
+    name: "Templates & Assets",
+    shortName: "Templates",
+    navLabel: "Templates",
+    pricingHint: "Starting from Rs 49",
+    cta: "Browse Templates",
+    description: "Ready-to-use templates for quick and professional results.",
+    heroDescription:
+      "Useful starting points when you need something quick, clean, and adaptable without a full custom build.",
+    bestFor: [
+      "Quick launches, reusable kits, student-ready deliverables",
+      "People who need a strong base before adding their own content",
+    ],
+    services: [
+      {
+        id: "website-templates",
+        name: "Website Templates",
+        shortName: "Web Template",
+        summary:
+          "Pre-built website foundations for faster launches with a cleaner starting point than generic freebies.",
+        bestFor: "Student brands, early startups, internal mockups",
+        deliverables: [
+          "Responsive starter templates",
+          "Editable sections and reusable blocks",
+          "Cleaner launch-ready structure",
+          "Faster setup time",
+        ],
+        image: "/Images/Project_Preview/Project_Preview_2.jpg",
+        plans: buildPlans(
+          {
+            price: 149,
+            delivery: "48 hrs",
+            features: [
+              "Single starter template",
+              "Editable hero and content blocks",
+              "Basic setup notes",
+            ],
+          },
+          {
+            price: 399,
+            delivery: "36 hrs",
+            features: [
+              "Polished template pack",
+              "Multiple reusable sections",
+              "Minor customization pass",
+            ],
+          },
+          {
+            price: 799,
+            delivery: "24 hrs",
+            features: [
+              "Premium template system",
+              "Priority delivery",
+              "Launch-oriented structure review",
+            ],
+          },
+        ),
+      },
+      {
+        id: "portfolio-templates",
+        name: "Portfolio Templates",
+        shortName: "Portfolio Kit",
+        summary:
+          "Portfolio starter kits for students and creators who need structure fast without starting from a blank file.",
+        bestFor: "Students, designers, developers, creators",
+        deliverables: [
+          "Reusable portfolio sections",
+          "Clean project presentation layout",
+          "Easy-to-edit content blocks",
+          "Responsive base structure",
+        ],
+        image: "/Images/Project_Preview/Project_Preview_1.png",
+        plans: buildPlans(
+          {
+            price: 99,
+            delivery: "48 hrs",
+            features: [
+              "Starter portfolio template",
+              "Single-page structure",
+              "Simple customization notes",
+            ],
+          },
+          {
+            price: 249,
+            delivery: "36 hrs",
+            features: [
+              "Expanded portfolio layout",
+              "Project showcase variants",
+              "Contact section included",
+            ],
+          },
+          {
+            price: 499,
+            delivery: "24 hrs",
+            features: [
+              "Premium creator kit",
+              "Priority template delivery",
+              "Multi-section polish",
+            ],
+          },
+        ),
+      },
+      {
+        id: "ppt-templates",
+        name: "PPT Templates",
+        shortName: "Slide Kit",
+        summary:
+          "Ready-to-edit presentation templates that give you a cleaner base than default slide decks.",
+        bestFor: "Academic reviews, college events, startup decks",
+        deliverables: [
+          "Presentation templates with structure",
+          "Slide master consistency",
+          "Quick-start brand-ready layouts",
+          "Editable content placeholders",
+        ],
+        image: "/Images/Project_Preview/Project_Preview_4.jpg",
+        plans: buildPlans(
+          {
+            price: 49,
+            delivery: "24 hrs",
+            features: [
+              "Simple slide starter pack",
+              "Core title and content slides",
+              "Quick-use editable file",
+            ],
+          },
+          {
+            price: 149,
+            delivery: "24 hrs",
+            features: [
+              "Expanded slide system",
+              "Visual consistency kit",
+              "Academic or pitch style options",
+            ],
+          },
+          {
+            price: 299,
+            delivery: "24 hrs",
+            features: [
+              "Premium template bundle",
+              "Priority support",
+              "Multiple theme variants",
+            ],
+          },
+        ),
+      },
+    ],
+  },
+];
+
+export const SERVICE_CATEGORY_MAP = Object.fromEntries(
+  SERVICE_CATEGORIES.map((category) => [category.id, category])
+);
+
+export const SERVICE_LIST = SERVICE_CATEGORIES.flatMap((category) =>
+  category.services.map((service) => ({
+    ...service,
+    categoryId: category.id,
+    categoryName: category.name,
+    categoryShortName: category.shortName,
+    categoryDescription: category.description,
+    pricingHint: category.pricingHint,
+    cta: category.cta,
+    startingPrice: Math.min(...service.plans.map((plan) => plan.price)),
+  }))
+);
+
+export const SERVICE_MAP = Object.fromEntries(
+  SERVICE_LIST.map((service) => [service.id, service])
+);
+
+export const BOOKING_STEP_LABELS = [
+  "Category",
+  "Service",
+  "Plan",
+  "Details",
+  "Payment",
+  "Review",
+];
+
+export const WHY_CHOOSE_US = [
+  "Affordable pricing",
+  "Fast delivery",
+  "Beginner-friendly service",
+  "Custom solutions",
+];
 
 export const CLIENT_FAQS = [
   {
-    question: "How is pricing calculated?",
+    question: "How do I know which service to pick?",
     answer:
-      "The booking page is the source of truth. It shows original package price, any referral discount, GST, and the online gateway fee separately before checkout."
+      "Start with the category that matches the outcome you need. If you are still unsure, book the closest option and use the requirements box - we can refine the scope from there.",
   },
   {
-    question: "Do you still support WhatsApp or manual bookings?",
+    question: "What does priority delivery do?",
     answer:
-      "Yes. You can create a manual booking through WhatsApp. The dashboard now stores that order in the database with the manual total so your booking does not get lost."
+      "Priority delivery moves your project higher in the queue and increases the quoted total. The exact fee is shown before you confirm the order.",
   },
   {
-    question: "What are the current delivery windows?",
+    question: "How does the upfront payment work?",
     answer:
-      "PPT packages range from 24 to 72 hours, poster packages range from 36 to 72 hours, and websites range from 3 to 7 days depending on the package you choose."
+      "New customers are shown a 70 percent advance. Returning customers are shown a 50 percent advance. The remaining amount is due on completion.",
   },
   {
-    question: "How many revisions are included?",
+    question: "Can I send references and detailed requirements?",
     answer:
-      "Revisions depend on the package. Starter and single-deliverable plans include fewer revisions, while premium packages include more revision cycles and source files where listed."
+      "Yes. The booking flow includes fields for your project description, feature list, references, and deadline so we can work from your exact brief.",
   },
   {
-    question: "How do referrals work?",
+    question: "Do you handle both digital and print-ready output?",
     answer:
-      "Referral discounts are tied to the staff member who referred you. The discount is stored on your user profile and automatically applied in checkout."
+      "Yes. Design deliverables can be prepared for digital posting, presentations, or print depending on the service you choose.",
   },
   {
-    question: "How do I track my project after payment?",
+    question: "What if I need something custom?",
     answer:
-      "After login you can use your profile page to review orders, billing totals, status, and delivery history. Staff users also get dashboard access based on role."
+      "Use the closest service and explain the custom scope in your requirements. We can adjust the plan after reviewing the request.",
   },
-  {
-    question: "What payment methods are supported?",
-    answer:
-      "Razorpay online checkout is supported for cards, UPI, and compatible methods. Manual WhatsApp orders can still be coordinated for cash or direct transfer if needed."
-  },
-  {
-    question: "Will my registration be saved?",
-    answer:
-      "Yes. Customer and staff registrations are written into the users collection in Firestore, including role, referral metadata, and timestamps."
-  }
 ];
 
 export const WORKER_FAQS = [
   {
-    question: "How do workers receive assignments?",
+    question: "How are orders marked for urgency?",
     answer:
-      "Managers can assign up to 2 workers directly. If an order needs more than 2 workers, admin, superadmin, or owner approval is required before the larger team is attached."
+      "Priority bookings are stored with a high-priority flag so the delivery team can identify them quickly.",
   },
   {
-    question: "How is pay handled?",
+    question: "What details are saved with a booking?",
     answer:
-      "The dashboard keeps salary allotments and payout requests in the database. Workers, managers, admins, and superadmins can see their available balance and request redemption when allowed by role rules."
+      "Orders store the category, service, plan, priority state, customer inputs, payment summary, status, and timestamp so the internal team has a complete handoff.",
   },
   {
-    question: "When do payouts happen?",
+    question: "Can staff see deadlines and customer type?",
     answer:
-      "Payroll is designed around monthly processing with redemption requests tracked separately. The dashboard already stores next-pay and payout request records, and backend hardening is being completed before launch."
+      "Yes. The booking data includes the customer deadline and whether the order was treated as a new or returning-customer payment flow.",
   },
   {
-    question: "How do I report a problem?",
+    question: "How should incomplete briefs be handled?",
     answer:
-      "The role dashboards include reporting tabs so workers can raise issues to managers, admins, or superadmins. These reports are stored in Firestore for follow-up."
+      "If requirements are thin, use the stored reference links, feature notes, and project description first, then follow up with the client for anything blocking delivery.",
+  },
+];
+
+export const HELP_PROMISES = [
+  {
+    title: "Clear pricing",
+    text:
+      "You see the base price, priority fee when selected, upfront amount, and remaining payment before confirming.",
   },
   {
-    question: "Can workers communicate with clients?",
-    answer:
-      "Yes. Workers can exchange samples with clients through the dashboard flow. Access still follows role-based controls so sensitive actions can be approved when needed."
-  }
+    title: "Direct communication",
+    text:
+      "You are speaking to the people building the work, not a relay chain that keeps losing your brief.",
+  },
+  {
+    title: "Practical support",
+    text:
+      "If you are stuck, message support with your order details and we will help shape the right service path.",
+  },
+];
+
+export const FEATURED_PROJECTS = [
+  {
+    id: "autobit",
+    title: "AutoBit",
+    category: "Web Development / Software",
+    status: "Ongoing",
+    description:
+      "A co-built product by WaveWalker and Mr_Ratty. The public case study is still being written, but the build is active and moving.",
+    builtBy: "WaveWalker & Mr_Ratty",
+    image: "/Images/Project_Preview/Project_Preview_5.jpg",
+  },
+  {
+    id: "studio-slot",
+    title: "Upcoming Client Launch",
+    category: "Website / Poster / PPT",
+    status: "Ongoing",
+    description:
+      "A second ongoing client slot is currently under wraps. Details will be published once the project is ready to go public.",
+    builtBy: "WaveWalker & Mr_Ratty",
+    image: "/Images/Project_Preview/Project_Preview_2.jpg",
+  },
+  {
+    id: "design-vault",
+    title: "Design Vault",
+    category: "Mixed Deliverables",
+    status: "Expanding",
+    description:
+      "A growing collection of presentation, poster, and web work that shows the range of what TNWebRats ships.",
+    builtBy: "TNWebRats",
+    image: "/Images/Project_Preview/Project_Preview_7.png",
+  },
+];
+
+export const PORTFOLIO_GALLERY = [
+  {
+    id: "gallery-1",
+    title: "Presentation Work",
+    image: "/Images/Project_Preview/Project_Preview_1.png",
+    link: "https://drive.google.com/drive/folders/1aO3Z-mfWXL7PXlot4fbmJ2K49iyyp8tQ?usp=sharing",
+  },
+  {
+    id: "gallery-2",
+    title: "Brand And Web Visuals",
+    image: "/Images/Project_Preview/Project_Preview_3.png",
+    link: "https://drive.google.com/drive/folders/1aO3Z-mfWXL7PXlot4fbmJ2K49iyyp8tQ?usp=sharing",
+  },
+  {
+    id: "gallery-3",
+    title: "Creative Posters",
+    image: "/Images/Project_Preview/Project_Preview_4.jpg",
+    link: "https://drive.google.com/drive/folders/1aO3Z-mfWXL7PXlot4fbmJ2K49iyyp8tQ?usp=sharing",
+  },
+  {
+    id: "gallery-4",
+    title: "Website Snapshots",
+    image: "/Images/Project_Preview/Project_Preview_6.png",
+    link: "https://drive.google.com/drive/folders/1aO3Z-mfWXL7PXlot4fbmJ2K49iyyp8tQ?usp=sharing",
+  },
 ];
 
 export const ABOUT_POINTS = [
-  "Role-based dashboards for owner, superadmin, admin, manager, worker, and customer flows.",
-  "Server-verified checkout with GST and billing breakdowns shown before payment.",
-  "Shared project handling for PPTs, posters, graphics, and websites with tracked delivery windows.",
-  "Referral-aware accounts, payout tracking, reporting tools, and cloud-ready Firestore rules."
+  "Two founders working directly with the people they build for.",
+  "A service mix that covers design, web builds, template kits, and quick-fix support.",
+  "A booking flow built to capture project scope cleanly before delivery starts.",
+  "A growing studio system designed to support clearer order handling and faster handoffs.",
 ];
+
+export const TEAM_MEMBERS = [
+  {
+    id: "ratty",
+    name: "Mr_Ratty",
+    role: "Founder & Creative Director",
+    image: "/Images/Icons/WebRatTransparentLight.png",
+    intro:
+      "Mr_Ratty leads the visual side of the studio - posters, graphics, presentations, and the look-and-feel decisions that make the work feel bold instead of generic.",
+    skills: [
+      "Graphic & poster design",
+      "Presentation design",
+      "UI and visual direction",
+      "Creative concept development",
+    ],
+  },
+  {
+    id: "wavewalker",
+    name: "WaveWalker",
+    role: "Co-Founder & Lead Developer",
+    image: "/Images/Icons/WebratTransparentDark.png",
+    intro:
+      "WaveWalker drives the web side of TNWebRats - translating ideas into responsive interfaces, cleaner structures, and builds that feel deliberate on both mobile and desktop.",
+    skills: [
+      "React and frontend development",
+      "UI and interaction structure",
+      "Problem solving and technical design",
+      "Portfolio and business site builds",
+    ],
+  },
+];
+
+export const STATS = [
+  { label: "Founders", value: "2" },
+  { label: "Service Lanes", value: "4" },
+  { label: "Core Offers", value: "12" },
+  { label: "Direct Contact", value: "Always" },
+];
+
+export const TERMS_POINTS = [
+  "Projects move step by step and begin after the advance amount is confirmed.",
+  "Priority delivery increases the total and flags the order as high priority for the internal team.",
+  "Deadlines should be realistic and based on complete, usable requirements from the client side.",
+  "The remaining balance is due once the project reaches the delivery stage.",
+];
+
+export const PAYMENT_RULES = {
+  newCustomerAdvanceRate: 0.7,
+  returningCustomerAdvanceRate: 0.5,
+  priorityMultiplier: 0.2,
+  minimumPriorityFee: 99,
+};
+
+export const getCategoryById = (categoryId) => SERVICE_CATEGORY_MAP[categoryId];
+
+export const getServiceById = (serviceId) => SERVICE_MAP[serviceId];
+
+export const getPlanById = (serviceId, planId) =>
+  SERVICE_MAP[serviceId]?.plans.find((plan) => plan.id === planId);
+
+export const getPriorityFee = (basePrice) =>
+  Math.max(
+    PAYMENT_RULES.minimumPriorityFee,
+    Math.round(basePrice * PAYMENT_RULES.priorityMultiplier)
+  );
+
+export const getAdvanceRate = (customerType) =>
+  customerType === "returning"
+    ? PAYMENT_RULES.returningCustomerAdvanceRate
+    : PAYMENT_RULES.newCustomerAdvanceRate;
+
+export const buildPaymentBreakdown = ({
+  basePrice,
+  isPriority = false,
+  customerType = "new",
+}) => {
+  const priorityFee = isPriority ? getPriorityFee(basePrice) : 0;
+  const total = basePrice + priorityFee;
+  const advanceRate = getAdvanceRate(customerType);
+  const advancePayment = Math.round(total * advanceRate);
+  const remainingPayment = total - advancePayment;
+
+  return {
+    basePrice,
+    priorityFee,
+    total,
+    advanceRate,
+    advancePayment,
+    remainingPayment,
+  };
+};

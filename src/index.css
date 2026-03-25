@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&display=swap");
 @import "tailwindcss";
 @import "./styles/theme.css";
 
@@ -13,8 +14,6 @@
 }
 
 @layer base {
-  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&display=swap');
-
   body {
     @apply bg-primary-dark text-light-gray font-sans cursor-default overflow-x-hidden m-0 p-0;
     background: rgba(38, 43, 37, 0.85);

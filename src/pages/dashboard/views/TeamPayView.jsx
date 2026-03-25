@@ -210,7 +210,7 @@ const TeamPayView = () => {
                   return (
                     <div key={w.id} className="bg-[#262B25] border border-white/5 p-6 rounded-2xl flex flex-col md:flex-row items-center gap-6 group hover:border-white/10 transition-all">
                        <div className="flex items-center gap-4 flex-grow w-full md:w-auto">
-                          <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center font-bold text-xs border border-white/5 group-hover:bg-cyan-primary group-hover:text-primary-dark transition-all">
+                          <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center font-bold text-xs border border-white/5 group-hover:bg-cyan-primary group-hover:text-white transition-all">
                              {w.name?.charAt(0)}
                           </div>
                           <div>

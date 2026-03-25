@@ -10,7 +10,7 @@ import { useDashboard } from '../../context/DashboardContext';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 
 const DashboardLayout = ({ children }) => {
-  const { user, userData, logout } = useAuth();
+  const { user, userProfile, logout } = useAuth();
   const { 
     searchQuery, setSearchQuery, notifications, unreadCount, 
     markAsRead, markAllAsRead 
@@ -30,7 +30,7 @@ const DashboardLayout = ({ children }) => {
     return () => clearInterval(timer);
   }, []);
 
-  const role = userData?.role || 'customer';
+  const role = userProfile?.role || 'client';
   
   const navItems = [
     { id: 'overview', label: 'Overview', icon: <Home size={18} />, roles: ['owner', 'superadmin', 'admin', 'manager', 'worker'] },
@@ -121,10 +121,10 @@ const DashboardLayout = ({ children }) => {
         <div className="p-6 border-t border-white/5 bg-black/20">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 rounded-xl bg-cyan-primary/10 flex items-center justify-center text-cyan-primary font-bold border border-cyan-primary/20">
-              {userData?.name?.charAt(0) || 'U'}
+              {userProfile?.name?.charAt(0) || 'U'}
             </div>
             <div className="overflow-hidden">
-              <div className="text-xs font-bold text-white truncate">{userData?.name || 'Loading...'}</div>
+              <div className="text-xs font-bold text-white truncate">{userProfile?.name || 'Loading...'}</div>
               <div className="text-[10px] text-white/30 truncate">{user?.email}</div>
             </div>
           </div>

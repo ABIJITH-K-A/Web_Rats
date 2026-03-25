@@ -1,14 +1,27 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import DashboardLayout from '../../components/dashboard/DashboardLayout';
-import { 
-  Inbox, Clock, DollarSign, Users, TrendingUp, 
-  Box, Bell, Package, Calendar
+import { useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import {
+  Bell,
+  Box,
+  Calendar,
+  Clock,
+  DollarSign,
+  Inbox,
+  TrendingUp,
+  Users,
 } from 'lucide-react';
+import { collection, getDocs, orderBy, query } from 'firebase/firestore';
+import DashboardLayout from '../../components/dashboard/DashboardLayout';
 import { db } from '../../config/firebase';
-import { collection, query, getDocs, limit, orderBy } from 'firebase/firestore';
-
-// Import modular views
+import {
+  getCustomerTypeLabel,
+  getOrderAmount,
+  getOrderPriorityBadgeClass,
+  getOrderPriorityLabel,
+  getOrderStatusBadgeClass,
+  getOrderStatusLabel,
+  normalizeOrderStatus,
+} from '../../utils/orderHelpers';
 import OrdersView from './views/OrdersView';
 import UsersView from './views/UsersView';
 import ReferralsView from './views/ReferralsView';
@@ -24,157 +37,218 @@ import InviteKeysView from './views/InviteKeysView';
 import EarningsView from './views/EarningsView';
 import AnalyticsView from './views/AnalyticsView';
 
-const AdminDashboard = () => {
-  return (
-    <DashboardLayout>
-      {({ currentView }) => (
-        <AnimatePresence mode="wait">
-          <motion.div 
-            key={currentView}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.3 }}
-            className="w-full h-full"
-          >
-            {currentView === 'overview' && <OverviewTab />}
-            {currentView === 'orders' && <OrdersView />}
-            {currentView === 'users' && <UsersView />}
-            {currentView === 'referrals' && <ReferralsView />}
-            {currentView === 'reviews' && <ReviewsView />}
-            {currentView === 'wallet' && <WalletView />}
-            {currentView === 'reports' && <ReportsView />}
-            {currentView === 'samples' && <SamplesView />}
-            {currentView === 'payroll' && <PayrollView />}
-            {currentView === 'teampay' && <TeamPayView />}
-            {currentView === 'approvals' && <ApprovalsView />}
-            {currentView === 'myorders' && <MyOrdersView />}
-            {currentView === 'invitekeys' && <InviteKeysView />}
-            {currentView === 'earnings' && <EarningsView />}
-            {currentView === 'analytics' && <AnalyticsView />}
-          </motion.div>
-        </AnimatePresence>
-      )}
-    </DashboardLayout>
-  );
-};
+const AdminDashboard = () => (
+  <DashboardLayout>
+    {({ currentView }) => (
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={currentView}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.3 }}
+          className="h-full w-full"
+        >
+          {currentView === 'overview' && <OverviewTab />}
+          {currentView === 'orders' && <OrdersView />}
+          {currentView === 'users' && <UsersView />}
+          {currentView === 'referrals' && <ReferralsView />}
+          {currentView === 'reviews' && <ReviewsView />}
+          {currentView === 'wallet' && <WalletView />}
+          {currentView === 'reports' && <ReportsView />}
+          {currentView === 'samples' && <SamplesView />}
+          {currentView === 'payroll' && <PayrollView />}
+          {currentView === 'teampay' && <TeamPayView />}
+          {currentView === 'approvals' && <ApprovalsView />}
+          {currentView === 'myorders' && <MyOrdersView />}
+          {currentView === 'invitekeys' && <InviteKeysView />}
+          {currentView === 'earnings' && <EarningsView />}
+          {currentView === 'analytics' && <AnalyticsView />}
+        </motion.div>
+      </AnimatePresence>
+    )}
+  </DashboardLayout>
+);
 
 const OverviewTab = () => {
   const [recentOrders, setRecentOrders] = useState([]);
+  const [stats, setStats] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchStats = async () => {
+    const fetchOverview = async () => {
+      setLoading(true);
+
       try {
-        const q = query(collection(db, "orders"), orderBy("createdAt", "desc"), limit(6));
-        const snap = await getDocs(q);
-        setRecentOrders(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-      } catch (e) {
-        console.error(e);
+        const [orderSnapshot, userSnapshot] = await Promise.all([
+          getDocs(query(collection(db, 'orders'), orderBy('createdAt', 'desc'))),
+          getDocs(collection(db, 'users')),
+        ]);
+
+        const orders = orderSnapshot.docs.map((orderDoc) => ({
+          id: orderDoc.id,
+          ...orderDoc.data(),
+        }));
+        const users = userSnapshot.docs.map((userDoc) => userDoc.data());
+
+        const activeOrders = orders.filter(
+          (order) => !['completed', 'cancelled'].includes(normalizeOrderStatus(order.status))
+        );
+        const bookedValue = orders.reduce(
+          (sum, order) => sum + getOrderAmount(order),
+          0
+        );
+        const staffCount = users.filter(
+          (account) => account.role && account.role !== 'client'
+        ).length;
+
+        setRecentOrders(orders.slice(0, 6));
+        setStats([
+          { label: 'Total Orders', value: String(orders.length), icon: Inbox, color: 'text-cyan-primary' },
+          { label: 'Active Orders', value: String(activeOrders.length), icon: Clock, color: 'text-yellow-500' },
+          { label: 'Booked Value', value: `₹${bookedValue.toLocaleString('en-IN')}`, icon: DollarSign, color: 'text-green-500' },
+          { label: 'Staff Count', value: String(staffCount), icon: Users, color: 'text-purple-500' },
+        ]);
+      } catch (error) {
+        console.error(error);
       } finally {
         setLoading(false);
       }
     };
-    fetchStats();
-  }, []);
 
-  const stats = [
-    { label: 'Total Orders', value: '142', icon: <Inbox />, color: 'text-cyan-primary' },
-    { label: 'Active Missions', value: '12', icon: <Clock />, color: 'text-yellow-500' },
-    { label: 'Revenue Pool', value: '₹1.2L', icon: <DollarSign />, color: 'text-green-500' },
-    { label: 'Staff Count', value: '15', icon: <Users />, color: 'text-purple-500' },
-  ];
+    fetchOverview();
+  }, []);
 
   return (
     <div className="space-y-10">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+      <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
         <div>
-          <h1 className="text-3xl font-black text-white italic">Overview <span className="text-cyan-primary not-italic font-mono uppercase text-sm tracking-[0.2em] ml-2">// Protocol Alpha</span></h1>
-          <p className="text-[10px] font-mono text-white/20 uppercase tracking-widest mt-1 italic font-bold">// Syncing with global rat network</p>
+          <h1 className="text-3xl font-black text-white italic">
+            Overview{' '}
+            <span className="ml-2 text-sm font-mono uppercase tracking-[0.2em] text-cyan-primary not-italic">
+              // Operations
+            </span>
+          </h1>
+          <p className="mt-1 text-[10px] font-mono uppercase tracking-widest text-white/20">
+            A live summary of the current order queue and team load
+          </p>
         </div>
+
         <div className="flex gap-3">
-           <button className="px-6 py-3 bg-white/5 border border-white/10 rounded-xl text-[10px] font-mono uppercase tracking-widest hover:bg-white/10 transition-all flex items-center gap-2">
-              <Calendar size={14} /> Analytics Range
-           </button>
-           <button className="px-6 py-3 bg-cyan-primary/10 border border-cyan-primary/20 rounded-xl text-[10px] font-mono uppercase tracking-widest text-cyan-primary shadow-[0_0_20px_rgba(103, 248, 29,0.05)] hover:bg-cyan-primary/20 transition-all">
-              Export Database
-           </button>
+          <button className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-6 py-3 text-[10px] font-mono uppercase tracking-widest transition-colors hover:bg-white/10">
+            <Calendar size={14} /> Live Range
+          </button>
+          <button className="rounded-xl border border-cyan-primary/20 bg-cyan-primary/10 px-6 py-3 text-[10px] font-mono uppercase tracking-widest text-cyan-primary transition-colors hover:bg-cyan-primary/18">
+            Export Snapshot
+          </button>
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, i) => (
-          <motion.div 
-            key={i}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.1 }}
-            className="bg-[#121417] border border-white/5 p-8 rounded-[2rem] group hover:border-cyan-primary/30 transition-all shadow-2xl relative overflow-hidden"
-          >
-            <div className="flex justify-between items-start mb-6">
-              <div className={`w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center ${stat.color} group-hover:scale-110 transition-transform duration-500`}>
-                {stat.icon}
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        {stats.map((stat, index) => {
+          const Icon = stat.icon;
+
+          return (
+            <motion.div
+              key={stat.label}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.08 }}
+              className="relative overflow-hidden rounded-[2rem] border border-white/8 bg-[#121417] p-8 shadow-2xl"
+            >
+              <div className="mb-6 flex items-start justify-between gap-4">
+                <div className={`flex h-14 w-14 items-center justify-center rounded-2xl bg-white/5 ${stat.color}`}>
+                  <Icon size={22} />
+                </div>
+                <div className="flex items-center gap-1 text-[9px] font-mono font-black text-green-400">
+                  <TrendingUp size={12} /> live
+                </div>
               </div>
-              <div className="flex items-center gap-1 text-[9px] font-mono text-green-500 font-black">
-                <TrendingUp size={12} /> +12% SYNC
+              <div className="text-3xl font-black text-white">{stat.value}</div>
+              <div className="mt-1 text-[10px] font-mono uppercase tracking-widest text-white/28">
+                {stat.label}
               </div>
-            </div>
-            <div className="text-3xl font-black text-white mb-1 font-mono">{stat.value}</div>
-            <div className="text-[10px] font-mono uppercase tracking-widest text-white/20">{stat.label}</div>
-            
-            {/* Background Accent */}
-            <div className={`absolute top-0 right-0 w-24 h-24 blur-[60px] opacity-10 pointer-events-none ${stat.color.replace('text-', 'bg-')}`} />
-          </motion.div>
-        ))}
+            </motion.div>
+          );
+        })}
       </div>
 
-      {/* Main Content Sections */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-20">
-        {/* Recent Orders Table */}
-        <div className="lg:col-span-2 bg-[#121417] border border-white/5 rounded-[2.5rem] overflow-hidden self-start shadow-2xl">
-          <div className="p-8 border-b border-white/5 flex items-center justify-between bg-white/[0.01]">
-             <h3 className="text-xs font-mono uppercase tracking-widest text-cyan-primary flex items-center gap-3">
-                <Box size={16} /> Latest Missions
-             </h3>
-             <button className="text-[10px] font-mono uppercase tracking-widest text-white/20 hover:text-cyan-primary transition-colors">See Archive →</button>
+      <div className="grid grid-cols-1 gap-8 pb-20 lg:grid-cols-3">
+        <div className="overflow-hidden rounded-[2.5rem] border border-white/8 bg-[#121417] shadow-2xl lg:col-span-2">
+          <div className="flex items-center justify-between border-b border-white/8 bg-white/[0.01] p-8">
+            <h3 className="flex items-center gap-3 text-xs font-mono uppercase tracking-widest text-cyan-primary">
+              <Box size={16} /> Latest Orders
+            </h3>
           </div>
+
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
-                <tr className="bg-[#262B25] text-[9px] font-mono uppercase tracking-widest text-white/20 border-b border-white/5">
-                  <th className="px-8 py-5">Intel ID</th>
-                  <th className="px-8 py-5">Project Scope</th>
-                  <th className="px-8 py-5">Protocol Value</th>
+                <tr className="border-b border-white/8 bg-[#262B25] text-[9px] font-mono uppercase tracking-widest text-white/20">
+                  <th className="px-8 py-5">Order</th>
+                  <th className="px-8 py-5">Service</th>
+                  <th className="px-8 py-5">Priority / Deadline</th>
+                  <th className="px-8 py-5">Customer Type</th>
                   <th className="px-8 py-5 text-center">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
+              <tbody className="divide-y divide-white/6">
                 {loading ? (
-                   Array(6).fill(0).map((_, i) => (
-                    <tr key={i} className="animate-pulse">
-                      <td colSpan="4" className="px-8 py-6 h-12 bg-white/5 border-b border-[#262B25]"></td>
-                    </tr>
-                  ))
+                  Array(6)
+                    .fill(0)
+                    .map((_, index) => (
+                      <tr key={index} className="animate-pulse">
+                        <td colSpan="5" className="h-12 bg-white/5 px-8 py-6" />
+                      </tr>
+                    ))
                 ) : recentOrders.length === 0 ? (
                   <tr>
-                    <td colSpan="4" className="px-8 py-20 text-center text-white/10 font-mono text-xs uppercase tracking-widest italic">Encrypted archive empty</td>
+                    <td
+                      colSpan="5"
+                      className="px-8 py-20 text-center text-xs font-mono uppercase tracking-widest text-white/10 italic"
+                    >
+                      No orders yet
+                    </td>
                   </tr>
                 ) : (
-                  recentOrders.map(order => (
-                    <tr key={order.id} className="hover:bg-white/[0.02] transition-colors group">
-                      <td className="px-8 py-6 font-mono text-[11px] text-cyan-primary/40 group-hover:text-cyan-primary transition-colors">#{order.id.slice(-8).toUpperCase()}</td>
-                      <td className="px-8 py-6">
-                        <div className="text-sm font-bold text-white group-hover:text-cyan-primary transition-colors">{order.service}</div>
-                        <div className="text-[10px] text-white/20 font-mono uppercase tracking-tighter">{order.package}</div>
+                  recentOrders.map((order) => (
+                    <tr key={order.id} className="hover:bg-white/[0.02]">
+                      <td className="px-8 py-6 font-mono text-[11px] text-cyan-primary/50">
+                        #{order.id.slice(-8).toUpperCase()}
                       </td>
-                      <td className="px-8 py-6 font-black text-cyan-primary italic">₹{order.finalPrice?.toLocaleString()}</td>
                       <td className="px-8 py-6">
-                         <div className="flex justify-center">
-                            <span className="px-3 py-1 rounded-full text-[8px] font-mono font-black uppercase tracking-[0.2em] border border-cyan-primary/20 bg-cyan-primary/5 text-cyan-primary shadow-[0_0_10px_rgba(103, 248, 29,0.1)]">
-                              {order.status || 'NEW'}
-                            </span>
-                         </div>
+                        <div className="text-sm font-bold text-white">{order.service}</div>
+                        <div className="text-[10px] font-mono uppercase tracking-widest text-white/25">
+                          {order.plan || order.package}
+                        </div>
+                      </td>
+                      <td className="px-8 py-6">
+                        <div className="flex flex-col gap-2">
+                          <span
+                            className={`w-fit rounded-full border px-3 py-1 text-[8px] font-mono font-black uppercase tracking-[0.2em] ${getOrderPriorityBadgeClass(
+                              order
+                            )}`}
+                          >
+                            {getOrderPriorityLabel(order)}
+                          </span>
+                          <div className="text-[10px] font-mono uppercase tracking-widest text-white/30">
+                            {order.deadline || 'Flexible'}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-8 py-6 text-[10px] font-mono uppercase tracking-widest text-white/40">
+                        {getCustomerTypeLabel(order)}
+                      </td>
+                      <td className="px-8 py-6">
+                        <div className="flex justify-center">
+                          <span
+                            className={`rounded-full border px-3 py-1 text-[8px] font-mono font-black uppercase tracking-[0.2em] ${getOrderStatusBadgeClass(
+                              order.status
+                            )}`}
+                          >
+                            {getOrderStatusLabel(order.status)}
+                          </span>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -184,44 +258,40 @@ const OverviewTab = () => {
           </div>
         </div>
 
-        {/* Sidebar Alerts */}
         <div className="space-y-8">
-           <div className="bg-[#121417] border border-white/5 p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
-              <h3 className="text-xs font-mono uppercase tracking-widest text-cyan-primary mb-8 flex items-center gap-3">
-                 <Bell size={16} /> Intelligence Feed
-              </h3>
-              <div className="space-y-6">
-                 {[
-                   { t: 'Payment pending for #DE23X', time: '2h ago', color: 'bg-yellow-500' },
-                   { t: 'New staff verification pending', time: '5h ago', color: 'bg-cyan-primary' },
-                   { t: 'Weekly Payroll Cycle Initialized', time: '1d ago', color: 'bg-green-500' },
-                   { t: 'Emergency bug report in Samples', time: '2d ago', color: 'bg-red-500' },
-                 ].map((a, i) => (
-                   <div key={i} className="flex gap-5 items-start relative group cursor-pointer">
-                      <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${a.color} shadow-[0_0_10px_rgba(103, 248, 29,0.2)] group-hover:scale-150 transition-transform`} />
-                      <div>
-                         <div className="text-xs font-bold text-white/70 group-hover:text-white transition-colors leading-tight">{a.t}</div>
-                         <div className="text-[9px] font-mono text-white/20 mt-1 uppercase tracking-widest font-bold">{a.time}</div>
-                      </div>
-                      {/* Vertical Line Connector */}
-                      {i !== 3 && <div className="absolute left-[3px] top-6 w-[2px] h-8 bg-white/5" />}
-                   </div>
-                 ))}
-              </div>
-           </div>
-           
-           <div className="bg-gradient-to-br from-[#121417] to-[#262B25] border border-white/5 p-10 rounded-[2.5rem] relative overflow-hidden group shadow-2xl">
-              <div className="absolute -right-8 -bottom-8 text-cyan-primary/5 group-hover:scale-110 transition-transform duration-700 -rotate-12">
-                <Box size={180} />
-              </div>
-              <h4 className="text-lg font-black text-white mb-3 italic">System <span className="text-cyan-primary">Protocol</span></h4>
-              <p className="text-[10px] font-mono text-white/30 uppercase tracking-[0.15em] leading-relaxed mb-8 font-bold italic">
-                Platform stability is 99.9%. All encrypted tunnels are secure.
-              </p>
-              <button className="text-[10px] font-mono uppercase tracking-[0.2em] text-cyan-primary hover:text-white transition-colors flex items-center gap-2 group/btn">
-                Run Diagnostic <TrendingUp size={14} className="group-hover/btn:translate-x-1 transition-transform" />
-              </button>
-           </div>
+          <div className="relative overflow-hidden rounded-[2.5rem] border border-white/8 bg-[#121417] p-8 shadow-2xl">
+            <h3 className="mb-8 flex items-center gap-3 text-xs font-mono uppercase tracking-widest text-cyan-primary">
+              <Bell size={16} /> Operations Notes
+            </h3>
+            <div className="space-y-6">
+              {[
+                'Priority orders should be assigned first.',
+                'Returning customers now use a 50 percent upfront split.',
+                'Deadlines from the booking page are surfaced directly in the queue.',
+                'Completed orders should trigger client notification updates.',
+              ].map((message, index) => (
+                <div key={message} className="flex gap-4">
+                  <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-cyan-primary" />
+                  <div>
+                    <div className="text-sm font-semibold text-white/75">{message}</div>
+                    <div className="mt-1 text-[9px] font-mono uppercase tracking-widest text-white/20">
+                      note {index + 1}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="overflow-hidden rounded-[2.5rem] border border-white/8 bg-gradient-to-br from-[#121417] to-[#262B25] p-10 shadow-2xl">
+            <h4 className="text-lg font-black text-white italic">
+              Booking Flow <span className="text-cyan-primary">Synced</span>
+            </h4>
+            <p className="mt-3 text-[10px] font-mono uppercase tracking-[0.15em] leading-relaxed text-white/30">
+              The dashboard now reads the same priority, customer type, deadline,
+              and status data created by the booking stepper.
+            </p>
+          </div>
         </div>
       </div>
     </div>

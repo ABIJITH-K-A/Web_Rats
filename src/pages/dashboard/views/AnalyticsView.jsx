@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { db } from '../../../config/firebase';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { normalizeOrderStatus } from '../../../utils/orderHelpers';
 
 const AnalyticsView = () => {
   const [data, setData] = useState({
@@ -53,7 +54,9 @@ const AnalyticsView = () => {
 
         // Stats
         const totalRevenue = orders.reduce((s, o) => s + (o.paymentStatus === 'paid' ? Number(o.finalPrice || 0) : 0), 0);
-        const completed = orders.filter(o => o.status === 'complete').length;
+        const completed = orders.filter(
+          (order) => normalizeOrderStatus(order.status) === 'completed'
+        ).length;
 
         setData({
           revenue: revenueData,
