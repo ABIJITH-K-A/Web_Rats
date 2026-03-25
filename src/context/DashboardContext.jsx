@@ -9,7 +9,7 @@ import { useAuth } from './AuthContext';
 const DashboardContext = createContext();
 
 export const DashboardProvider = ({ children }) => {
-  const { user, userData } = useAuth();
+  const { user, userProfile } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -20,7 +20,7 @@ export const DashboardProvider = ({ children }) => {
     // Listen for notifications relevant to the user or their role
     // Admins see all, others see their own or role-specific ones
     let q;
-    if (userData?.role === 'admin' || userData?.role === 'owner') {
+    if (['admin', 'owner', 'superadmin'].includes(userProfile?.role)) {
       q = query(
         collection(db, 'notifications'),
         orderBy('createdAt', 'desc'),
@@ -28,8 +28,8 @@ export const DashboardProvider = ({ children }) => {
       );
     } else {
       const recipientIds = [user.uid, 'all'];
-      if (userData?.role) {
-        recipientIds.push(userData.role);
+      if (userProfile?.role) {
+        recipientIds.push(userProfile.role);
       }
       q = query(
         collection(db, 'notifications'),
@@ -49,7 +49,7 @@ export const DashboardProvider = ({ children }) => {
     });
 
     return () => unsubscribe();
-  }, [user, userData]);
+  }, [user, userProfile]);
 
   const markAsRead = async (notificationId) => {
     try {
