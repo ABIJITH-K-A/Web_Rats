@@ -1,68 +1,176 @@
-import { motion } from 'framer-motion';
-import { ArrowRight } from 'lucide-react';
-import { Button, Card } from '../../components/ui/Primitives';
-import { SERVICE_LIST } from '../../data/siteData';
-import { Link } from 'react-router-dom';
-import ServiceCard from '../../components/ui/ServiceCard';
+import { motion } from "framer-motion";
+import { ArrowRight, MessageCircle } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Button, Card } from "../../components/ui/Primitives";
+import ServiceCard from "../../components/ui/ServiceCard";
+import {
+  CONTACT_INFO,
+  SERVICE_CATEGORIES,
+  WHY_CHOOSE_US,
+} from "../../data/siteData";
 
 const Services = () => {
   return (
     <div className="flex flex-col py-20">
-      {/* Hero Shell */}
-      <section className="text-center mb-24">
-        <div className="container mx-auto px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="inline-block px-4 py-1 rounded-full bg-cyan-primary/10 border border-cyan-primary/20 text-cyan-primary text-xs font-mono uppercase tracking-[0.2em] mb-6"
-          >
-            Live Catalog
-          </motion.div>
-          <h1 className="text-5xl md:text-6xl font-black mb-8 max-w-4xl mx-auto leading-tight">
-            Services and pricing that now match the live booking flow.
+      <section className="pb-18">
+        <div className="container mx-auto px-6 text-center">
+          <div className="mb-6 inline-flex rounded-full border border-cyan-primary/20 bg-cyan-primary/8 px-4 py-2 text-[10px] font-mono uppercase tracking-[0.24em] text-cyan-primary">
+            Our Services
+          </div>
+          <h1 className="mx-auto max-w-5xl text-5xl font-black leading-[1.05] text-white md:text-6xl">
+            Affordable digital solutions for students, creators, and small
+            businesses.
           </h1>
-          <p className="text-lg text-light-gray max-w-2xl mx-auto opacity-70 mb-12">
-            This page is synced to the same package catalog used in checkout, so your public pricing, 
-            delivery promises, and service details stay aligned with the actual order form.
+          <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-light-gray/70">
+            We keep our focus sharp and our output sharper. Here is exactly what
+            TNWebRats brings to the table - nothing bloated, nothing vague.
           </p>
-          
-          <div className="flex flex-wrap justify-center gap-4 mb-12">
+
+          <div className="mt-10 flex flex-wrap justify-center gap-4">
             <Link to="/book">
-              <Button>Start Booking <ArrowRight className="ml-2" size={20} /></Button>
+              <Button>
+                View Services <ArrowRight size={16} />
+              </Button>
             </Link>
-            <a href="#pricingGrid">
-              <Button variant="outline">Browse All</Button>
+            <a
+              href={`https://wa.me/${CONTACT_INFO.whatsappNumber}`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <Button variant="outline">Contact Us</Button>
             </a>
           </div>
-        </div>
-      </section>
 
-      {/* All Services Grid */}
-      <section className="py-20 bg-secondary-dark/20" id="pricingGrid">
-        <div className="container mx-auto px-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 w-full">
-            {SERVICE_LIST.map((service) => (
-              <ServiceCard key={service.id} service={service} />
+          <div className="mt-10 flex flex-wrap justify-center gap-3">
+            {SERVICE_CATEGORIES.map((category) => (
+              <a
+                key={category.id}
+                href={`#${category.id}`}
+                className="rounded-full border border-white/10 bg-black/45 px-4 py-2 text-[11px] font-mono uppercase tracking-[0.18em] text-light-gray/65 transition-colors hover:border-cyan-primary/20 hover:text-cyan-primary"
+              >
+                {category.navLabel}
+              </a>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Custom Scope CTA */}
-      <section className="py-32">
+      {SERVICE_CATEGORIES.map((category, categoryIndex) => (
+        <section
+          key={category.id}
+          id={category.id}
+          className={`py-16 ${
+            categoryIndex % 2 === 1 ? "bg-secondary-dark/30" : ""
+          }`}
+        >
+          <div className="container mx-auto px-6">
+            <div className="grid gap-8 lg:grid-cols-[0.72fr_1.28fr]">
+              <motion.div
+                initial={{ opacity: 0, x: -24 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, margin: "-100px" }}
+                transition={{ duration: 0.5 }}
+              >
+                <Card className="sticky top-28 flex h-full flex-col border-cyan-primary/10 bg-black/70 lg:min-h-[38rem] xl:min-h-[42rem]">
+                  <div className="text-[10px] font-mono uppercase tracking-[0.24em] text-cyan-primary/70">
+                    {category.pricingHint}
+                  </div>
+                  <h2 className="mt-4 text-4xl font-black text-white">
+                    {category.name}
+                  </h2>
+                  <p className="mt-5 text-base leading-8 text-light-gray/68">
+                    {category.description}
+                  </p>
+                  <p className="mt-4 text-sm leading-7 text-light-gray/58">
+                    {category.heroDescription}
+                  </p>
+
+                  <div className="mt-8 space-y-3">
+                    {category.bestFor.map((point) => (
+                      <div
+                        key={point}
+                        className="rounded-2xl border border-white/8 bg-white/3 px-4 py-3 text-sm leading-6 text-light-gray/68"
+                      >
+                        {point}
+                      </div>
+                    ))}
+                  </div>
+
+                  <Link
+                    to={`/book?category=${category.id}`}
+                    className="mt-auto block pt-8"
+                  >
+                    <Button className="w-full">
+                      {category.cta} <ArrowRight size={16} />
+                    </Button>
+                  </Link>
+                </Card>
+              </motion.div>
+
+              <div className="grid gap-6 xl:grid-cols-2">
+                {category.services.map((service) => (
+                  <ServiceCard
+                    key={service.id}
+                    service={{
+                      ...service,
+                      categoryId: category.id,
+                      categoryShortName: category.shortName,
+                      startingPrice: Math.min(
+                        ...service.plans.map((plan) => plan.price)
+                      ),
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      ))}
+
+      <section className="py-20">
         <div className="container mx-auto px-6">
-          <Card className="bg-gradient-to-br from-secondary-dark to-primary-dark border-cyan-primary/10 py-20 text-center">
-            <h2 className="text-4xl font-black text-cyan-primary mb-6">Need custom scope?</h2>
-            <p className="text-lg text-light-gray max-w-2xl mx-auto opacity-70 mb-10 leading-relaxed">
-               If your job needs multiple deliverables, multiple workers, or a custom workflow, 
-               start from booking and we will route it through the right team.
+          <Card className="border-white/8 bg-secondary-dark/70 p-10">
+            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+              {WHY_CHOOSE_US.map((item) => (
+                <div
+                  key={item}
+                  className="rounded-2xl border border-white/8 bg-black/55 p-6"
+                >
+                  <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-cyan-primary/70">
+                    Why Us
+                  </div>
+                  <div className="mt-3 text-xl font-bold text-white">{item}</div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
+      </section>
+
+      <section className="pb-12 pt-4">
+        <div className="container mx-auto px-6">
+          <Card className="border-cyan-primary/12 bg-black/75 py-14 text-center">
+            <h2 className="text-4xl font-black text-white">
+              Not sure what you need exactly?
+            </h2>
+            <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-light-gray/68">
+              Talk to us and we will help shape the right category, service, and
+              plan together.
             </p>
-            <div className="flex justify-center gap-4">
-              <Link to="/help">
-                <Button variant="outline">Read Help</Button>
-              </Link>
+            <div className="mt-8 flex flex-wrap justify-center gap-4">
+              <a
+                href={`https://wa.me/${CONTACT_INFO.whatsappNumber}?text=${encodeURIComponent(
+                  "Hi TNWebRats, I need help choosing the right service."
+                )}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <Button>
+                  <MessageCircle size={16} /> Talk To Us
+                </Button>
+              </a>
               <Link to="/book">
-                <Button>Go To Booking</Button>
+                <Button variant="outline">Open Booking Flow</Button>
               </Link>
             </div>
           </Card>

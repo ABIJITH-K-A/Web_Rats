@@ -97,6 +97,7 @@ export const AuthProvider = ({ children }) => {
         name:              extraData.name || '',
         email:             email.trim().toLowerCase(),
         phone:             extraData.phone || '',
+        customerType:      extraData.customerType || 'new',
         role,
         referralCode:      refCode,
         discountPercent:   0,
@@ -223,7 +224,7 @@ export const AuthProvider = ({ children }) => {
   const logout = () => signOut(auth);
 
   const value = {
-    user, userProfile, role, loading,
+    user, userProfile, userData: userProfile, role, loading,
     login, signup, staffSignup, logout, resetPassword,
     isAdmin:      ['admin', 'superadmin', 'owner'].includes(role),
     isManager:    role === 'manager',

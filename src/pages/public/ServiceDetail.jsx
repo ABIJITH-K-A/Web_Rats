@@ -1,84 +1,224 @@
-import { motion } from 'framer-motion';
-import { Check, ArrowLeft } from 'lucide-react';
-import { Button, Card } from '../../components/ui/Primitives';
-import { SERVICE_MAP } from '../../data/siteData';
-import { Link, useParams } from 'react-router-dom';
+import { motion } from "framer-motion";
+import { ArrowLeft, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Link, useParams } from "react-router-dom";
+import ServiceCard from "../../components/ui/ServiceCard";
+import { Button, Card } from "../../components/ui/Primitives";
+import {
+  getCategoryById,
+  getServiceById,
+  SERVICE_LIST,
+} from "../../data/siteData";
+
+const formatPrice = (price) => `Rs ${price.toLocaleString("en-IN")}`;
 
 const ServiceDetail = () => {
   const { serviceId } = useParams();
-  const service = SERVICE_MAP[serviceId];
+  const service = getServiceById(serviceId);
 
   if (!service) {
     return (
-      <div className="flex flex-col items-center justify-center text-center py-20">
-        <h1 className="text-4xl font-bold text-red-500 mb-4">Service not found</h1>
-        <p className="text-lg text-light-gray opacity-70 mb-8">
-          The service you are looking for does not exist.
+      <div className="py-28 text-center">
+        <h1 className="text-4xl font-black text-white">Service not found</h1>
+        <p className="mx-auto mt-4 max-w-xl text-lg text-light-gray/65">
+          The service you opened is not part of the current public catalog.
         </p>
-        <Link to="/services">
+        <Link to="/services" className="mt-8 inline-block">
           <Button variant="outline">
-            <ArrowLeft className="mr-2" size={20} />
-            Back to Services
+            <ArrowLeft size={16} /> Back To Services
           </Button>
         </Link>
       </div>
     );
   }
 
+  const category = getCategoryById(service.categoryId);
+  const relatedServices = SERVICE_LIST.filter(
+    (item) => item.categoryId === service.categoryId && item.id !== service.id
+  );
+
   return (
     <div className="flex flex-col py-20">
-      <section className="text-center mb-24">
+      <section className="pb-14">
         <div className="container mx-auto px-6">
-          <Link to="/services" className="text-cyan-primary hover:underline mb-8 inline-block">
+          <Link to="/services" className="mb-8 inline-flex">
             <Button variant="ghost">
-              <ArrowLeft className="mr-2" size={20} />
-              Back to Services
+              <ArrowLeft size={16} /> Back To Services
             </Button>
           </Link>
-          <div className="mb-12 flex flex-col items-center border-b border-white/5 pb-10 w-full max-w-4xl mx-auto">
-            <div className="text-xs font-mono uppercase tracking-[0.2em] text-cyan-primary mb-3 opacity-70">{service.shortName}</div>
-            <h3 className="text-5xl font-black mb-4">{service.name}</h3>
-            <p className="text-xl text-light-gray opacity-60 max-w-2xl mx-auto leading-relaxed">{service.summary}</p>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 w-full">
-            {service.packages.map((pkg, pidx) => (
-              <motion.div
-                key={pidx}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: pidx * 0.1 }}
-                className="h-full"
-              >
-                <Card className={`flex flex-col relative group h-full max-w-sm mx-auto w-full transition-all duration-500 hover:border-cyan-primary/40 ${pkg.badge === 'Most Popular' ? 'border-cyan-primary/30 ring-1 ring-cyan-primary/20 scale-[1.03] shadow-[0_0_40px_rgba(103, 248, 29,0.1)]' : ''}`}>
-                  <div className="absolute top-4 right-4 text-[10px] font-mono px-3 py-1 rounded-full bg-cyan-primary/10 border border-cyan-primary/20 text-cyan-primary uppercase tracking-tighter">
-                    {pkg.badge}
+          <div className="grid gap-10 lg:grid-cols-[0.95fr_1.05fr]">
+            <motion.div
+              initial={{ opacity: 0, x: -24 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.55 }}
+            >
+              <div className="mb-5 inline-flex rounded-full border border-cyan-primary/18 bg-cyan-primary/8 px-4 py-2 text-[10px] font-mono uppercase tracking-[0.22em] text-cyan-primary">
+                {category?.name}
+              </div>
+              <h1 className="text-5xl font-black leading-[1.05] text-white md:text-6xl">
+                {service.name}
+              </h1>
+              <p className="mt-6 max-w-2xl text-lg leading-8 text-light-gray/70">
+                {service.summary}
+              </p>
+
+              <div className="mt-8 flex flex-wrap gap-4">
+                <Link
+                  to={`/book?category=${service.categoryId}&service=${service.id}`}
+                >
+                  <Button>
+                    Book This Service <ArrowRight size={16} />
+                  </Button>
+                </Link>
+                <Link to={`/book?category=${service.categoryId}`}>
+                  <Button variant="outline">Compare Within Category</Button>
+                </Link>
+              </div>
+
+              <div className="mt-10 grid gap-4 sm:grid-cols-2">
+                <Card className="border-white/8 bg-secondary-dark/70">
+                  <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-cyan-primary/70">
+                    Best For
                   </div>
-                  <h4 className="text-xl font-bold mb-2 opacity-60 uppercase tracking-wide">{pkg.label}</h4>
-                  <div className="text-5xl font-black text-cyan-primary mb-6">₹{pkg.price.toLocaleString('en-IN')}</div>
-                  <div className="text-[10px] font-mono uppercase tracking-widest text-light-gray/40 mb-10 border-t border-white/5 pt-6">
-                    Delivery: <span className="text-light-gray/80">{pkg.delivery}</span>
-                  </div>
-                  <ul className="space-y-5 flex-grow text-left">
-                    {pkg.features.map((feature, fidx) => (
-                      <li key={fidx} className="flex gap-4 text-base text-light-gray/80">
-                        <Check size={18} className="text-teal-primary shrink-0 mt-1" />
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <Link to="/book" className="mt-10">
-                    <Button variant={pkg.badge === 'Most Popular' ? 'primary' : 'outline'} className="w-full py-4 text-base font-bold">
-                      Select Plan
-                    </Button>
-                  </Link>
+                  <p className="mt-3 text-base leading-7 text-light-gray/68">
+                    {service.bestFor}
+                  </p>
                 </Card>
-              </motion.div>
-            ))}
+                <Card className="border-white/8 bg-secondary-dark/70">
+                  <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-cyan-primary/70">
+                    Starting Price
+                  </div>
+                  <div className="mt-3 text-3xl font-black text-cyan-primary">
+                    {formatPrice(service.startingPrice)}
+                  </div>
+                  <p className="mt-2 text-sm text-light-gray/55">
+                    Plans below scale from starter to premium delivery.
+                  </p>
+                </Card>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: 24 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.55, delay: 0.06 }}
+            >
+              <div className="overflow-hidden rounded-[32px] border border-white/8 bg-black/70">
+                <img
+                  src={service.image}
+                  alt={service.name}
+                  className="h-[420px] w-full object-cover"
+                />
+              </div>
+            </motion.div>
           </div>
         </div>
       </section>
+
+      <section className="py-16">
+        <div className="container mx-auto px-6">
+          <div className="grid gap-8 lg:grid-cols-[0.72fr_1.28fr]">
+            <Card className="border-cyan-primary/10 bg-black/72">
+              <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-cyan-primary/70">
+                What You Get
+              </div>
+              <div className="mt-6 space-y-4">
+                {service.deliverables.map((item) => (
+                  <div
+                    key={item}
+                    className="flex items-start gap-3 text-sm leading-7 text-light-gray/68"
+                  >
+                    <CheckCircle2
+                      size={16}
+                      className="mt-1 shrink-0 text-cyan-primary"
+                    />
+                    <span>{item}</span>
+                  </div>
+                ))}
+              </div>
+            </Card>
+
+            <div className="grid gap-6 xl:grid-cols-3">
+              {service.plans.map((plan, index) => (
+                <motion.div
+                  key={plan.id}
+                  initial={{ opacity: 0, y: 24 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-80px" }}
+                  transition={{ duration: 0.45, delay: index * 0.08 }}
+                >
+                  <Card
+                    className={`flex h-full flex-col border-white/8 bg-secondary-dark/75 ${
+                      plan.label === "Standard"
+                        ? "ring-1 ring-cyan-primary/30"
+                        : ""
+                    }`}
+                  >
+                    <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary/72">
+                      {plan.badge}
+                    </div>
+                    <h2 className="mt-3 text-3xl font-black text-white">
+                      {plan.label}
+                    </h2>
+                    <div className="mt-4 text-4xl font-black text-cyan-primary">
+                      {formatPrice(plan.price)}
+                    </div>
+                    <div className="mt-2 text-[10px] font-mono uppercase tracking-[0.18em] text-light-gray/42">
+                      Delivery {plan.delivery}
+                    </div>
+                    <div className="mt-8 space-y-4">
+                      {plan.features.map((feature) => (
+                        <div
+                          key={feature}
+                          className="flex items-start gap-3 text-sm leading-7 text-light-gray/68"
+                        >
+                          <CheckCircle2
+                            size={16}
+                            className="mt-1 shrink-0 text-cyan-primary"
+                          />
+                          <span>{feature}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <Link
+                      to={`/book?category=${service.categoryId}&service=${service.id}&plan=${plan.id}`}
+                      className="mt-8"
+                    >
+                      <Button
+                        variant={plan.label === "Standard" ? "primary" : "outline"}
+                        className="w-full"
+                      >
+                        Choose {plan.label}
+                      </Button>
+                    </Link>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {relatedServices.length > 0 && (
+        <section className="bg-secondary-dark/28 py-20">
+          <div className="container mx-auto px-6">
+            <div className="mb-10">
+              <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-cyan-primary/70">
+                Same Category
+              </div>
+              <h2 className="mt-3 text-4xl font-black text-white">
+                Related services in {category?.name}
+              </h2>
+            </div>
+
+            <div className="grid gap-6 xl:grid-cols-2">
+              {relatedServices.map((item) => (
+                <ServiceCard key={item.id} service={item} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
     </div>
   );
 };

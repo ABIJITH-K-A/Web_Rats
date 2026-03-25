@@ -2,19 +2,21 @@ import { motion } from 'framer-motion';
 
 const Button = ({ children, variant = 'primary', className = '', ...props }) => {
   const variants = {
-    primary: 'bg-cyan-primary text-primary-dark hover:shadow-[0_0_15px_#67F81D] active:scale-95',
-    outline: 'border border-cyan-primary text-cyan-primary hover:bg-cyan-primary/10 active:scale-95',
+    primary: 'bg-primary-dark border border-cyan-primary/80 text-cyan-primary btn-dark-hover active:scale-95',
+    outline: 'bg-black/25 border border-cyan-primary/55 text-cyan-primary btn-dark-outline-hover active:scale-95',
     ghost: 'text-light-gray hover:text-cyan-primary active:scale-95',
   };
 
   return (
     <motion.button
-      whileHover={{ y: -2 }}
+      whileHover={{ y: -3 }}
       whileTap={{ scale: 0.98 }}
-      className={`px-8 py-3 rounded-full font-bold transition-all duration-300 flex items-center justify-center gap-2 ${variants[variant]} ${className}`}
+      className={`relative isolate overflow-hidden px-8 py-3 rounded-full font-bold transition-all duration-300 flex items-center justify-center gap-2 ${variants[variant]} ${className}`}
       {...props}
     >
-      {children}
+      <span className="relative z-[1] flex items-center justify-center gap-2">
+        {children}
+      </span>
     </motion.button>
   );
 };

@@ -7,24 +7,24 @@
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { background: #0B0C10; overflow: hidden; width: 100vw; height: 100vh; }
-  canvas { display: block; position: fixed; inset: 0; cursor: none; }
+  canvas { display: block; position: fixed; inset: 0; }
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
 <script>
 const CFG = {
-  count:         180,   // Slightly fewer particles = cleaner spread
-  connectDist3D: 120,   // MUCH larger connection distance
-  fov:           1800,  // Better depth perspective
-  speed:         0.35,  // Slightly more motion
-  drag:          0.54,  // Less drag = no clumping
-  depth:         1000,  // More Z space = better distribution
-  mouseRadius:   260,
-  mouseStrength: 2.2,   // Less pull = less collapse
-  repelRadius:   380,
-  repelStrength: 6,
-  turbulence:    0.25,  // Reduced randomness
+  count:         180,
+  connectDist3D: 150, // Increased connection distance
+  fov:           1800,
+  speed:         0.35,
+  drag:          0.54,
+  depth:         1200, // Increased depth
+  mouseRadius:   0,
+  mouseStrength: 0,
+  repelRadius:   0,
+  repelStrength: 0,
+  turbulence:    0.25,
   light: { x: 2.2, y: 1.1 },
 };
 
@@ -40,10 +40,7 @@ function resize() {
 window.addEventListener('resize', resize);
 resize();
 
-let rotX = 0.18, rotY = 0.0, zoom = 1.75, frame = 0, lastMouseFrame = -9999;
-const mouseSCR  = { x: cx, y: cy };
-const mouse3D   = { x: 0, y: 0, z: 0, active: false };
-const cursorPos = { x: cx, y: cy };
+let rotX = 0.18, rotY = 0.0, zoom = 1.75, frame = 0;
 
 class Particle {
   constructor() {
@@ -75,15 +72,6 @@ class Particle {
     this.vx += (Math.random() - 0.5) * CFG.turbulence;
     this.vy += (Math.random() - 0.5) * CFG.turbulence;
     this.vz += (Math.random() - 0.5) * CFG.turbulence * 0.5;
-
-    if (mouse3D.active) {
-      const dx = mouse3D.x - this.x, dy = mouse3D.y - this.y, dz = mouse3D.z - this.z;
-      const d  = Math.sqrt(dx*dx + dy*dy + dz*dz);
-      if (d < CFG.mouseRadius && d > 1) {
-        const f = (1 - d / CFG.mouseRadius) * CFG.mouseStrength * 0.013;
-        this.vx += dx/d*f; this.vy += dy/d*f; this.vz += dz/d*f*0.45;
-      }
-    }
 
     this.vx *= CFG.drag; this.vy *= CFG.drag; this.vz *= CFG.drag;
     const spd = Math.sqrt(this.vx*this.vx + this.vy*this.vy + this.vz*this.vz);
@@ -178,66 +166,10 @@ function drawConnection(pjA, pjB, alpha) {
   }
 }
 
-function updateMouse3D() {
-  const sx=mouseSCR.x-cx, sy=mouseSCR.y-cy;
-  const cY=Math.cos(-rotY), sY=Math.sin(-rotY);
-  const cX=Math.cos(-rotX), sX=Math.sin(-rotX);
-  const uy=sy*cX, uz=sy*sX;
-  mouse3D.x=sx*cY-uz*sY; mouse3D.y=uy; mouse3D.z=sx*sY+uz*cY;
-}
-
-function repelBurst() {
-  particles.forEach(p => {
-    const dx=p.x-mouse3D.x, dy=p.y-mouse3D.y, dz=p.z-mouse3D.z;
-    const d=Math.sqrt(dx*dx+dy*dy+dz*dz);
-    if (d<CFG.repelRadius&&d>1) {
-      const f=(1-d/CFG.repelRadius)*CFG.repelStrength;
-      p.vx+=dx/d*f; p.vy+=dy/d*f; p.vz+=dz/d*f*0.55;
-    }
-  });
-}
-
-function drawCursor() {
-  const x=cursorPos.x, y=cursorPos.y;
-  ctx.beginPath(); ctx.arc(x,y,11,0,Math.PI*2);
-  ctx.strokeStyle='rgba(102,252,241,0.65)'; ctx.lineWidth=1.2; ctx.stroke();
-  ctx.beginPath(); ctx.arc(x,y,2.2,0,Math.PI*2);
-  ctx.fillStyle='rgba(102,252,241,0.9)'; ctx.fill();
-  ctx.beginPath();
-  ctx.moveTo(x-7,y); ctx.lineTo(x+7,y);
-  ctx.moveTo(x,y-7); ctx.lineTo(x,y+7);
-  ctx.strokeStyle='rgba(102,252,241,0.35)'; ctx.lineWidth=0.8; ctx.stroke();
-}
-
-window.addEventListener('mousemove', e => {
-  mouseSCR.x=e.clientX; mouseSCR.y=e.clientY;
-  cursorPos.x=e.clientX; cursorPos.y=e.clientY;
-  mouse3D.active=true; lastMouseFrame=frame;
-});
-window.addEventListener('mouseleave', () => { mouse3D.active=false; });
-window.addEventListener('click', repelBurst);
-window.addEventListener('wheel', e => {
-  zoom=Math.max(0.4,Math.min(3.0,zoom-e.deltaY*0.0008));
-}, { passive: true });
-window.addEventListener('touchmove', e => {
-  const t=e.touches[0];
-  mouseSCR.x=t.clientX; mouseSCR.y=t.clientY;
-  cursorPos.x=t.clientX; cursorPos.y=t.clientY;
-  mouse3D.active=true; lastMouseFrame=frame;
-}, { passive: true });
-window.addEventListener('touchstart', e => {
-  const t=e.touches[0]; mouseSCR.x=t.clientX; mouseSCR.y=t.clientY; repelBurst();
-}, { passive: true });
-
 function draw() {
   frame++;
-  const idle = frame - lastMouseFrame > 180;
-  if (idle) { rotY+=0.00028; rotX+=0.00011; }
-  else {
-    rotX+=(0.18+(mouseSCR.y/H-0.5)*0.65-rotX)*0.014;
-    rotY+=((mouseSCR.x/W-0.5)*1.3-rotY)*0.014;
-  }
-  updateMouse3D();
+  rotY+=0.00028; 
+  rotX+=0.00011;
 
   ctx.fillStyle='#0B0C10'; ctx.fillRect(0,0,W,H);
   const vig=ctx.createRadialGradient(cx,cy,H*0.05,cx,cy,H*0.92);
@@ -263,17 +195,6 @@ function draw() {
 
   order.forEach(i=>drawOrb(particles[i],PJ[i]));
 
-  if (mouse3D.active) {
-    const ring=ctx.createRadialGradient(cursorPos.x,cursorPos.y,5,cursorPos.x,cursorPos.y,65);
-    ring.addColorStop(0,'rgba(102,252,241,0.0)');
-    ring.addColorStop(0.75,'rgba(102,252,241,0.05)');
-    ring.addColorStop(0.92,'rgba(102,252,241,0.10)');
-    ring.addColorStop(1,'rgba(102,252,241,0.0)');
-    ctx.beginPath(); ctx.arc(cursorPos.x,cursorPos.y,65,0,Math.PI*2);
-    ctx.fillStyle=ring; ctx.fill();
-  }
-
-  drawCursor();
   requestAnimationFrame(draw);
 }
 draw();

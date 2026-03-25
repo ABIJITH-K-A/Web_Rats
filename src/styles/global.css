@@ -20,6 +20,8 @@ input[type="date"], input[type="month"], input[type="number"] {
 }
 
 /* ── Horizontal scroll guard ─────────────────────────────── */
+html { scroll-behavior: smooth; }
+
 body { overflow-x: hidden; }
 img  { max-width: 100%; }
 
@@ -231,3 +233,89 @@ select.dash-input option { background: var(--dark); }
   to   { opacity: 1; transform: scale(1)   translateY(0); }
 }
 @keyframes tnwr-spin { to { transform: rotate(360deg); } }
+
+/* Shared dark-button hover treatments */
+.btn-dark-hover,
+.btn-dark-outline-hover {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  transition:
+    color 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.35s ease,
+    background-color 0.35s ease;
+}
+
+.btn-dark-hover::before,
+.btn-dark-outline-hover::before {
+  content: '';
+  position: absolute;
+  inset: -35%;
+  background: linear-gradient(
+    120deg,
+    transparent 15%,
+    rgba(103, 248, 29, 0.08) 38%,
+    rgba(255, 255, 255, 0.22) 50%,
+    rgba(98, 203, 44, 0.12) 62%,
+    transparent 85%
+  );
+  z-index: -2;
+  opacity: 0;
+  transform: translateX(-135%) skewX(-24deg);
+  transition: transform 0.7s ease, opacity 0.35s ease;
+}
+
+.btn-dark-hover::after,
+.btn-dark-outline-hover::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at top, rgba(103, 248, 29, 0.22), transparent 55%),
+    linear-gradient(135deg, rgba(98, 203, 44, 0.12), rgba(0, 0, 0, 0.88) 55%);
+  opacity: 0;
+  transform: scale(0.98);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+  z-index: -1;
+}
+
+.btn-dark-hover {
+  box-shadow:
+    inset 0 0 0 1px rgba(103, 248, 29, 0.08),
+    0 10px 28px rgba(0, 0, 0, 0.18);
+}
+
+.btn-dark-outline-hover {
+  box-shadow:
+    inset 0 0 0 1px rgba(103, 248, 29, 0.05),
+    0 8px 22px rgba(0, 0, 0, 0.12);
+}
+
+.btn-dark-hover:hover,
+.btn-dark-outline-hover:hover {
+  color: #FFFFFF !important;
+  border-color: rgba(103, 248, 29, 0.9);
+  box-shadow:
+    inset 0 0 0 1px rgba(103, 248, 29, 0.18),
+    0 16px 42px rgba(103, 248, 29, 0.16);
+}
+
+.btn-dark-hover:hover::before,
+.btn-dark-outline-hover:hover::before {
+  opacity: 1;
+  transform: translateX(125%) skewX(-24deg);
+}
+
+.btn-dark-hover:hover::after,
+.btn-dark-outline-hover:hover::after {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.btn-dark-outline-hover:hover::after {
+  background:
+    radial-gradient(circle at top, rgba(103, 248, 29, 0.16), transparent 55%),
+    linear-gradient(135deg, rgba(103, 248, 29, 0.08), rgba(0, 0, 0, 0.84) 60%);
+}

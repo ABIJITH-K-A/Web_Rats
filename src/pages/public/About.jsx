@@ -1,178 +1,224 @@
-import { motion } from 'framer-motion';
-import { Shield, CreditCard, Users, Cloud, ArrowRight } from 'lucide-react';
-import { Button, Card, SectionHeading } from '../../components/ui/Primitives';
-import { ABOUT_POINTS, SERVICE_LIST } from '../../data/siteData';
-import { Link } from 'react-router-dom';
+import { motion } from "framer-motion";
+import { ArrowRight, Mail, Sparkles } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Button, Card, SectionHeading } from "../../components/ui/Primitives";
+import {
+  ABOUT_POINTS,
+  CONTACT_INFO,
+  SERVICE_CATEGORIES,
+  STATS,
+  TEAM_MEMBERS,
+} from "../../data/siteData";
 
 const About = () => {
-  const icons = [<Shield />, <CreditCard />, <Users />, <Cloud />];
-
   return (
     <div className="flex flex-col py-20">
-      {/* Hero Section */}
-      <section className="mb-32">
-        <div className="container mx-auto px-6">
-          <div className="text-xs font-mono uppercase tracking-[0.3em] text-cyan-primary mb-6">Studio To Platform</div>
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-            <motion.div 
-              className="lg:col-span-7"
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.7 }}
-            >
-              <h1 className="text-5xl md:text-6xl font-black leading-tight mb-8">
-                TN WEB RATS is no longer just a portfolio site. It is becoming a <span className="text-cyan-primary">production workflow</span> for design delivery.
-              </h1>
-              <p className="text-xl text-light-gray opacity-70 leading-relaxed max-w-2xl mb-12">
-                We started as a fast-moving creative team for PPTs, posters, and websites. 
-                The product has now grown into a role-based system with customer accounts, 
-                staff dashboards, referrals, reporting, payouts, and backend-verified billing.
-              </p>
-              <div className="flex gap-4">
-                <Link to="/book">
-                  <Button>Book A Project</Button>
-                </Link>
-                <Link to="/services">
-                  <Button variant="outline">See Live Packages</Button>
-                </Link>
-              </div>
-            </motion.div>
-
-            <motion.div 
-              className="lg:col-span-5"
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.7 }}
-            >
-              <Card className="relative overflow-hidden group">
-                <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
-                  <Users size={120} />
-                </div>
-                <div className="relative z-10">
-                  <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-cyan-primary mb-4 opacity-70">Now Active</div>
-                  <h3 className="text-2xl font-bold mb-8">What this platform is built around</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    {[
-                      { label: 'Full Control', value: 'Owner' },
-                      { label: 'Role Dashboards', value: 'Staff' },
-                      { label: 'Visible Billing', value: 'GST' },
-                      { label: 'Launch Ready', value: 'Cloud' },
-                    ].map((item, i) => (
-                      <div key={i} className="bg-primary-dark/50 p-4 rounded-xl border border-white/5 text-center">
-                        <div className="text-lg font-bold text-cyan-primary">{item.value}</div>
-                        <div className="text-[9px] uppercase font-mono tracking-widest text-light-gray/40">{item.label}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </Card>
-            </motion.div>
-          </div>
-
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mt-16">
-            {[
-              { label: 'Core Services', value: '3' },
-              { label: 'Package Tiers', value: '9' },
-              { label: 'Staff Roles', value: '5+' },
-              { label: 'Tracked Workflow', value: '24/7' },
-            ].map((stat, idx) => (
-              <div key={idx} className="text-center p-8 border-x border-white/5">
-                <div className="text-5xl font-black text-white/90 mb-2">{stat.value}</div>
-                <div className="text-xs font-mono uppercase tracking-widest text-cyan-primary opacity-60">{stat.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Story Section */}
-      <section className="py-32 bg-secondary-dark/20 relative">
-        <div className="container mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-12">
-          <Card className="relative p-12">
-            <div className="text-xs font-mono uppercase tracking-[0.3em] text-cyan-primary mb-6">Story</div>
-            <h2 className="text-4xl font-black mb-8">Why we are rebuilding</h2>
-            <div className="space-y-6 text-light-gray opacity-70 leading-relaxed text-lg">
-              <p>
-                The original static pages were written quickly, which made them easy to launch but hard to keep in sync. 
-                Booking, pricing, help, and role flows started drifting apart. 
-                We are now centralizing the live service catalog and auth behavior so every page reflects the real platform state.
-              </p>
-              <p>
-                That matters because this project is moving toward real-money operations, cloud deployment, 
-                staff payroll tracking, and safer approval flows. A marketing page can no longer say 
-                something different from the checkout or dashboard.
-              </p>
-            </div>
-          </Card>
-
-          <Card className="relative p-12 overflow-hidden">
-             <div className="text-xs font-mono uppercase tracking-[0.3em] text-cyan-primary mb-6">Direction</div>
-             <h2 className="text-4xl font-black mb-8">Where it's heading</h2>
-             <p className="text-light-gray opacity-70 mb-10 text-lg leading-relaxed">
-               The next stage is a maintainable application structure with shared content, 
-               trusted backend payment verification, and a modern React + Tailwind frontend.
-             </p>
-             <div className="flex flex-col gap-4">
-               {ABOUT_POINTS.map((point, i) => (
-                 <div key={i} className="flex gap-4 items-start p-4 bg-primary-dark/40 rounded-2xl border border-white/5 group hover:border-cyan-primary/20 transition-colors">
-                   <div className="w-10 h-10 shrink-0 bg-cyan-primary/10 rounded-xl flex items-center justify-center text-cyan-primary group-hover:bg-cyan-primary transition-colors group-hover:text-primary-dark">
-                     {icons[i] || <ArrowRight size={20} />}
-                   </div>
-                   <p className="text-sm opacity-80 leading-snug">{point}</p>
-                 </div>
-               ))}
-             </div>
-          </Card>
-        </div>
-      </section>
-
-      {/* Live Services Snapshot */}
-      <section className="py-32">
-        <div className="container mx-auto px-6">
-          <SectionHeading subtitle="The same live services exposed through the booking page.">
-            What we deliver today
-          </SectionHeading>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {SERVICE_LIST.map((service, i) => (
-              <Card key={i} className="text-center group overflow-hidden border-cyan-primary/5 hover:border-cyan-primary/20">
-                <div className="text-xs font-mono uppercase tracking-[0.2em] text-cyan-primary mb-4 opacity-50 group-hover:opacity-100 transition-opacity">
-                  {service.shortName}
-                </div>
-                <h3 className="text-3xl font-black mb-4 group-hover:text-white transition-colors">{service.name}</h3>
-                <p className="text-light-gray opacity-60 mb-8 max-w-xs mx-auto text-sm">{service.summary}</p>
-                <div className="text-xl font-bold text-cyan-primary border-t border-white/5 pt-6 group-hover:scale-110 transition-transform">
-                  Starts at ₹{Math.min(...service.packages.map(p => p.price)).toLocaleString('en-IN')}
-                </div>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Final CTA */}
-      <section className="py-32">
-        <div className="container mx-auto px-6 text-center">
+      <section className="pb-18">
+        <div className="container mx-auto grid items-center gap-12 px-6 lg:grid-cols-[1.05fr_0.95fr]">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            initial={{ opacity: 0, x: -28 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6 }}
           >
-            <h2 className="text-5xl font-black text-cyan-primary mb-8">Need project help?</h2>
-            <p className="text-xl text-light-gray opacity-70 max-w-2xl mx-auto mb-12">
-              Use booking for new work, help for support, and profile or dashboards once you are signed in.
+            <div className="mb-6 inline-flex rounded-full border border-cyan-primary/20 bg-cyan-primary/8 px-4 py-2 text-[10px] font-mono uppercase tracking-[0.24em] text-cyan-primary">
+              About TNWebRats
+            </div>
+            <h1 className="text-5xl font-black leading-[1.05] text-white md:text-6xl">
+              Two developers. Two designers. One shared drive to build things
+              that actually matter.
+            </h1>
+            <p className="mt-6 max-w-3xl text-lg leading-8 text-light-gray/68">
+              TNWebRats started as a simple conversation between two friends who
+              realised they were already doing the work - building things,
+              designing things, solving problems - so it made sense to make it
+              official.
             </p>
-            <div className="flex justify-center gap-6">
-              <Link to="/help">
-                <Button variant="outline">Open Help</Button>
+            <p className="mt-5 max-w-3xl text-lg leading-8 text-light-gray/68">
+              What began as side energy turned into a proper creative studio for
+              students, startups, and small businesses who want quality without
+              agency bloat or impersonal handoffs.
+            </p>
+
+            <div className="mt-10 flex flex-wrap gap-4">
+              <Link to="/book">
+                <Button>
+                  Let's Talk <ArrowRight size={16} />
+                </Button>
               </Link>
-              <Link to="/signup">
-                <Button>Create Account</Button>
+              <Link to="/services">
+                <Button variant="outline">See What We Build</Button>
               </Link>
             </div>
           </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, x: 28 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.06 }}
+          >
+            <Card className="border-cyan-primary/10 bg-black/72 p-8">
+              <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-cyan-primary/72">
+                Brand Story
+              </div>
+              <h2 className="mt-4 text-3xl font-black text-white">
+                The name is bold. The work is bolder.
+              </h2>
+              <div className="mt-8 grid gap-4 sm:grid-cols-2">
+                {STATS.map((stat) => (
+                  <div
+                    key={stat.label}
+                    className="rounded-2xl border border-white/8 bg-white/3 p-5 text-center"
+                  >
+                    <div className="text-3xl font-black text-cyan-primary">
+                      {stat.value}
+                    </div>
+                    <div className="mt-2 text-[10px] font-mono uppercase tracking-[0.18em] text-light-gray/42">
+                      {stat.label}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </motion.div>
+        </div>
+      </section>
+
+      <section className="bg-secondary-dark/28 py-20">
+        <div className="container mx-auto px-6">
+          <div className="grid gap-8 lg:grid-cols-[0.78fr_1.22fr]">
+            <Card className="border-white/8 bg-black/72">
+              <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-cyan-primary/72">
+                What We Are Building
+              </div>
+              <div className="mt-6 space-y-4">
+                {ABOUT_POINTS.map((point) => (
+                  <div
+                    key={point}
+                    className="flex items-start gap-3 text-sm leading-7 text-light-gray/68"
+                  >
+                    <Sparkles
+                      size={16}
+                      className="mt-1 shrink-0 text-cyan-primary"
+                    />
+                    <span>{point}</span>
+                  </div>
+                ))}
+              </div>
+            </Card>
+
+            <Card className="border-white/8 bg-secondary-dark/72">
+              <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-cyan-primary/72">
+                Closing Note
+              </div>
+              <h2 className="mt-4 text-3xl font-black text-white">
+                TNWebRats is not just a service - it is a creative duo that
+                genuinely loves the work.
+              </h2>
+              <p className="mt-5 text-base leading-8 text-light-gray/68">
+                If you have an idea, a deadline, or even a rough thought you
+                want made real, we are happy to help shape it. The goal is not
+                to oversell the process. The goal is to build something solid
+                with you.
+              </p>
+
+              <div className="mt-8 grid gap-3 md:grid-cols-2">
+                {SERVICE_CATEGORIES.slice(0, 4).map((category) => (
+                  <div
+                    key={category.id}
+                    className="rounded-2xl border border-white/8 bg-black/55 p-4"
+                  >
+                    <div className="font-semibold text-white">{category.name}</div>
+                    <div className="mt-2 text-sm text-light-gray/58">
+                      {category.pricingHint}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      <section className="py-20">
+        <div className="container mx-auto px-6">
+          <SectionHeading subtitle="The people behind the pixels.">
+            Meet The <span className="text-white">Studio</span>
+          </SectionHeading>
+
+          <div className="grid gap-8 lg:grid-cols-2">
+            {TEAM_MEMBERS.map((member, index) => (
+              <motion.div
+                key={member.id}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.45, delay: index * 0.08 }}
+              >
+                <Card className="h-full border-white/8 bg-black/72">
+                  <div className="flex flex-col gap-8 md:flex-row md:items-start">
+                    <img
+                      src={member.image}
+                      alt={member.name}
+                      className="h-32 w-32 rounded-[28px] border border-cyan-primary/15 bg-secondary-dark/70 object-cover p-3"
+                    />
+                    <div className="flex-1">
+                      <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary/72">
+                        {member.role}
+                      </div>
+                      <h3 className="mt-3 text-3xl font-black text-white">
+                        {member.name}
+                      </h3>
+                      <p className="mt-4 text-base leading-8 text-light-gray/68">
+                        {member.intro}
+                      </p>
+
+                      <div className="mt-6 grid gap-3">
+                        {member.skills.map((skill) => (
+                          <div
+                            key={skill}
+                            className="rounded-2xl border border-white/8 bg-white/3 px-4 py-3 text-sm text-light-gray/72"
+                          >
+                            {skill}
+                          </div>
+                        ))}
+                      </div>
+
+                      <a
+                        href={`mailto:${CONTACT_INFO.email}`}
+                        className="mt-7 inline-flex items-center gap-2 text-sm font-semibold text-cyan-primary"
+                      >
+                        <Mail size={16} /> Contact via studio email
+                      </a>
+                    </div>
+                  </div>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="pb-10 pt-4">
+        <div className="container mx-auto px-6">
+          <Card className="border-cyan-primary/12 bg-black/75 py-14 text-center">
+            <h2 className="text-4xl font-black text-white">
+              If you have got an idea, we are ready to help build it.
+            </h2>
+            <p className="mx-auto mt-5 max-w-3xl text-lg leading-8 text-light-gray/68">
+              Start from booking if you know what you need. Start from services
+              if you want to compare options first.
+            </p>
+            <div className="mt-8 flex flex-wrap justify-center gap-4">
+              <Link to="/book">
+                <Button>
+                  Let's Talk <ArrowRight size={16} />
+                </Button>
+              </Link>
+              <a href={`mailto:${CONTACT_INFO.email}`}>
+                <Button variant="outline">Email The Studio</Button>
+              </a>
+            </div>
+          </Card>
         </div>
       </section>
     </div>

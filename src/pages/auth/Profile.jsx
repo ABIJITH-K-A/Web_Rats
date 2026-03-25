@@ -1,435 +1,1874 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  User, List, Ticket, Wallet, Settings, Shield, 
-  LogOut, Plus, Copy, Check, Clock, Package, 
-  CreditCard, Calendar, Smartphone, Mail, Edit3, 
-  Trash2, Key, Info, ShieldCheck, ChevronRight, UserCircle, History
-} from 'lucide-react';
-import { Button, Card, SectionHeading } from '../../components/ui/Primitives';
-import { useAuth } from '../../context/AuthContext';
-import { db } from '../../config/firebase';
-import { 
-  collection, query, where, orderBy, getDocs, 
-  doc, getDoc, updateDoc, 
-  serverTimestamp 
-} from 'firebase/firestore';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  ArrowRight,
+  Bell,
+  Check,
+  CheckCircle2,
+  Clock3,
+  CreditCard,
+  Download,
+  ExternalLink,
+  FileText,
+  LayoutDashboard,
+  LifeBuoy,
+  LogOut,
+  Mail,
+  MessageSquareText,
+  Package,
+  Phone,
+  ShieldCheck,
+  Star,
+  User,
+  Wallet,
+  X,
+} from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  addDoc,
+  collection,
+  doc,
+  getDocs,
+  orderBy,
+  query,
+  serverTimestamp,
+  setDoc,
+  updateDoc,
+  where,
+} from "firebase/firestore";
+import { Button, Card } from "../../components/ui/Primitives";
+import { db } from "../../config/firebase";
+import { useAuth } from "../../context/AuthContext";
+import { useDashboard } from "../../context/DashboardContext";
+import { CONTACT_INFO } from "../../data/siteData";
+import {
+  formatCurrency,
+  formatDate,
+  formatDateTime,
+  getCustomerTypeLabel,
+  getOrderAmount,
+  getOrderDisplayId,
+  getOrderPaymentSummary,
+  getOrderPlanLabel,
+  getOrderPriorityBadgeClass,
+  getOrderPriorityLabel,
+  getOrderProgress,
+  getOrderStatusBadgeClass,
+  getOrderStatusLabel,
+  getOrderTimeline,
+  getPaymentStatusBadgeClass,
+  getPaymentStatusLabel,
+  getPrimaryAssetLink,
+  getRequirementFields,
+  isCompletedOrder,
+  isOpenOrder,
+  normalizePaymentStatus,
+} from "../../utils/orderHelpers";
+
+const NAV_ITEMS = [
+  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { id: "orders", label: "My Orders", icon: Package },
+  { id: "payments", label: "Payments", icon: CreditCard },
+  { id: "profile", label: "Profile", icon: User },
+  { id: "support", label: "Support", icon: LifeBuoy },
+];
 
 const Profile = () => {
-  const { user, logout, userData } = useAuth();
+  const { user, userProfile, logout } = useAuth();
+  const {
+    notifications,
+    unreadCount,
+    markAllAsRead,
+    markAsRead,
+  } = useDashboard();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('orders');
-  const [orders, setOrders] = useState([]);
-  const [loadingOrders, setLoadingOrders] = useState(true);
-  const [copySuccess, setCopySuccess] = useState(false);
-  const [isStaff, setIsStaff] = useState(false);
 
-  // Stats
-  const [stats, setStats] = useState({
-    total: 0,
-    active: 0,
-    done: 0,
-    spent: 0
+  const [activeSection, setActiveSection] = useState("dashboard");
+  const [orderTab, setOrderTab] = useState("active");
+  const [loading, setLoading] = useState(true);
+  const [orders, setOrders] = useState([]);
+  const [payments, setPayments] = useState([]);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [supportForm, setSupportForm] = useState({ subject: "", message: "" });
+  const [supportState, setSupportState] = useState({
+    sending: false,
+    feedback: "",
+    error: "",
+  });
+  const [profileForm, setProfileForm] = useState({
+    name: "",
+    phone: "",
+    customerType: "new",
+  });
+  const [profileState, setProfileState] = useState({
+    saving: false,
+    feedback: "",
+    error: "",
+  });
+  const [reviewState, setReviewState] = useState({
+    open: false,
+    order: null,
+    rating: 0,
+    comment: "",
+    submitting: false,
+    error: "",
   });
 
   useEffect(() => {
     if (!user) {
-      navigate('/join?login=1&return=/profile');
+      navigate("/join?login=1&return=/profile");
       return;
     }
-    
-    if (userData) {
-      setIsStaff(['worker', 'manager', 'admin', 'superadmin', 'owner'].includes(userData.role));
-    }
 
-    const fetchOrders = async () => {
+    let isMounted = true;
+
+    const fetchDashboardData = async () => {
+      setLoading(true);
+
       try {
-        const q = query(
-          collection(db, "orders"), 
-          where("userId", "==", user.uid), 
-          orderBy("createdAt", "desc")
-        );
-        const snap = await getDocs(q);
-        const orderData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        setOrders(orderData);
-        
-        // Calculate stats
-        const active = orderData.filter(o => o.status === 'in_progress').length;
-        const done = orderData.filter(o => o.status === 'complete').length;
-        const spent = orderData.reduce((acc, curr) => acc + (Number(curr.price) || 0), 0);
-        
-        setStats({
-          total: orderData.length,
-          active,
-          done,
-          spent
+        const orderQueries = [
+          query(
+            collection(db, "orders"),
+            where("userId", "==", user.uid),
+            orderBy("createdAt", "desc")
+          ),
+          query(
+            collection(db, "orders"),
+            where("customerId", "==", user.uid),
+            orderBy("createdAt", "desc")
+          ),
+        ];
+
+        const [orderResults, paymentResult] = await Promise.all([
+          Promise.all(
+            orderQueries.map((orderQuery) =>
+              getDocs(orderQuery).catch(() => null)
+            )
+          ),
+          getDocs(
+            query(
+              collection(db, "payments"),
+              where("userId", "==", user.uid),
+              orderBy("timestamp", "desc")
+            )
+          ).catch(() => null),
+        ]);
+
+        const mergedOrders = new Map();
+        orderResults.forEach((snapshot) => {
+          snapshot?.docs.forEach((orderDoc) => {
+            mergedOrders.set(orderDoc.id, {
+              id: orderDoc.id,
+              ...orderDoc.data(),
+            });
+          });
         });
-      } catch (e) {
-        console.error("Error fetching orders:", e);
+
+        const nextOrders = Array.from(mergedOrders.values()).sort(
+          (left, right) => {
+            const leftTime = left.createdAt?.toDate?.()?.getTime?.() || 0;
+            const rightTime = right.createdAt?.toDate?.()?.getTime?.() || 0;
+            return rightTime - leftTime;
+          }
+        );
+
+        const nextPayments =
+          paymentResult?.docs.map((paymentDoc) => ({
+            id: paymentDoc.id,
+            ...paymentDoc.data(),
+          })) || [];
+
+        if (!isMounted) return;
+
+        setOrders(nextOrders);
+        setPayments(nextPayments);
+      } catch (error) {
+        console.error("Profile dashboard error:", error);
       } finally {
-        setLoadingOrders(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
-    fetchOrders();
-  }, [user, userData, navigate]);
+    fetchDashboardData();
 
-  const handleCopyCode = () => {
-    if (userData?.referralCode) {
-      navigator.clipboard.writeText(userData.referralCode);
-      setCopySuccess(true);
-      setTimeout(() => setCopySuccess(false), 2000);
+    return () => {
+      isMounted = false;
+    };
+  }, [navigate, user]);
+
+  useEffect(() => {
+    if (!userProfile) return;
+
+    setProfileForm({
+      name: userProfile.name || user?.displayName || "",
+      phone: userProfile.phone || "",
+      customerType: userProfile.customerType || "new",
+    });
+  }, [user, userProfile]);
+
+  useEffect(() => {
+    if (!orders.length || userProfile?.customerType) return;
+
+    setProfileForm((current) => ({
+      ...current,
+      customerType: orders.length > 0 ? "returning" : current.customerType,
+    }));
+  }, [orders, userProfile]);
+
+  const isClient = !userProfile?.role || userProfile.role === "client";
+  const activeOrders = orders.filter(isOpenOrder);
+  const completedOrders = orders.filter(isCompletedOrder);
+  const recentOrders = orders.slice(0, 3);
+  const pendingPaymentOrders = orders
+    .map((order) => ({
+      order,
+      summary: getOrderPaymentSummary(order),
+    }))
+    .filter(({ summary }) => summary.pending > 0);
+
+  const totalPaid = orders.reduce((sum, order) => {
+    const summary = getOrderPaymentSummary(order);
+    return sum + summary.paid;
+  }, 0);
+  const totalPending = pendingPaymentOrders.reduce(
+    (sum, item) => sum + item.summary.pending,
+    0
+  );
+  const effectiveCustomerType =
+    profileForm.customerType ||
+    userProfile?.customerType ||
+    (orders.length > 0 ? "returning" : "new");
+  const displayName =
+    profileForm.name || userProfile?.name || user?.displayName || "Client";
+
+  const paymentHistory =
+    payments.length > 0
+      ? payments.map((payment) => ({
+          id: payment.id,
+          orderId: payment.orderId || "Manual",
+          amount: Number(payment.amount || 0),
+          status: payment.status || "paid",
+          timestamp: payment.timestamp || payment.createdAt || null,
+          detail: payment.note || "Recorded payment",
+        }))
+      : orders.map((order) => {
+          const summary = getOrderPaymentSummary(order);
+          const paymentStatus = normalizePaymentStatus(order.paymentStatus);
+
+          return {
+            id: `order-${order.id}`,
+            orderId: getOrderDisplayId(order),
+            amount:
+              paymentStatus === "paid"
+                ? summary.total
+                : paymentStatus === "partial"
+                ? order.advancePayment || summary.paid
+                : summary.pending,
+            status: order.paymentStatus || "Pending",
+            timestamp: order.createdAt || null,
+            detail:
+              paymentStatus === "paid"
+                ? "Full payment recorded"
+                : paymentStatus === "partial"
+                ? "Advance payment recorded"
+                : "Awaiting payment",
+          };
+        });
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/join?login=1");
+  };
+
+  const handleProfileChange = (event) => {
+    const { name, value } = event.target;
+
+    setProfileForm((current) => ({
+      ...current,
+      [name]: value,
+    }));
+    setProfileState({ saving: false, feedback: "", error: "" });
+  };
+
+  const handleSaveProfile = async () => {
+    if (!user?.uid) return;
+
+    setProfileState({ saving: true, feedback: "", error: "" });
+
+    try {
+      await setDoc(
+        doc(db, "users", user.uid),
+        {
+          name: profileForm.name.trim(),
+          phone: profileForm.phone.trim(),
+          customerType: profileForm.customerType,
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true }
+      );
+
+      setProfileState({
+        saving: false,
+        feedback: "Profile updated successfully.",
+        error: "",
+      });
+    } catch (error) {
+      console.error("Profile update error:", error);
+      setProfileState({
+        saving: false,
+        feedback: "",
+        error: "Could not save your profile right now.",
+      });
     }
   };
 
-  const tabs = [
-    { id: 'orders', label: 'My Orders', icon: <List size={18} /> },
-    { id: 'referral', label: 'Referral', icon: <Ticket size={18} /> },
-    ...(isStaff ? [{ id: 'wallet', label: 'Wallet', icon: <Wallet size={18} /> }] : []),
-    { id: 'settings', label: 'Settings', icon: <Settings size={18} /> },
-    { id: 'security', label: 'Security', icon: <Shield size={18} /> },
-  ];
+  const handleSupportChange = (event) => {
+    const { name, value } = event.target;
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'pending': return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20';
-      case 'in_progress': return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
-      case 'complete': return 'bg-cyan-primary/10 text-cyan-primary border-cyan-primary/20';
-      case 'cancelled': return 'bg-red-500/10 text-red-500 border-red-500/20';
-      default: return 'bg-white/5 text-white/40 border-white/10';
+    setSupportForm((current) => ({
+      ...current,
+      [name]: value,
+    }));
+    setSupportState({ sending: false, feedback: "", error: "" });
+  };
+
+  const handleSupportSubmit = async (event) => {
+    event.preventDefault();
+
+    if (!supportForm.subject.trim() || !supportForm.message.trim()) return;
+
+    setSupportState({ sending: true, feedback: "", error: "" });
+
+    try {
+      await addDoc(collection(db, "supportMessages"), {
+        userId: user.uid,
+        name: displayName,
+        email: user.email || "",
+        subject: supportForm.subject.trim(),
+        message: supportForm.message.trim(),
+        status: "new",
+        createdAt: serverTimestamp(),
+      });
+
+      await addDoc(collection(db, "notifications"), {
+        recipientId: "admin",
+        title: "New support request",
+        type: "system",
+        read: false,
+        message: `${displayName} sent a support request: ${supportForm.subject.trim()}`,
+        createdAt: serverTimestamp(),
+      });
+
+      setSupportForm({ subject: "", message: "" });
+      setSupportState({
+        sending: false,
+        feedback: "Support request sent. We will get back to you soon.",
+        error: "",
+      });
+    } catch (error) {
+      console.error("Support request error:", error);
+      setSupportState({
+        sending: false,
+        feedback: "",
+        error: "We could not send your support request right now.",
+      });
     }
   };
+
+  const handleReorder = (order) => {
+    navigate("/book", {
+      state: {
+        reorderOrder: order,
+      },
+    });
+  };
+
+  const openContactThread = (order) => {
+    const message = [
+      "Hi TNWebRats, I need an update on my order.",
+      "",
+      `Order ID: ${getOrderDisplayId(order)}`,
+      `Service: ${order.service || "Project"}`,
+      `Plan: ${getOrderPlanLabel(order)}`,
+    ].join("\n");
+
+    window.open(
+      `https://wa.me/${CONTACT_INFO.whatsappNumber}?text=${encodeURIComponent(
+        message
+      )}`,
+      "_blank"
+    );
+  };
+
+  const openPaymentThread = (order, dueNow) => {
+    const message = [
+      "Hi TNWebRats, I want to clear the pending payment for my order.",
+      "",
+      `Order ID: ${getOrderDisplayId(order)}`,
+      `Service: ${order.service || "Project"}`,
+      `Amount Due: ${formatCurrency(dueNow)}`,
+    ].join("\n");
+
+    window.open(
+      `https://wa.me/${CONTACT_INFO.whatsappNumber}?text=${encodeURIComponent(
+        message
+      )}`,
+      "_blank"
+    );
+  };
+
+  const openReviewModal = (order) => {
+    setReviewState({
+      open: true,
+      order,
+      rating: 0,
+      comment: "",
+      submitting: false,
+      error: "",
+    });
+  };
+
+  const closeReviewModal = () => {
+    setReviewState({
+      open: false,
+      order: null,
+      rating: 0,
+      comment: "",
+      submitting: false,
+      error: "",
+    });
+  };
+
+  const handleReviewSubmit = async () => {
+    if (!reviewState.order || reviewState.rating === 0) {
+      setReviewState((current) => ({
+        ...current,
+        error: "Choose a star rating before submitting.",
+      }));
+      return;
+    }
+
+    setReviewState((current) => ({
+      ...current,
+      submitting: true,
+      error: "",
+    }));
+
+    try {
+      await updateDoc(doc(db, "orders", reviewState.order.id), {
+        review: {
+          rating: reviewState.rating,
+          comment: reviewState.comment.trim(),
+          createdAt: serverTimestamp(),
+        },
+        reviewDone: true,
+      });
+
+      await addDoc(collection(db, "reviews"), {
+        orderId: reviewState.order.id,
+        rating: reviewState.rating,
+        comment: reviewState.comment.trim(),
+        customerId: user.uid,
+        customerName: displayName,
+        service: reviewState.order.service || "Project",
+        workerAssigned: reviewState.order.workerAssigned || null,
+        createdAt: serverTimestamp(),
+      });
+
+      setOrders((current) =>
+        current.map((order) =>
+          order.id === reviewState.order.id
+            ? {
+                ...order,
+                reviewDone: true,
+                review: {
+                  rating: reviewState.rating,
+                  comment: reviewState.comment.trim(),
+                },
+              }
+            : order
+        )
+      );
+
+      closeReviewModal();
+    } catch (error) {
+      console.error("Review submit error:", error);
+      setReviewState((current) => ({
+        ...current,
+        submitting: false,
+        error: "We could not submit your review right now.",
+      }));
+    }
+  };
+
+  if (!user) return null;
+
+  if (!isClient) {
+    return (
+      <div className="mx-auto flex min-h-[calc(100vh-6rem)] max-w-4xl items-center px-6 py-12">
+        <Card className="w-full border-cyan-primary/15 bg-black/75 p-10 text-center">
+          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full border border-cyan-primary/20 bg-cyan-primary/10 text-cyan-primary">
+            <ShieldCheck size={34} />
+          </div>
+          <h1 className="mt-6 text-3xl font-black text-white">
+            Staff accounts use the internal dashboard.
+          </h1>
+          <p className="mx-auto mt-4 max-w-2xl text-base leading-8 text-light-gray/64">
+            Your account is registered as{" "}
+            <span className="font-semibold text-cyan-primary">
+              {userProfile?.role}
+            </span>
+            . Open the staff workspace for orders, reports, payroll, and team
+            tools.
+          </p>
+          <div className="mt-8 flex flex-wrap justify-center gap-4">
+            <Button onClick={() => navigate("/dashboard")}>
+              Open Staff Dashboard
+            </Button>
+            <Link to="/">
+              <Button variant="outline">Back To Home</Button>
+            </Link>
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   return (
-    <div className="container mx-auto px-6 py-20 pb-40 max-w-5xl">
-       {/* Hero Section */}
-       <section className="text-center mb-16">
-         <motion.div 
-           initial={{ scale: 0.9, opacity: 0 }}
-           animate={{ scale: 1, opacity: 1 }}
-           className="relative inline-block mb-6"
-         >
-           <div className="w-24 h-24 rounded-full border-2 border-cyan-primary bg-cyan-primary/5 flex items-center justify-center text-4xl font-black text-cyan-primary shadow-[0_0_30px_rgba(103, 248, 29,0.2)]">
-             {userData?.name?.charAt(0).toUpperCase() || '?'}
-             <button className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-cyan-primary text-primary-dark flex items-center justify-center border-4 border-primary-dark hover:scale-110 transition-transform">
-               <Edit3 size={14} />
-             </button>
-           </div>
-         </motion.div>
-         <h1 className="text-3xl font-black mb-1">{userData?.name || 'Loading...'}</h1>
-         <p className="text-sm font-mono text-light-gray opacity-40 mb-6">{user?.email}</p>
-         
-         <div className="flex justify-center gap-3 flex-wrap">
-           <span className="px-4 py-1 rounded-full border border-cyan-primary/20 bg-cyan-primary/5 text-cyan-primary text-[10px] font-mono uppercase tracking-widest flex items-center gap-2">
-             <UserCircle size={12} /> {userData?.role || 'customer'}
-           </span>
-           <span className="px-4 py-1 rounded-full border border-teal-primary/20 bg-teal-primary/5 text-teal-primary text-[10px] font-mono uppercase tracking-widest flex items-center gap-2">
-             <Ticket size={12} /> {userData?.discountPercent || 0}% Discount Active
-           </span>
-         </div>
-       </section>
+    <div className="min-h-screen bg-primary-dark text-light-gray">
+      <div className="mx-auto flex min-h-screen max-w-[1560px]">
+        <aside className="hidden w-72 shrink-0 border-r border-white/6 bg-[#0f1217] lg:flex lg:flex-col">
+          <div className="border-b border-white/6 px-6 py-6">
+            <div className="text-[10px] font-mono uppercase tracking-[0.28em] text-cyan-primary/72">
+              Client Dashboard
+            </div>
+            <h1 className="mt-3 text-2xl font-black text-white">
+              TNWebRats
+            </h1>
+            <p className="mt-2 text-sm leading-7 text-light-gray/50">
+              Track orders, payments, profile details, and support in one
+              place.
+            </p>
+          </div>
 
-       {/* Navigation Tabs */}
-       <div className="flex border-b border-white/10 mb-12 overflow-x-auto no-scrollbar scroll-smooth">
-         {tabs.map((tab) => (
-           <button
-             key={tab.id}
-             onClick={() => setActiveTab(tab.id)}
-             className={`px-8 py-4 font-mono text-[10px] uppercase tracking-[0.2em] whitespace-nowrap flex items-center gap-3 transition-colors relative ${
-               activeTab === tab.id ? 'text-cyan-primary' : 'text-white/30 hover:text-white/60'
-             }`}
-           >
-             {tab.icon} {tab.label}
-             {activeTab === tab.id && (
-               <motion.div 
-                 layoutId="activeTabProfile"
-                 className="absolute bottom-0 left-0 right-0 h-[2px] bg-cyan-primary"
-               />
-             )}
-           </button>
-         ))}
-       </div>
+          <nav className="flex-1 space-y-2 px-4 py-6">
+            {NAV_ITEMS.map((item) => {
+              const Icon = item.icon;
+              const isActive = activeSection === item.id;
 
-       {/* Content Panels */}
-       <AnimatePresence mode="wait">
-         <motion.div
-           key={activeTab}
-           initial={{ opacity: 0, y: 10 }}
-           animate={{ opacity: 1, y: 0 }}
-           exit={{ opacity: 0, y: -10 }}
-           transition={{ duration: 0.2 }}
-         >
-           {activeTab === 'orders' && (
-             <div className="space-y-12">
-               {/* Stats Grid */}
-               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                 {[
-                   { label: 'Total Orders', val: stats.total },
-                   { label: 'In Progress', val: stats.active },
-                   { label: 'Completed', val: stats.done },
-                   { label: 'Total Spent', val: `₹${stats.spent.toLocaleString('en-IN')}` },
-                 ].map((s, i) => (
-                   <div key={i} className="bg-secondary-dark/50 border border-white/5 p-6 rounded-2xl">
-                     <div className="text-2xl font-black text-cyan-primary font-mono mb-1">{s.val}</div>
-                     <div className="text-[10px] font-mono uppercase tracking-widest text-light-gray/30">{s.label}</div>
-                   </div>
-                 ))}
-               </div>
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setActiveSection(item.id)}
+                  className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left transition-colors ${
+                    isActive
+                      ? "border border-cyan-primary/20 bg-cyan-primary/10 text-cyan-primary"
+                      : "border border-transparent text-light-gray/52 hover:border-white/8 hover:bg-white/5 hover:text-white"
+                  }`}
+                >
+                  <Icon size={18} />
+                  <span className="text-sm font-semibold">{item.label}</span>
+                </button>
+              );
+            })}
+          </nav>
 
-               {/* Order Table */}
-               <Card className="p-0 overflow-hidden">
-                 <div className="p-6 border-b border-white/5 flex justify-between items-center">
-                   <h3 className="font-mono text-[10px] uppercase tracking-widest text-cyan-primary flex items-center gap-2">
-                     <History size={14} /> Order History
-                   </h3>
-                   <Link to="/book">
-                     <Button variant="outline" className="text-[10px] px-4 py-1.5 flex items-center gap-2">
-                       <Plus size={14} /> New Order
-                     </Button>
-                   </Link>
-                 </div>
-                 <div className="overflow-x-auto">
-                   <table className="w-full text-left text-sm">
-                     <thead className="bg-white/5 text-[10px] font-mono uppercase tracking-widest text-white/30">
-                       <tr>
-                         <th className="px-6 py-4">Order ID</th>
-                         <th className="px-6 py-4">Service</th>
-                         <th className="px-6 py-4">Amount</th>
-                         <th className="px-6 py-4">Status</th>
-                         <th className="px-6 py-4">Date</th>
-                       </tr>
-                     </thead>
-                     <tbody className="divide-y divide-white/5">
-                        {loadingOrders ? (
-                          <tr>
-                            <td colSpan="5" className="px-6 py-12 text-center text-white/20 font-mono text-xs">
-                              <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1 }} className="inline-block mb-2">
-                                <Clock size={16} />
-                              </motion.div><br />
-                              Loading your orders...
-                            </td>
-                          </tr>
-                        ) : orders.length === 0 ? (
-                          <tr>
-                            <td colSpan="5" className="px-6 py-20 text-center">
-                               <Package size={40} className="mx-auto mb-4 text-white/5" />
-                               <p className="text-white/30 font-mono text-xs mb-6 uppercase tracking-widest">No orders found yet</p>
-                               <Link to="/book">
-                                 <Button>Book Your First Project</Button>
-                               </Link>
-                            </td>
-                          </tr>
-                        ) : (
-                          orders.map((order) => (
-                            <tr key={order.id} className="hover:bg-white/5 transition-colors cursor-pointer group">
-                              <td className="px-6 py-4 font-mono text-[11px] text-cyan-primary/60 group-hover:text-cyan-primary truncate max-w-[100px]">
-                                #{order.id.slice(-8).toUpperCase()}
-                              </td>
-                              <td className="px-6 py-4 font-bold">
-                                {order.service}
-                                <div className="text-[10px] font-normal text-white/30">{order.package}</div>
-                              </td>
-                              <td className="px-6 py-4 font-black italic text-cyan-primary">₹{order.price?.toLocaleString('en-IN')}</td>
-                              <td className="px-6 py-4">
-                                <span className={`px-2.5 py-1 rounded-full border text-[9px] font-mono uppercase tracking-wider ${getStatusColor(order.status)}`}>
-                                  {order.status || 'pending'}
-                                </span>
-                              </td>
-                              <td className="px-6 py-4 text-white/30 text-xs">
-                                {order.createdAt?.toDate?.().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) || '—'}
-                              </td>
-                            </tr>
-                          ))
-                        )}
-                     </tbody>
-                   </table>
-                 </div>
-               </Card>
-             </div>
-           )}
+          <div className="border-t border-white/6 px-6 py-6">
+            <div className="rounded-[24px] border border-white/8 bg-white/5 p-5">
+              <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary/72">
+                Customer Type
+              </div>
+              <div className="mt-3 text-xl font-black text-white">
+                {getCustomerTypeLabel({ customerType: effectiveCustomerType })}
+              </div>
+              <div className="mt-2 text-sm leading-7 text-light-gray/56">
+                {effectiveCustomerType === "returning"
+                  ? "Your dashboard is showing the returning-customer payment split."
+                  : "Your next booking will default to the new-customer upfront split."}
+              </div>
+            </div>
+          </div>
+        </aside>
 
-           {activeTab === 'referral' && (
-             <div className="max-w-3xl mx-auto space-y-12">
-               <Card className="p-10 border-cyan-primary/10">
-                 <h3 className="font-mono text-[10px] uppercase tracking-widest text-cyan-primary mb-8 flex items-center gap-2">
-                   <Ticket size={14} /> Your Referral Code
-                 </h3>
-                 
-                 {userData?.referralCode ? (
-                   <div className="space-y-8">
-                     <div className="flex flex-col md:flex-row items-center gap-6 bg-primary-dark border border-cyan-primary/20 rounded-2xl p-8 justify-between relative overflow-hidden group">
-                       <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                         <Ticket size={120} />
-                       </div>
-                       <div className="text-center md:text-left z-10">
-                         <div className="text-3xl font-black text-cyan-primary tracking-[0.2em] mb-2">{userData.referralCode}</div>
-                         <p className="text-[10px] font-mono text-light-gray opacity-40 uppercase tracking-widest italic font-bold">
-                           {userData.role} code • {userData.discountPercent}% Discount
-                         </p>
-                       </div>
-                       <Button onClick={handleCopyCode} className="z-10 min-w-[160px]">
-                         {copySuccess ? <Check size={18} className="mr-2" /> : <Copy size={18} className="mr-2" />}
-                         {copySuccess ? 'Copied!' : 'Copy Code'}
-                       </Button>
-                     </div>
-                     
-                     <div className="grid grid-cols-3 gap-4">
-                        {[
-                          { label: 'Times Used', val: '0' },
-                          { label: 'Discount Given', val: `${userData.discountPercent}%` },
-                          { label: 'Referral Bonus', val: '₹0' },
-                        ].map((s, i) => (
-                          <div key={i} className="text-center p-4 bg-white/5 rounded-xl border border-white/5">
-                            <div className="text-xl font-black text-cyan-primary mb-1">{s.val}</div>
-                            <div className="text-[9px] font-mono uppercase tracking-widest text-white/30">{s.label}</div>
-                          </div>
-                        ))}
-                     </div>
-                     
-                     <p className="text-xs text-light-gray opacity-40 leading-relaxed italic text-center">
-                       Share this code with friends. When they sign up using it, they get a {userData.discountPercent}% discount — and you earn a referral bonus per cycle.
-                     </p>
-                   </div>
-                 ) : (
-                   <div className="p-12 text-center bg-white/5 rounded-2xl border border-dashed border-white/10">
-                      <Ticket size={48} className="mx-auto mb-6 text-white/10" />
-                      <p className="text-sm text-light-gray opacity-50 mb-8 max-w-sm mx-auto font-mono tracking-widest uppercase">
-                        Referral codes are available for staff members to share with clients.
-                      </p>
-                      <Link to="/help" className="text-cyan-primary font-mono text-xs uppercase tracking-widest hover:underline">
-                        Learn more about Rewards →
-                      </Link>
-                   </div>
-                 )}
-               </Card>
-             </div>
-           )}
-
-           {activeTab === 'settings' && (
-             <div className="max-w-2xl mx-auto space-y-12">
-                <Card className="p-8">
-                  <h3 className="font-mono text-[10px] uppercase tracking-widest text-cyan-primary mb-8 flex items-center gap-2 border-b border-white/5 pb-4">
-                    <Edit3 size={14} /> Profile Settings
-                  </h3>
-                  <div className="grid gap-6">
-                    <div className="space-y-1">
-                      <label className="text-[10px] uppercase font-mono tracking-widest text-light-gray/40">Full Name</label>
-                      <div className="relative">
-                        <User className="absolute left-4 top-1/2 -translate-y-1/2 text-cyan-primary/30" size={18} />
-                        <input className="w-full bg-primary-dark border border-white/10 rounded-xl px-12 py-3 outline-none focus:border-cyan-primary text-sm" value={userData?.name || ''} readOnly />
-                      </div>
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[10px] uppercase font-mono tracking-widest text-light-gray/40">WhatsApp / Phone</label>
-                      <div className="relative">
-                        <Smartphone className="absolute left-4 top-1/2 -translate-y-1/2 text-cyan-primary/30" size={18} />
-                        <input className="w-full bg-primary-dark border border-white/10 rounded-xl px-12 py-3 outline-none focus:border-cyan-primary text-sm" value={userData?.phone || ''} readOnly />
-                      </div>
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[10px] uppercase font-mono tracking-widest text-light-gray/40">Email (Cannot Change)</label>
-                      <div className="relative">
-                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-white/10" size={18} />
-                        <input className="w-full bg-primary-dark/30 border border-white/5 rounded-xl px-12 py-3 outline-none text-white/20 text-sm cursor-not-allowed" value={user?.email || ''} readOnly />
-                      </div>
-                    </div>
-                    <Button className="mt-4">Save Changes</Button>
-                  </div>
-                </Card>
-
-                <Card className="p-8 border-red-500/20 bg-red-500/5">
-                   <h3 className="font-mono text-[10px] uppercase tracking-widest text-red-500 mb-6 flex items-center gap-2">
-                     <Trash2 size={14} /> Danger Zone
-                   </h3>
-                   <p className="text-xs text-light-gray/50 mb-8 leading-relaxed">
-                     Once you logout, you will need to re-authenticate to access your profile and track your orders. 
-                     Your data is safely stored.
-                   </p>
-                   <Button 
-                     onClick={() => logout()}
-                     className="bg-red-500 border-red-500 text-white hover:bg-red-600 hover:border-red-600 w-full"
-                   >
-                     <LogOut size={18} className="mr-2" /> Sign Out
-                   </Button>
-                </Card>
-             </div>
-           )}
-
-           {activeTab === 'security' && (
-             <div className="max-w-2xl mx-auto space-y-12">
-                <Card className="p-8">
-                  <h3 className="font-mono text-[10px] uppercase tracking-widest text-cyan-primary mb-8 flex items-center gap-2 border-b border-white/5 pb-4">
-                    <Key size={14} /> Password Security
-                  </h3>
-                  <div className="grid gap-6">
-                    <div className="space-y-1">
-                      <label className="text-[10px] uppercase font-mono tracking-widest text-light-gray/40">Current Password</label>
-                      <input type="password" placeholder="••••••••" className="w-full bg-primary-dark border border-white/10 rounded-xl px-5 py-3 outline-none focus:border-cyan-primary text-sm" />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[10px] uppercase font-mono tracking-widest text-light-gray/40">New Password</label>
-                      <input type="password" placeholder="••••••••" className="w-full bg-primary-dark border border-white/10 rounded-xl px-5 py-3 outline-none focus:border-cyan-primary text-sm" />
-                    </div>
-                    <Button className="mt-4">Update Password</Button>
-                  </div>
-                </Card>
-
-                <Card className="p-8">
-                   <h3 className="font-mono text-[10px] uppercase tracking-widest text-cyan-primary mb-8 flex items-center gap-2 border-b border-white/5 pb-4">
-                     <ShieldCheck size={14} /> Account Information
-                   </h3>
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {[
-                        { k: 'Member Since', v: userData?.createdAt?.toDate?.().toLocaleDateString('en-IN') || '2026' },
-                        { k: 'Verified Email', v: user?.emailVerified ? 'Yes' : 'No' },
-                        { k: 'Last Login', v: user?.metadata?.lastSignInTime ? new Date(user?.metadata?.lastSignInTime).toLocaleDateString('en-IN') : 'Today' },
-                        { k: 'User ID', v: user?.uid?.slice(0, 12) + '...' },
-                      ].map((item, i) => (
-                        <div key={i} className="p-4 bg-white/5 rounded-xl border border-white/5">
-                          <div className="text-[9px] font-mono uppercase tracking-widest text-white/30 mb-1">{item.k}</div>
-                          <div className="text-sm font-bold">{item.v}</div>
-                        </div>
-                      ))}
-                   </div>
-                </Card>
-             </div>
-           )}
-
-           {activeTab === 'wallet' && isStaff && (
-             <div className="space-y-8">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                   <Card className="bg-gradient-to-tr from-cyan-primary/20 to-teal-primary/5 border-cyan-primary/30 p-8 flex flex-col items-center text-center">
-                      <Wallet size={32} className="text-cyan-primary mb-4" />
-                      <div className="text-3xl font-black text-cyan-primary italic font-mono mb-2">₹0</div>
-                      <div className="text-[10px] font-mono uppercase tracking-widest text-cyan-primary opacity-60">Available Balance</div>
-                   </Card>
-                   <Card className="p-8 flex flex-col items-center text-center border-white/10">
-                      <Clock size={32} className="text-white/20 mb-4" />
-                      <div className="text-2xl font-black text-white/40 font-mono mb-2">₹0</div>
-                      <div className="text-[10px] font-mono uppercase tracking-widest text-white/20">Pending Payouts</div>
-                   </Card>
-                   <Card className="p-8 flex flex-col items-center text-center border-white/10">
-                      <Calendar size={32} className="text-white/20 mb-4" />
-                      <div className="text-2xl font-black text-white/40 font-mono mb-2">1st April</div>
-                      <div className="text-[10px] font-mono uppercase tracking-widest text-white/20">Next Pay Cycle</div>
-                   </Card>
+        <div className="min-w-0 flex-1">
+          <header className="sticky top-0 z-20 border-b border-white/6 bg-[#0f1217]/92 px-5 py-4 backdrop-blur md:px-6 lg:px-8">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <div className="text-[10px] font-mono uppercase tracking-[0.24em] text-cyan-primary/72">
+                  Welcome Back
                 </div>
-                
-                <Card className="p-10 text-center">
-                   <div className="opacity-10 mb-8"><Wallet size={60} className="mx-auto" /></div>
-                   <h4 className="text-lg font-bold mb-4">No Earnings Yet</h4>
-                   <p className="text-xs text-light-gray opacity-40 max-w-sm mx-auto mb-8 font-mono uppercase tracking-widest">
-                     Earn rewards by Referring clients or completing student projects as a worker.
-                   </p>
-                   <Button variant="outline">Learn More about Payroll</Button>
-                </Card>
-             </div>
-           )}
-         </motion.div>
-       </AnimatePresence>
+                <h2 className="mt-2 text-2xl font-black text-white">
+                  {displayName}
+                </h2>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setIsNotifOpen((current) => !current)}
+                    className="relative flex h-11 w-11 items-center justify-center rounded-full border border-white/8 bg-white/5 text-light-gray/72 transition-colors hover:border-cyan-primary/18 hover:text-cyan-primary"
+                  >
+                    <Bell size={18} />
+                    {unreadCount > 0 && (
+                      <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-cyan-primary" />
+                    )}
+                  </button>
+
+                  <AnimatePresence>
+                    {isNotifOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.96 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.96 }}
+                        className="absolute right-0 mt-3 w-[22rem] overflow-hidden rounded-[24px] border border-white/8 bg-[#11141a] shadow-2xl"
+                      >
+                        <div className="flex items-center justify-between border-b border-white/8 px-5 py-4">
+                          <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary/72">
+                            Notifications
+                          </div>
+                          {unreadCount > 0 && (
+                            <button
+                              type="button"
+                              onClick={markAllAsRead}
+                              className="text-[10px] font-mono uppercase tracking-[0.14em] text-cyan-primary"
+                            >
+                              Mark all as read
+                            </button>
+                          )}
+                        </div>
+                        <div className="max-h-[24rem] overflow-y-auto">
+                          {notifications.length === 0 ? (
+                            <div className="px-5 py-10 text-center text-sm text-light-gray/42">
+                              No notifications yet.
+                            </div>
+                          ) : (
+                            notifications.map((notification) => (
+                              <button
+                                key={notification.id}
+                                type="button"
+                                onClick={() => markAsRead(notification.id)}
+                                className={`w-full border-b border-white/6 px-5 py-4 text-left transition-colors hover:bg-white/5 ${
+                                  notification.read ? "" : "bg-cyan-primary/6"
+                                }`}
+                              >
+                                <div className="flex items-start gap-3">
+                                  <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-white/8 bg-white/5 text-cyan-primary">
+                                    <Bell size={14} />
+                                  </div>
+                                  <div className="min-w-0">
+                                    <div className="text-sm font-semibold text-white">
+                                      {notification.title}
+                                    </div>
+                                    <div className="mt-1 text-sm leading-6 text-light-gray/54">
+                                      {notification.message}
+                                    </div>
+                                    <div className="mt-2 text-[10px] font-mono uppercase tracking-[0.14em] text-light-gray/38">
+                                      {formatDateTime(notification.createdAt)}
+                                    </div>
+                                  </div>
+                                </div>
+                              </button>
+                            ))
+                          )}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                <Button variant="outline" onClick={() => navigate("/book")}>
+                  New Order
+                </Button>
+
+                <Button
+                  variant="outline"
+                  className="border-red-500/40 text-red-300 hover:border-red-400 hover:text-red-200"
+                  onClick={handleLogout}
+                >
+                  <LogOut size={16} /> Logout
+                </Button>
+              </div>
+            </div>
+
+            <div className="mt-4 flex gap-2 overflow-x-auto pb-1 lg:hidden">
+              {NAV_ITEMS.map((item) => {
+                const Icon = item.icon;
+                const isActive = activeSection === item.id;
+
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setActiveSection(item.id)}
+                    className={`flex shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold transition-colors ${
+                      isActive
+                        ? "border-cyan-primary/20 bg-cyan-primary/10 text-cyan-primary"
+                        : "border-white/8 bg-white/5 text-light-gray/54"
+                    }`}
+                  >
+                    <Icon size={14} />
+                    {item.label}
+                  </button>
+                );
+              })}
+            </div>
+          </header>
+
+          <main className="px-5 py-6 md:px-6 lg:px-8 lg:py-8">
+            {loading ? (
+              <div className="flex min-h-[50vh] items-center justify-center">
+                <div className="flex flex-col items-center gap-4 text-center">
+                  <div className="h-12 w-12 animate-spin rounded-full border-2 border-cyan-primary border-t-transparent" />
+                  <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-light-gray/42">
+                    Loading your dashboard
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeSection}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                  className="space-y-8"
+                >
+                  {activeSection === "dashboard" && (
+                    <div className="space-y-8">
+                      <div className="grid gap-4 md:grid-cols-3">
+                        <StatsCard
+                          label="Active Orders"
+                          value={activeOrders.length}
+                          accent="text-yellow-400"
+                          icon={Package}
+                        />
+                        <StatsCard
+                          label="Completed Orders"
+                          value={completedOrders.length}
+                          accent="text-cyan-primary"
+                          icon={CheckCircle2}
+                        />
+                        <StatsCard
+                          label="Pending Payments"
+                          value={formatCurrency(totalPending)}
+                          accent="text-amber-300"
+                          icon={Wallet}
+                        />
+                      </div>
+
+                      <div className="grid gap-6 xl:grid-cols-[1.08fr_0.92fr]">
+                        <Card className="border-white/8 bg-[#10141a]">
+                          <div className="flex items-center justify-between gap-4">
+                            <div>
+                              <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary/72">
+                                Recent Orders
+                              </div>
+                              <h3 className="mt-3 text-2xl font-black text-white">
+                                Last 3 bookings
+                              </h3>
+                            </div>
+                            <Button
+                              variant="outline"
+                              onClick={() => setActiveSection("orders")}
+                            >
+                              View All
+                            </Button>
+                          </div>
+
+                          <div className="mt-8 space-y-4">
+                            {recentOrders.length === 0 ? (
+                              <EmptyState
+                                title="No orders yet"
+                                description="Create your first order to start tracking it from here."
+                              />
+                            ) : (
+                              recentOrders.map((order) => (
+                                <button
+                                  key={order.id}
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedOrder(order);
+                                    setActiveSection("orders");
+                                  }}
+                                  className="flex w-full items-center justify-between gap-4 rounded-[22px] border border-white/8 bg-black/35 px-5 py-4 text-left transition-colors hover:border-cyan-primary/16 hover:bg-cyan-primary/6"
+                                >
+                                  <div>
+                                    <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary/72">
+                                      {getOrderDisplayId(order)}
+                                    </div>
+                                    <div className="mt-2 text-lg font-bold text-white">
+                                      {order.service}
+                                    </div>
+                                    <div className="mt-1 text-sm text-light-gray/50">
+                                      {getOrderPlanLabel(order)}
+                                    </div>
+                                  </div>
+                                  <div className="text-right">
+                                    <StatusBadge value={order.status} />
+                                    <div className="mt-2 text-sm text-light-gray/50">
+                                      {getOrderProgress(order.status)}% progress
+                                    </div>
+                                  </div>
+                                </button>
+                              ))
+                            )}
+                          </div>
+                        </Card>
+
+                        <div className="space-y-6">
+                          <Card className="border-cyan-primary/12 bg-[#10141a]">
+                            <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary/72">
+                              Quick Actions
+                            </div>
+                            <div className="mt-6 grid gap-4">
+                              <button
+                                type="button"
+                                onClick={() => navigate("/book")}
+                                className="rounded-[22px] border border-cyan-primary/18 bg-cyan-primary/10 px-5 py-5 text-left transition-colors hover:bg-cyan-primary/14"
+                              >
+                                <div className="flex items-center justify-between gap-4">
+                                  <div>
+                                    <div className="text-lg font-bold text-white">
+                                      Create New Order
+                                    </div>
+                                    <div className="mt-2 text-sm leading-7 text-light-gray/58">
+                                      Open the booking flow and send your next
+                                      project brief.
+                                    </div>
+                                  </div>
+                                  <ArrowRight
+                                    size={18}
+                                    className="shrink-0 text-cyan-primary"
+                                  />
+                                </div>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => setActiveSection("support")}
+                                className="rounded-[22px] border border-white/8 bg-black/35 px-5 py-5 text-left transition-colors hover:border-white/12 hover:bg-white/5"
+                              >
+                                <div className="flex items-center justify-between gap-4">
+                                  <div>
+                                    <div className="text-lg font-bold text-white">
+                                      Contact Support
+                                    </div>
+                                    <div className="mt-2 text-sm leading-7 text-light-gray/58">
+                                      Message the team if a deadline or payment
+                                      needs clarification.
+                                    </div>
+                                  </div>
+                                  <ArrowRight
+                                    size={18}
+                                    className="shrink-0 text-cyan-primary"
+                                  />
+                                </div>
+                              </button>
+                            </div>
+                          </Card>
+
+                          <Card className="border-white/8 bg-[#10141a]">
+                            <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary/72">
+                              Payment Snapshot
+                            </div>
+                            <div className="mt-6 space-y-4">
+                              <SnapshotRow
+                                label="Total paid"
+                                value={formatCurrency(totalPaid)}
+                              />
+                              <SnapshotRow
+                                label="Pending now"
+                                value={formatCurrency(totalPending)}
+                              />
+                              <SnapshotRow
+                                label="Customer type"
+                                value={getCustomerTypeLabel({
+                                  customerType: effectiveCustomerType,
+                                })}
+                              />
+                            </div>
+                          </Card>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  {activeSection === "orders" && (
+                    <div className="space-y-8">
+                      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                        <div>
+                          <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary/72">
+                            My Orders
+                          </div>
+                          <h3 className="mt-3 text-3xl font-black text-white">
+                            Track every project
+                          </h3>
+                        </div>
+                        <div className="flex gap-2 rounded-full border border-white/8 bg-white/5 p-1">
+                          {[
+                            { id: "active", label: "Active Orders" },
+                            { id: "completed", label: "Completed Orders" },
+                          ].map((tab) => (
+                            <button
+                              key={tab.id}
+                              type="button"
+                              onClick={() => setOrderTab(tab.id)}
+                              className={`rounded-full px-4 py-2 text-xs font-semibold transition-colors ${
+                                orderTab === tab.id
+                                  ? "bg-cyan-primary text-primary-dark"
+                                  : "text-light-gray/52"
+                              }`}
+                            >
+                              {tab.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="grid gap-5">
+                        {(orderTab === "active" ? activeOrders : completedOrders)
+                          .length === 0 ? (
+                          <EmptyState
+                            title={
+                              orderTab === "active"
+                                ? "No active orders"
+                                : "No completed orders"
+                            }
+                            description={
+                              orderTab === "active"
+                                ? "Your ongoing projects will appear here with progress, deadlines, and contact actions."
+                                : "Finished orders will appear here once the team marks them completed."
+                            }
+                          />
+                        ) : (
+                          (orderTab === "active" ? activeOrders : completedOrders).map(
+                            (order) => (
+                              <OrderCard
+                                key={order.id}
+                                order={order}
+                                onViewDetails={() => setSelectedOrder(order)}
+                                onContact={() => openContactThread(order)}
+                                onDownload={() => {
+                                  const assetLink = getPrimaryAssetLink(order);
+                                  if (assetLink) {
+                                    window.open(assetLink, "_blank");
+                                  }
+                                }}
+                                onReorder={() => handleReorder(order)}
+                                onReview={() => openReviewModal(order)}
+                              />
+                            )
+                          )
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {activeSection === "payments" && (
+                    <div className="space-y-8">
+                      <div>
+                        <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary/72">
+                          Payments
+                        </div>
+                        <h3 className="mt-3 text-3xl font-black text-white">
+                          Summary, history, and pending balances
+                        </h3>
+                      </div>
+
+                      <div className="grid gap-4 md:grid-cols-3">
+                        <StatsCard
+                          label="Total Paid"
+                          value={formatCurrency(totalPaid)}
+                          accent="text-cyan-primary"
+                          icon={Wallet}
+                        />
+                        <StatsCard
+                          label="Pending Amount"
+                          value={formatCurrency(totalPending)}
+                          accent="text-amber-300"
+                          icon={CreditCard}
+                        />
+                        <StatsCard
+                          label="Ledger Entries"
+                          value={paymentHistory.length}
+                          accent="text-sky-400"
+                          icon={FileText}
+                        />
+                      </div>
+
+                      <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+                        <Card className="border-white/8 bg-[#10141a]">
+                          <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary/72">
+                            Payment History
+                          </div>
+                          <div className="mt-6 overflow-hidden rounded-[24px] border border-white/8">
+                            <div className="grid grid-cols-[1.2fr_0.9fr_0.9fr] gap-4 border-b border-white/8 bg-white/5 px-5 py-4 text-[10px] font-mono uppercase tracking-[0.18em] text-light-gray/42">
+                              <div>Order</div>
+                              <div>Amount</div>
+                              <div>Status</div>
+                            </div>
+                            {paymentHistory.length === 0 ? (
+                              <div className="px-5 py-12 text-center text-sm text-light-gray/42">
+                                No payment history yet.
+                              </div>
+                            ) : (
+                              paymentHistory.map((entry) => (
+                                <div
+                                  key={entry.id}
+                                  className="grid grid-cols-[1.2fr_0.9fr_0.9fr] gap-4 border-b border-white/6 px-5 py-4 text-sm last:border-b-0"
+                                >
+                                  <div>
+                                    <div className="font-semibold text-white">
+                                      {entry.orderId}
+                                    </div>
+                                    <div className="mt-1 text-xs text-light-gray/46">
+                                      {entry.detail}
+                                    </div>
+                                    <div className="mt-1 text-[10px] font-mono uppercase tracking-[0.14em] text-light-gray/34">
+                                      {formatDate(entry.timestamp)}
+                                    </div>
+                                  </div>
+                                  <div className="font-semibold text-cyan-primary">
+                                    {formatCurrency(entry.amount)}
+                                  </div>
+                                  <div>
+                                    <PaymentBadge value={entry.status} />
+                                  </div>
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        </Card>
+
+                        <Card className="border-white/8 bg-[#10141a]">
+                          <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary/72">
+                            Pending Payments
+                          </div>
+                          <div className="mt-6 space-y-4">
+                            {pendingPaymentOrders.length === 0 ? (
+                              <EmptyState
+                                title="No pending payments"
+                                description="Any advance or final balance due will appear here with a quick contact action."
+                              />
+                            ) : (
+                              pendingPaymentOrders.map(({ order, summary }) => (
+                                <div
+                                  key={order.id}
+                                  className="rounded-[22px] border border-white/8 bg-black/35 p-5"
+                                >
+                                  <div className="flex items-start justify-between gap-4">
+                                    <div>
+                                      <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary/72">
+                                        {getOrderDisplayId(order)}
+                                      </div>
+                                      <div className="mt-2 text-lg font-bold text-white">
+                                        {order.service}
+                                      </div>
+                                      <div className="mt-1 text-sm text-light-gray/52">
+                                        {normalizePaymentStatus(order.paymentStatus) ===
+                                        "partial"
+                                          ? "Final balance due"
+                                          : "Advance payment due"}
+                                      </div>
+                                    </div>
+                                    <PaymentBadge value={order.paymentStatus} />
+                                  </div>
+                                  <div className="mt-5 flex items-end justify-between gap-4">
+                                    <div>
+                                      <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-light-gray/38">
+                                        Amount due now
+                                      </div>
+                                      <div className="mt-2 text-2xl font-black text-cyan-primary">
+                                        {formatCurrency(summary.dueNow)}
+                                      </div>
+                                    </div>
+                                    <Button
+                                      onClick={() =>
+                                        openPaymentThread(order, summary.dueNow)
+                                      }
+                                    >
+                                      Pay Now
+                                    </Button>
+                                  </div>
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        </Card>
+                      </div>
+                    </div>
+                  )}
+
+                  {activeSection === "profile" && (
+                    <div className="grid gap-6 xl:grid-cols-[1fr_0.86fr]">
+                      <Card className="border-white/8 bg-[#10141a]">
+                        <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary/72">
+                          Profile
+                        </div>
+                        <h3 className="mt-3 text-3xl font-black text-white">
+                          Update your contact details
+                        </h3>
+                        <div className="mt-8 grid gap-5">
+                          <Field
+                            label="Name"
+                            icon={User}
+                            name="name"
+                            value={profileForm.name}
+                            onChange={handleProfileChange}
+                            placeholder="Your full name"
+                          />
+                          <Field
+                            label="Email"
+                            icon={Mail}
+                            value={user.email || ""}
+                            disabled={true}
+                          />
+                          <Field
+                            label="Phone"
+                            icon={Phone}
+                            name="phone"
+                            value={profileForm.phone}
+                            onChange={handleProfileChange}
+                            placeholder="+91 98765 43210"
+                          />
+
+                          <label className="space-y-2">
+                            <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-light-gray/42">
+                              Customer Type
+                            </span>
+                            <select
+                              name="customerType"
+                              value={profileForm.customerType}
+                              onChange={handleProfileChange}
+                              className="w-full rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-sm text-white outline-none transition-colors focus:border-cyan-primary"
+                            >
+                              <option value="new">New</option>
+                              <option value="returning">Returning</option>
+                            </select>
+                          </label>
+                        </div>
+
+                        <div className="mt-6 flex flex-wrap gap-4">
+                          <Button
+                            onClick={handleSaveProfile}
+                            disabled={profileState.saving}
+                          >
+                            {profileState.saving ? "Saving..." : "Save Changes"}
+                          </Button>
+                          <Link to="/forgot-password">
+                            <Button variant="outline">
+                              Change Password
+                            </Button>
+                          </Link>
+                        </div>
+
+                        {profileState.feedback && (
+                          <div className="mt-4 rounded-2xl border border-cyan-primary/18 bg-cyan-primary/8 px-4 py-3 text-sm text-cyan-primary">
+                            {profileState.feedback}
+                          </div>
+                        )}
+                        {profileState.error && (
+                          <div className="mt-4 rounded-2xl border border-red-500/18 bg-red-500/8 px-4 py-3 text-sm text-red-300">
+                            {profileState.error}
+                          </div>
+                        )}
+                      </Card>
+
+                      <div className="space-y-6">
+                        <Card className="border-white/8 bg-[#10141a]">
+                          <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary/72">
+                            Account Snapshot
+                          </div>
+                          <div className="mt-6 space-y-4">
+                            <SnapshotRow
+                              label="Orders placed"
+                              value={orders.length}
+                            />
+                            <SnapshotRow
+                              label="Customer type"
+                              value={getCustomerTypeLabel({
+                                customerType: effectiveCustomerType,
+                              })}
+                            />
+                            <SnapshotRow
+                              label="Member since"
+                              value={formatDate(userProfile?.createdAt)}
+                            />
+                          </div>
+                        </Card>
+
+                        <Card className="border-white/8 bg-[#10141a]">
+                          <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary/72">
+                            Security
+                          </div>
+                          <div className="mt-5 space-y-4 text-sm leading-7 text-light-gray/60">
+                            <div>
+                              Your account email is{" "}
+                              <span className="font-semibold text-white">
+                                {user.email}
+                              </span>
+                              .
+                            </div>
+                            <div>
+                              Use password reset if you want to change your
+                              credentials without leaving the dashboard.
+                            </div>
+                          </div>
+                        </Card>
+                      </div>
+                    </div>
+                  )}
+
+                  {activeSection === "support" && (
+                    <div className="grid gap-6 xl:grid-cols-[1fr_0.86fr]">
+                      <Card className="border-white/8 bg-[#10141a]">
+                        <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary/72">
+                          Support
+                        </div>
+                        <h3 className="mt-3 text-3xl font-black text-white">
+                          Send a message to the team
+                        </h3>
+
+                        <form onSubmit={handleSupportSubmit} className="mt-8 space-y-5">
+                          <label className="space-y-2">
+                            <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-light-gray/42">
+                              Subject
+                            </span>
+                            <input
+                              type="text"
+                              name="subject"
+                              value={supportForm.subject}
+                              onChange={handleSupportChange}
+                              placeholder="Payment question, deadline update, files issue..."
+                              className="w-full rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-sm text-white outline-none transition-colors focus:border-cyan-primary"
+                            />
+                          </label>
+
+                          <label className="space-y-2">
+                            <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-light-gray/42">
+                              Message
+                            </span>
+                            <textarea
+                              name="message"
+                              value={supportForm.message}
+                              onChange={handleSupportChange}
+                              placeholder="Tell us what you need and include the order ID if this is about an existing project."
+                              className="min-h-[180px] w-full rounded-2xl border border-white/10 bg-black/35 px-4 py-4 text-sm text-white outline-none transition-colors focus:border-cyan-primary"
+                            />
+                          </label>
+
+                          <Button
+                            type="submit"
+                            disabled={supportState.sending}
+                            className="w-full"
+                          >
+                            {supportState.sending ? "Sending..." : "Send Message"}
+                          </Button>
+                        </form>
+
+                        {supportState.feedback && (
+                          <div className="mt-4 rounded-2xl border border-cyan-primary/18 bg-cyan-primary/8 px-4 py-3 text-sm text-cyan-primary">
+                            {supportState.feedback}
+                          </div>
+                        )}
+                        {supportState.error && (
+                          <div className="mt-4 rounded-2xl border border-red-500/18 bg-red-500/8 px-4 py-3 text-sm text-red-300">
+                            {supportState.error}
+                          </div>
+                        )}
+                      </Card>
+
+                      <div className="space-y-6">
+                        <Card className="border-white/8 bg-[#10141a]">
+                          <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary/72">
+                            Direct Contact
+                          </div>
+                          <div className="mt-6 space-y-4">
+                            <ContactCard
+                              icon={MessageSquareText}
+                              title="WhatsApp"
+                              value={CONTACT_INFO.whatsappDisplay}
+                              actionLabel="Open Chat"
+                              href={`https://wa.me/${CONTACT_INFO.whatsappNumber}`}
+                            />
+                            <ContactCard
+                              icon={Mail}
+                              title="Email"
+                              value={CONTACT_INFO.email}
+                              actionLabel="Send Email"
+                              href={`mailto:${CONTACT_INFO.email}`}
+                            />
+                          </div>
+                        </Card>
+
+                        <Card className="border-white/8 bg-[#10141a]">
+                          <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary/72">
+                            Helpful Tip
+                          </div>
+                          <div className="mt-4 text-sm leading-7 text-light-gray/60">
+                            Include the order ID, service name, and any revised
+                            deadline in your message. That helps us jump
+                            straight into the right project thread.
+                          </div>
+                        </Card>
+                      </div>
+                    </div>
+                  )}
+                </motion.div>
+              </AnimatePresence>
+            )}
+          </main>
+        </div>
+      </div>
+
+      <AnimatePresence>
+        {selectedOrder && (
+          <OrderDetailsModal
+            order={selectedOrder}
+            onClose={() => setSelectedOrder(null)}
+            onContact={() => openContactThread(selectedOrder)}
+            onDownload={() => {
+              const assetLink = getPrimaryAssetLink(selectedOrder);
+              if (assetLink) {
+                window.open(assetLink, "_blank");
+              }
+            }}
+            onReorder={() => {
+              handleReorder(selectedOrder);
+              setSelectedOrder(null);
+            }}
+            onReview={() => {
+              openReviewModal(selectedOrder);
+              setSelectedOrder(null);
+            }}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {reviewState.open && (
+          <ReviewModal
+            state={reviewState}
+            setState={setReviewState}
+            onClose={closeReviewModal}
+            onSubmit={handleReviewSubmit}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };
+
+const StatsCard = ({ label, value, icon: Icon, accent }) => (
+  <Card className="border-white/8 bg-[#10141a] p-6">
+    <div className="flex items-start justify-between gap-4">
+      <div>
+        <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-light-gray/42">
+          {label}
+        </div>
+        <div className="mt-4 text-3xl font-black text-white">{value}</div>
+      </div>
+      <div
+        className={`flex h-12 w-12 items-center justify-center rounded-2xl border border-white/8 bg-white/5 ${accent}`}
+      >
+        <Icon size={20} />
+      </div>
+    </div>
+  </Card>
+);
+
+const SnapshotRow = ({ label, value }) => (
+  <div className="flex items-center justify-between gap-4 rounded-2xl border border-white/8 bg-black/30 px-4 py-3">
+    <div className="text-sm text-light-gray/54">{label}</div>
+    <div className="text-sm font-semibold text-white">{value}</div>
+  </div>
+);
+
+const EmptyState = ({ title, description }) => (
+  <Card
+    hoverEffect={false}
+    className="border-dashed border-white/10 bg-[#10141a] px-6 py-10 text-center"
+  >
+    <div className="text-xl font-black text-white">{title}</div>
+    <div className="mx-auto mt-3 max-w-xl text-sm leading-7 text-light-gray/50">
+      {description}
+    </div>
+  </Card>
+);
+
+const StatusBadge = ({ value }) => (
+  <span
+    className={`inline-flex rounded-full border px-3 py-1 text-[10px] font-mono uppercase tracking-[0.16em] ${getOrderStatusBadgeClass(
+      value
+    )}`}
+  >
+    {getOrderStatusLabel(value)}
+  </span>
+);
+
+const PaymentBadge = ({ value }) => (
+  <span
+    className={`inline-flex rounded-full border px-3 py-1 text-[10px] font-mono uppercase tracking-[0.16em] ${getPaymentStatusBadgeClass(
+      value
+    )}`}
+  >
+    {getPaymentStatusLabel(value)}
+  </span>
+);
+
+const OrderCard = ({
+  order,
+  onViewDetails,
+  onContact,
+  onDownload,
+  onReorder,
+  onReview,
+}) => {
+  const assetLink = getPrimaryAssetLink(order);
+  const progress = getOrderProgress(order.status);
+  const isCompleted = isCompletedOrder(order);
+  const reviewDone = order.reviewDone || order.review?.rating;
+
+  return (
+    <Card className="border-white/8 bg-[#10141a] p-6">
+      <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary/72">
+              {getOrderDisplayId(order)}
+            </span>
+            <StatusBadge value={order.status} />
+            <span
+              className={`inline-flex rounded-full border px-3 py-1 text-[10px] font-mono uppercase tracking-[0.16em] ${getOrderPriorityBadgeClass(
+                order
+              )}`}
+            >
+              {getOrderPriorityLabel(order)}
+            </span>
+          </div>
+
+          <h4 className="mt-4 text-2xl font-black text-white">{order.service}</h4>
+          <div className="mt-2 text-sm text-light-gray/54">
+            {getOrderPlanLabel(order)} · Deadline {order.deadline || "Flexible"}
+          </div>
+
+          <div className="mt-5 flex flex-wrap gap-5 text-sm text-light-gray/54">
+            <div>
+              <span className="text-light-gray/36">Customer Type:</span>{" "}
+              <span className="font-semibold text-white">
+                {getCustomerTypeLabel(order)}
+              </span>
+            </div>
+            <div>
+              <span className="text-light-gray/36">Amount:</span>{" "}
+              <span className="font-semibold text-cyan-primary">
+                {formatCurrency(getOrderAmount(order))}
+              </span>
+            </div>
+            <div>
+              <span className="text-light-gray/36">Payment:</span>{" "}
+              <span className="font-semibold text-white">
+                {getPaymentStatusLabel(order.paymentStatus)}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="min-w-[220px] space-y-3">
+          <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-[0.16em] text-light-gray/40">
+            <span>Progress</span>
+            <span>{progress}%</span>
+          </div>
+          <div className="h-2 overflow-hidden rounded-full bg-white/8">
+            <div
+              className="h-full rounded-full bg-cyan-primary transition-[width]"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-6 flex flex-wrap gap-3">
+        <Button variant="outline" onClick={onViewDetails}>
+          View Details
+        </Button>
+        <Button variant="outline" onClick={onContact}>
+          Contact Worker
+        </Button>
+
+        {isCompleted ? (
+          <>
+            <Button
+              variant="outline"
+              onClick={onDownload}
+              disabled={!assetLink}
+              className={!assetLink ? "opacity-50" : ""}
+            >
+              <Download size={16} /> Download Files
+            </Button>
+            <Button
+              variant="outline"
+              onClick={onReview}
+              disabled={Boolean(reviewDone)}
+              className={reviewDone ? "opacity-50" : ""}
+            >
+              <Star size={16} /> {reviewDone ? "Reviewed" : "Leave Review"}
+            </Button>
+            <Button onClick={onReorder}>Reorder</Button>
+          </>
+        ) : null}
+      </div>
+    </Card>
+  );
+};
+
+const OrderDetailsModal = ({
+  order,
+  onClose,
+  onContact,
+  onDownload,
+  onReorder,
+  onReview,
+}) => {
+  const requirements = getRequirementFields(order);
+  const payment = getOrderPaymentSummary(order);
+  const timeline = getOrderTimeline(order);
+  const assetLink = getPrimaryAssetLink(order);
+  const isCompleted = isCompletedOrder(order);
+  const reviewDone = order.reviewDone || order.review?.rating;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[120] flex items-center justify-center bg-black/70 p-5 backdrop-blur"
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 20, scale: 0.97 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 20, scale: 0.97 }}
+        className="max-h-[90vh] w-full max-w-5xl overflow-hidden rounded-[32px] border border-white/10 bg-[#10141a] shadow-2xl"
+      >
+        <div className="flex items-start justify-between gap-4 border-b border-white/8 px-6 py-5">
+          <div>
+            <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary/72">
+              {getOrderDisplayId(order)}
+            </div>
+            <h3 className="mt-2 text-3xl font-black text-white">
+              {order.service}
+            </h3>
+            <div className="mt-3 flex flex-wrap gap-3">
+              <StatusBadge value={order.status} />
+              <PaymentBadge value={order.paymentStatus} />
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/8 bg-white/5 text-light-gray/62 transition-colors hover:text-white"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="grid max-h-[calc(90vh-6rem)] gap-6 overflow-y-auto px-6 py-6 xl:grid-cols-[0.92fr_1.08fr]">
+          <div className="space-y-6">
+            <Card hoverEffect={false} className="border-white/8 bg-black/30">
+              <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary/72">
+                Service Info
+              </div>
+              <div className="mt-6 space-y-4">
+                <SnapshotRow label="Plan" value={getOrderPlanLabel(order)} />
+                <SnapshotRow
+                  label="Priority"
+                  value={getOrderPriorityLabel(order)}
+                />
+                <SnapshotRow
+                  label="Customer Type"
+                  value={getCustomerTypeLabel(order)}
+                />
+                <SnapshotRow
+                  label="Deadline"
+                  value={order.deadline || "Flexible"}
+                />
+              </div>
+            </Card>
+
+            <Card hoverEffect={false} className="border-white/8 bg-black/30">
+              <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary/72">
+                Payment Status
+              </div>
+              <div className="mt-6 space-y-4">
+                <SnapshotRow
+                  label="Total"
+                  value={formatCurrency(payment.total)}
+                />
+                <SnapshotRow
+                  label="Paid"
+                  value={formatCurrency(payment.paid)}
+                />
+                <SnapshotRow
+                  label="Pending"
+                  value={formatCurrency(payment.pending)}
+                />
+              </div>
+            </Card>
+
+            <Card hoverEffect={false} className="border-white/8 bg-black/30">
+              <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary/72">
+                Timeline
+              </div>
+              <div className="mt-6 space-y-4">
+                {timeline.map((step) => (
+                  <div key={step.key} className="flex items-start gap-4">
+                    <div
+                      className={`mt-0.5 flex h-8 w-8 items-center justify-center rounded-full border ${
+                        step.done
+                          ? "border-cyan-primary bg-cyan-primary text-primary-dark"
+                          : "border-white/10 bg-white/5 text-light-gray/42"
+                      }`}
+                    >
+                      {step.done ? <Check size={14} /> : <Clock3 size={14} />}
+                    </div>
+                    <div>
+                      <div className="font-semibold text-white">{step.label}</div>
+                      <div className="text-sm text-light-gray/50">
+                        {step.date ? formatDateTime(step.date) : "Waiting"}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </div>
+          <div className="space-y-6">
+            <Card hoverEffect={false} className="border-white/8 bg-black/30">
+              <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary/72">
+                Requirements Submitted
+              </div>
+              <div className="mt-6 space-y-5 text-sm leading-7 text-light-gray/62">
+                <DetailBlock label="Name" value={requirements.name} />
+                <DetailBlock label="Email" value={requirements.email} />
+                <DetailBlock label="Phone" value={requirements.phone} />
+                <DetailBlock
+                  label="Project Description"
+                  value={requirements.projectDescription}
+                />
+                <DetailBlock label="Features" value={requirements.features} />
+                <DetailBlock label="References" value={requirements.references} />
+              </div>
+            </Card>
+
+            <Card hoverEffect={false} className="border-white/8 bg-black/30">
+              <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary/72">
+                Actions
+              </div>
+              <div className="mt-6 flex flex-wrap gap-3">
+                <Button variant="outline" onClick={onContact}>
+                  Contact Worker
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={onDownload}
+                  disabled={!assetLink}
+                  className={!assetLink ? "opacity-50" : ""}
+                >
+                  Download Files
+                </Button>
+                {isCompleted ? (
+                  <>
+                    <Button variant="outline" onClick={onReorder}>
+                      Reorder This Service
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={onReview}
+                      disabled={Boolean(reviewDone)}
+                      className={reviewDone ? "opacity-50" : ""}
+                    >
+                      {reviewDone ? "Review Saved" : "Leave Review"}
+                    </Button>
+                  </>
+                ) : null}
+                {assetLink ? (
+                  <a href={assetLink} target="_blank" rel="noreferrer">
+                    <Button variant="outline">
+                      <ExternalLink size={16} /> Open Files
+                    </Button>
+                  </a>
+                ) : null}
+              </div>
+            </Card>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
+const ReviewModal = ({ state, setState, onClose, onSubmit }) => (
+  <motion.div
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    exit={{ opacity: 0 }}
+    className="fixed inset-0 z-[130] flex items-center justify-center bg-black/70 p-5 backdrop-blur"
+  >
+    <motion.div
+      initial={{ opacity: 0, y: 20, scale: 0.97 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: 20, scale: 0.97 }}
+      className="w-full max-w-xl rounded-[32px] border border-white/10 bg-[#10141a] p-6 shadow-2xl"
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary/72">
+            Leave Review
+          </div>
+          <h3 className="mt-2 text-2xl font-black text-white">
+            {state.order?.service}
+          </h3>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="flex h-10 w-10 items-center justify-center rounded-full border border-white/8 bg-white/5 text-light-gray/62 transition-colors hover:text-white"
+        >
+          <X size={18} />
+        </button>
+      </div>
+
+      <div className="mt-6 flex gap-2">
+        {[1, 2, 3, 4, 5].map((rating) => (
+          <button
+            key={rating}
+            type="button"
+            onClick={() =>
+              setState((current) => ({
+                ...current,
+                rating,
+                error: "",
+              }))
+            }
+            className="flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-white/5 text-light-gray/40 transition-colors hover:text-cyan-primary"
+          >
+            <Star
+              size={20}
+              className={
+                rating <= state.rating
+                  ? "fill-cyan-primary text-cyan-primary"
+                  : ""
+              }
+            />
+          </button>
+        ))}
+      </div>
+
+      <label className="mt-6 block space-y-2">
+        <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-light-gray/42">
+          Comment
+        </span>
+        <textarea
+          value={state.comment}
+          onChange={(event) =>
+            setState((current) => ({
+              ...current,
+              comment: event.target.value,
+              error: "",
+            }))
+          }
+          placeholder="Tell us what worked well or what can be improved."
+          className="min-h-[150px] w-full rounded-2xl border border-white/10 bg-black/35 px-4 py-4 text-sm text-white outline-none transition-colors focus:border-cyan-primary"
+        />
+      </label>
+
+      {state.error && (
+        <div className="mt-4 rounded-2xl border border-red-500/18 bg-red-500/8 px-4 py-3 text-sm text-red-300">
+          {state.error}
+        </div>
+      )}
+
+      <div className="mt-6 flex flex-wrap gap-3">
+        <Button variant="outline" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button onClick={onSubmit} disabled={state.submitting}>
+          {state.submitting ? "Submitting..." : "Submit Review"}
+        </Button>
+      </div>
+    </motion.div>
+  </motion.div>
+);
+
+const Field = ({
+  icon: Icon,
+  label,
+  name,
+  value,
+  onChange,
+  placeholder,
+  disabled = false,
+}) => (
+  <label className="space-y-2">
+    <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-light-gray/42">
+      {label}
+    </span>
+    <div className="relative">
+      <Icon
+        size={16}
+        className="absolute left-4 top-1/2 -translate-y-1/2 text-cyan-primary/35"
+      />
+      <input
+        type="text"
+        name={name}
+        value={value}
+        onChange={onChange}
+        disabled={disabled}
+        placeholder={placeholder}
+        className={`w-full rounded-2xl border px-12 py-3 text-sm outline-none transition-colors ${
+          disabled
+            ? "cursor-not-allowed border-white/8 bg-white/5 text-light-gray/42"
+            : "border-white/10 bg-black/35 text-white focus:border-cyan-primary"
+        }`}
+      />
+    </div>
+  </label>
+);
+
+const ContactCard = ({ icon: Icon, title, value, actionLabel, href }) => (
+  <a
+    href={href}
+    target="_blank"
+    rel="noreferrer"
+    className="flex items-center justify-between gap-4 rounded-[22px] border border-white/8 bg-black/35 px-5 py-4 transition-colors hover:border-cyan-primary/16 hover:bg-cyan-primary/6"
+  >
+    <div className="flex items-center gap-4">
+      <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/8 bg-white/5 text-cyan-primary">
+        <Icon size={18} />
+      </div>
+      <div>
+        <div className="text-sm text-light-gray/48">{title}</div>
+        <div className="font-semibold text-white">{value}</div>
+      </div>
+    </div>
+    <div className="text-sm font-semibold text-cyan-primary">{actionLabel}</div>
+  </a>
+);
+
+const DetailBlock = ({ label, value }) => (
+  <div>
+    <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-light-gray/40">
+      {label}
+    </div>
+    <div className="mt-2 text-sm leading-7 text-light-gray/66">
+      {value || "—"}
+    </div>
+  </div>
+);
 
 export default Profile;

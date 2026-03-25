@@ -7,6 +7,8 @@ import { useLocation } from 'react-router-dom';
 
 const RootLayout = ({ children }) => {
   const location = useLocation();
+  const isDashboardRoute =
+    location.pathname === '/dashboard' || location.pathname === '/profile';
 
   return (
     <ReactLenis root>
@@ -14,7 +16,7 @@ const RootLayout = ({ children }) => {
         <NeuralBackground />
         
         <div className="relative z-10 flex flex-col min-h-screen overflow-x-hidden">
-          <Navbar />
+          {!isDashboardRoute && <Navbar />}
           
           <AnimatePresence mode="wait">
              <motion.main 
@@ -23,13 +25,13 @@ const RootLayout = ({ children }) => {
                animate={{ opacity: 1, y: 0 }}
                exit={{ opacity: 0, y: -20 }}
                transition={{ duration: 0.4, ease: "easeOut" }}
-               className="flex-grow pt-24"
+               className={`flex-grow ${isDashboardRoute ? '' : 'pt-24'}`}
              >
                {children}
              </motion.main>
           </AnimatePresence>
 
-          <Footer />
+          {!isDashboardRoute && <Footer />}
         </div>
       </div>
     </ReactLenis>

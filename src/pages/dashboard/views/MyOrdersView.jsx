@@ -1,171 +1,337 @@
-import { useState, useEffect } from 'react';
-import { 
-  Package, Clock, CheckCircle, ExternalLink, 
-  Search, Filter, List, AlertCircle,
-  Calendar, MapPin, Eye, FileText
+import { useEffect, useState } from 'react';
+import {
+  AlertCircle,
+  Calendar,
+  CheckCircle,
+  Clock3,
+  ExternalLink,
+  Package,
+  UserRound,
 } from 'lucide-react';
-import { db } from '../../../config/firebase';
-import { 
-  collection, query, getDocs, where, 
-  orderBy, updateDoc, doc 
+import {
+  addDoc,
+  collection,
+  doc,
+  getDocs,
+  orderBy,
+  query,
+  serverTimestamp,
+  updateDoc,
+  where,
 } from 'firebase/firestore';
+import { db } from '../../../config/firebase';
 import { useAuth } from '../../../context/AuthContext';
+import {
+  getCustomerTypeLabel,
+  getOrderDisplayId,
+  getOrderPriorityBadgeClass,
+  getOrderPriorityLabel,
+  getOrderProgress,
+  getOrderStatusBadgeClass,
+  getOrderStatusLabel,
+  normalizeOrderStatus,
+  toFirestoreOrderStatus,
+} from '../../../utils/orderHelpers';
+
+const FILTERS = ['active', 'accepted', 'in_progress', 'completed'];
 
 const MyOrdersView = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState([]);
-  const [statusFilter, setStatusFilter] = useState('in_progress');
+  const [statusFilter, setStatusFilter] = useState('active');
 
   useEffect(() => {
+    if (!user?.uid) return;
+
+    const fetchMyOrders = async () => {
+      setLoading(true);
+
+      try {
+        const [assignedArray, assignedSingle] = await Promise.all([
+          getDocs(
+            query(
+              collection(db, 'orders'),
+              where('assignedWorkers', 'array-contains', user.uid),
+              orderBy('createdAt', 'desc')
+            )
+          ).catch(() => null),
+          getDocs(
+            query(
+              collection(db, 'orders'),
+              where('workerAssigned', '==', user.uid),
+              orderBy('createdAt', 'desc')
+            )
+          ).catch(() => null),
+        ]);
+
+        const mergedOrders = new Map();
+        [assignedArray, assignedSingle].forEach((snapshot) => {
+          snapshot?.docs.forEach((orderDoc) => {
+            mergedOrders.set(orderDoc.id, {
+              id: orderDoc.id,
+              ...orderDoc.data(),
+            });
+          });
+        });
+
+        setOrders(Array.from(mergedOrders.values()));
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchMyOrders();
-  }, [statusFilter]);
+  }, [user]);
 
-  const fetchMyOrders = async () => {
-    setLoading(true);
+  const filteredOrders = orders.filter(
+    (order) => normalizeOrderStatus(order.status) === statusFilter
+  );
+
+  const handleUpdateStatus = async (order, nextStatus) => {
     try {
-      // Fetch where workerAssigned is user.uid OR user.uid is in assignedWorkers array
-      const q = query(
-         collection(db, "orders"), 
-         where("assignedWorkers", "array-contains", user.uid),
-         orderBy("createdAt", "desc")
+      const firestoreStatus = toFirestoreOrderStatus(nextStatus);
+
+      await updateDoc(doc(db, 'orders', order.id), {
+        status: firestoreStatus,
+        orderStatus: firestoreStatus,
+        ...(nextStatus === 'accepted' ? { acceptedAt: serverTimestamp() } : {}),
+        ...(nextStatus === 'in_progress'
+          ? { inProgressAt: serverTimestamp() }
+          : {}),
+        ...(nextStatus === 'completed'
+          ? { completedAt: serverTimestamp() }
+          : {}),
+      });
+
+      const clientId = order.userId || order.customerId;
+
+      if (clientId && clientId !== 'guest') {
+        await addDoc(collection(db, 'notifications'), {
+          recipientId: clientId,
+          title: 'Order Status Updated',
+          message: `${order.service || 'Your order'} is now ${firestoreStatus}.`,
+          type: 'order',
+          orderId: order.id,
+          read: false,
+          createdAt: serverTimestamp(),
+        });
+      }
+
+      setOrders((current) =>
+        current.map((item) =>
+          item.id === order.id
+            ? {
+                ...item,
+                status: firestoreStatus,
+                orderStatus: firestoreStatus,
+              }
+            : item
+        )
       );
-      const snap = await getDocs(q);
-      const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      
-      // Secondary filter by status if needed (client-side for better ux)
-      setOrders(statusFilter ? data.filter(o => o.status === statusFilter) : data);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleUpdateStatus = async (id, status) => {
-    try {
-      await updateDoc(doc(db, "orders", id), { status });
-      setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  const getStatusStyle = (s) => {
-    switch(s) {
-      case 'pending': return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20';
-      case 'in_progress': return 'bg-blue-500/10 text-blue-500 border-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.1)]';
-      case 'complete': return 'bg-cyan-primary/10 text-cyan-primary border-cyan-primary/20';
-      default: return 'bg-white/5 text-white/20 border-white/5';
+    } catch (error) {
+      console.error(error);
     }
   };
 
   return (
     <div className="space-y-10 animate-in fade-in duration-500 pb-20">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+      <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
         <div>
-          <h2 className="text-2xl font-black text-white italic">Mission <span className="text-cyan-primary not-italic font-mono uppercase text-sm tracking-[0.2em] ml-2">// Active Tasks</span></h2>
-          <p className="text-[10px] font-mono text-white/20 uppercase tracking-widest mt-1">Review your assigned projects, deadlines, and project requirements</p>
+          <h2 className="text-2xl font-black text-white italic">
+            My Orders{' '}
+            <span className="ml-2 text-sm font-mono uppercase tracking-[0.2em] text-cyan-primary not-italic">
+              // Worker Queue
+            </span>
+          </h2>
+          <p className="mt-1 text-[10px] font-mono uppercase tracking-widest text-white/20">
+            Priority tags, deadlines, customer type, and delivery progress for
+            your assigned work
+          </p>
         </div>
+
         <div className="flex flex-wrap gap-3">
-           {['pending', 'in_progress', 'complete'].map((s) => (
-              <button 
-                key={s}
-                onClick={() => setStatusFilter(s)}
-                className={`px-6 py-2.5 rounded-xl border text-[10px] font-mono uppercase tracking-[0.2em] transition-all ${statusFilter === s ? 'bg-cyan-primary text-primary-dark border-cyan-primary font-black shadow-[0_0_20px_rgba(103, 248, 29,0.2)]' : 'bg-white/5 border-white/5 text-white/30 hover:border-white/20'}`}
-              >
-                {s.replace('_', ' ')}
-              </button>
-           ))}
+          {FILTERS.map((filter) => (
+            <button
+              key={filter}
+              type="button"
+              onClick={() => setStatusFilter(filter)}
+              className={`rounded-xl border px-5 py-2.5 text-[10px] font-mono uppercase tracking-[0.18em] transition-all ${
+                statusFilter === filter
+                  ? 'border-cyan-primary bg-cyan-primary text-primary-dark'
+                  : 'border-white/8 bg-white/5 text-white/40 hover:border-white/16'
+              }`}
+            >
+              {getOrderStatusLabel(filter)}
+            </button>
+          ))}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-         {loading ? (
-            <div className="col-span-full py-32 text-center opacity-20 font-mono text-[10px] tracking-[0.5em] animate-pulse">Scanning Assigned Sector...</div>
-         ) : orders.length === 0 ? (
-            <div className="col-span-full py-40 flex flex-col items-center justify-center bg-white/[0.02] border border-dashed border-white/10 rounded-[3rem] opacity-30 group overflow-hidden relative">
-               <Package size={80} className="mb-6 group-hover:scale-110 transition-transform duration-700" />
-               <div className="text-sm font-black uppercase tracking-[0.3em] font-mono">No active missions found</div>
-               <p className="text-[10px] font-mono mt-2 uppercase tracking-widest">Return to base or check with Manager</p>
-               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-cyan-primary/5 rounded-full blur-[100px] pointer-events-none" />
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+        {loading ? (
+          <div className="col-span-full py-32 text-center font-mono text-[10px] uppercase tracking-[0.4em] text-white/20 animate-pulse">
+            Loading assigned orders...
+          </div>
+        ) : filteredOrders.length === 0 ? (
+          <div className="col-span-full rounded-[32px] border border-dashed border-white/10 bg-white/[0.02] px-8 py-24 text-center">
+            <Package size={56} className="mx-auto mb-5 text-white/12" />
+            <div className="text-lg font-black text-white/50">
+              No orders in this stage
             </div>
-         ) : (
-            orders.map(o => (
-               <div key={o.id} className="bg-[#121417] border border-white/5 rounded-[2.5rem] p-8 hover:border-cyan-primary/30 transition-all group flex flex-col relative overflow-hidden shadow-2xl">
-                  {/* Status Indicator Bubble */}
-                  <div className={`absolute top-8 right-8 px-4 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-widest ${getStatusStyle(o.status)}`}>
-                     {o.status?.replace('_', ' ')}
+            <p className="mt-3 text-[10px] font-mono uppercase tracking-[0.18em] text-white/20">
+              When new assignments land, they will appear here first.
+            </p>
+          </div>
+        ) : (
+          filteredOrders.map((order) => {
+            const normalizedStatus = normalizeOrderStatus(order.status);
+            const progress = getOrderProgress(order.status);
+            const nextStatus =
+              normalizedStatus === 'active'
+                ? 'accepted'
+                : normalizedStatus === 'accepted'
+                ? 'in_progress'
+                : normalizedStatus === 'in_progress'
+                ? 'completed'
+                : null;
+
+            return (
+              <div
+                key={order.id}
+                className="rounded-[30px] border border-white/8 bg-[#121417] p-7 shadow-2xl"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div>
+                    <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-cyan-primary/70">
+                      {getOrderDisplayId(order)}
+                    </div>
+                    <h3 className="mt-3 text-2xl font-black text-white">
+                      {order.service}
+                    </h3>
+                    <div className="mt-2 text-sm text-white/45">
+                      {order.plan || order.package || 'Custom'} plan
+                    </div>
                   </div>
 
-                  <div className="mb-8">
-                     <div className="text-[10px] font-mono text-cyan-primary/40 uppercase tracking-[0.3em] mb-3">Order #{o.id.slice(-8).toUpperCase()}</div>
-                     <h3 className="text-2xl font-black text-white leading-tight group-hover:text-cyan-primary transition-colors">{o.service}</h3>
-                     <div className="text-sm font-mono text-white/20 uppercase tracking-widest mt-1 italic">{o.package}</div>
+                  <div className="flex flex-wrap gap-2">
+                    <span
+                      className={`inline-flex rounded-full border px-3 py-1 text-[10px] font-mono uppercase tracking-[0.16em] ${getOrderStatusBadgeClass(
+                        order.status
+                      )}`}
+                    >
+                      {getOrderStatusLabel(order.status)}
+                    </span>
+                    <span
+                      className={`inline-flex rounded-full border px-3 py-1 text-[10px] font-mono uppercase tracking-[0.16em] ${getOrderPriorityBadgeClass(
+                        order
+                      )}`}
+                    >
+                      {getOrderPriorityLabel(order)}
+                    </span>
                   </div>
+                </div>
 
-                  <div className="space-y-4 mb-10 mt-auto">
-                     <div className="flex items-center gap-4 p-4 bg-white/5 rounded-2xl border border-white/5">
-                        <div className="w-10 h-10 rounded-xl bg-[#262B25] flex items-center justify-center text-white/20"><Calendar size={18} /></div>
-                        <div>
-                           <div className="text-[9px] font-mono text-white/20 uppercase tracking-widest">Target Deadline</div>
-                           <div className="text-xs font-bold text-white/80">{o.deadline || 'Flexible Protocol'}</div>
-                        </div>
-                     </div>
-                     <div className="flex items-center gap-4 p-4 bg-white/5 rounded-2xl border border-white/5">
-                        <div className="w-10 h-10 rounded-xl bg-[#262B25] flex items-center justify-center text-white/20"><MapPin size={18} /></div>
-                        <div>
-                           <div className="text-[9px] font-mono text-white/20 uppercase tracking-widest">Deployment Link</div>
-                           <div className="text-xs font-bold text-cyan-primary hover:underline truncate max-w-[140px] cursor-pointer">
-                              {o.driveLink ? 'Open Project Assets' : 'No Link Provided'}
-                           </div>
-                        </div>
-                     </div>
-                  </div>
+                <div className="mt-6 grid gap-4 md:grid-cols-3">
+                  <InfoCard
+                    icon={Calendar}
+                    label="Deadline"
+                    value={order.deadline || 'Flexible'}
+                  />
+                  <InfoCard
+                    icon={UserRound}
+                    label="Customer Type"
+                    value={getCustomerTypeLabel(order)}
+                  />
+                  <InfoCard
+                    icon={Clock3}
+                    label="Payment"
+                    value={order.paymentStatus || 'Pending'}
+                  />
+                </div>
 
-                  <div className="p-5 bg-black/40 rounded-3xl border border-white/5 mb-10">
-                     <div className="flex items-center gap-2 text-[9px] font-mono text-white/30 uppercase tracking-widest mb-3">
-                        <FileText size={12} /> Mission Intel
-                     </div>
-                     <p className="text-xs text-white/50 leading-relaxed line-clamp-3 italic">
-                        "{o.instructions || "No custom instructions appended to this mission log."}"
-                     </p>
+                <div className="mt-6 rounded-[24px] border border-white/8 bg-black/30 p-5">
+                  <div className="flex items-center justify-between gap-4 text-[10px] font-mono uppercase tracking-[0.16em] text-white/35">
+                    <span>Progress</span>
+                    <span>{progress}%</span>
                   </div>
+                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/8">
+                    <div
+                      className="h-full rounded-full bg-cyan-primary"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+                  <p className="mt-4 text-sm leading-7 text-white/55">
+                    {order.projectDescription ||
+                      order.requirements?.projectDescription ||
+                      'No requirement notes were added for this order.'}
+                  </p>
+                </div>
 
-                  <div className="grid grid-cols-2 gap-4 mt-auto">
-                     <button className="py-4 bg-white/5 border border-white/5 rounded-2xl text-[10px] font-black uppercase tracking-widest text-white/40 hover:bg-white/10 hover:text-white transition-all flex items-center justify-center gap-2">
-                        <Eye size={14} /> Full Details
-                     </button>
-                     {o.status !== 'complete' && (
-                        <button 
-                          onClick={() => handleUpdateStatus(o.id, 'complete')}
-                          className="py-4 bg-cyan-primary text-primary-dark rounded-2xl text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-[0_0_20px_rgba(103, 248, 29,0.1)] flex items-center justify-center gap-2"
-                        >
-                           <CheckCircle size={14} /> Mark Complete
-                        </button>
-                     )}
-                     {o.status === 'complete' && (
-                        <div className="col-span-2 py-4 bg-green-500/10 border border-green-500/20 text-green-500 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] text-center flex items-center justify-center gap-3 italic">
-                           <CheckCircle size={14} /> Mission Accomplished
-                        </div>
-                     )}
-                  </div>
-               </div>
-            ))
-         )}
+                <div className="mt-6 flex flex-wrap gap-3">
+                  {order.driveLink || order.references ? (
+                    <a
+                      href={order.driveLink || order.references}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <button
+                        type="button"
+                        className="flex items-center gap-2 rounded-2xl border border-white/8 bg-white/5 px-4 py-3 text-[10px] font-mono uppercase tracking-[0.16em] text-white/60 transition-colors hover:text-white"
+                      >
+                        <ExternalLink size={14} /> Open Assets
+                      </button>
+                    </a>
+                  ) : null}
+
+                  {nextStatus ? (
+                    <button
+                      type="button"
+                      onClick={() => handleUpdateStatus(order, nextStatus)}
+                      className="flex items-center gap-2 rounded-2xl bg-cyan-primary px-4 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-primary-dark transition-transform hover:scale-[1.01]"
+                    >
+                      <CheckCircle size={14} /> Mark {getOrderStatusLabel(nextStatus)}
+                    </button>
+                  ) : (
+                    <div className="flex items-center gap-2 rounded-2xl border border-green-500/20 bg-green-500/10 px-4 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-green-400">
+                      <CheckCircle size={14} /> Completed
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })
+        )}
       </div>
 
-      <div className="bg-[#121417]/50 border border-white/5 p-8 rounded-3xl flex items-start gap-5 italic shadow-xl">
-         <AlertCircle size={24} className="text-cyan-primary shrink-0 mt-0.5" />
-         <div>
-            <h4 className="text-[11px] font-black text-white uppercase tracking-widest mb-2 opacity-50">Task Efficiency Protocol</h4>
-            <p className="text-xs font-mono text-white/20 uppercase tracking-[0.1em] leading-relaxed">
-               Workers are required to update task status within 12h of progress changes. Marking a task as "Complete" triggers the client review phase. Failure to link project assets before completion may lead to payroll delays.
-            </p>
-         </div>
+      <div className="flex items-start gap-4 rounded-[28px] border border-white/8 bg-[#121417]/70 p-6">
+        <AlertCircle size={20} className="mt-0.5 shrink-0 text-cyan-primary" />
+        <p className="text-[10px] font-mono uppercase tracking-[0.16em] leading-relaxed text-white/28">
+          Priority orders should be accepted first. Keep the order status moving
+          as soon as work actually begins so the client dashboard and
+          notifications stay accurate.
+        </p>
       </div>
     </div>
   );
 };
+
+const InfoCard = ({ icon: Icon, label, value }) => (
+  <div className="rounded-[22px] border border-white/8 bg-white/5 p-4">
+    <div className="flex items-center gap-3">
+      <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-black/35 text-cyan-primary">
+        <Icon size={16} />
+      </div>
+      <div>
+        <div className="text-[9px] font-mono uppercase tracking-[0.16em] text-white/30">
+          {label}
+        </div>
+        <div className="mt-1 text-sm font-semibold text-white">{value}</div>
+      </div>
+    </div>
+  </div>
+);
 
 export default MyOrdersView;

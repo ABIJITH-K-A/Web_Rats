@@ -1,0 +1,10 @@
+/* src/styles/ServiceCard.css */
+.image-gradient-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 50%; /* Adjust height as needed for the transition */
+  background: linear-gradient(to top, rgba(11, 12, 16, 1), rgba(11, 12, 16, 0)); /* From card background to transparent */
+  pointer-events: none; /* Allow interaction with elements below */
+}

@@ -150,7 +150,7 @@ const PayrollView = () => {
                {managers.map(m => (
                   <div key={m.id} className="bg-[#262B25] border border-white/5 p-5 rounded-2xl group hover:border-white/10 transition-all">
                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center font-bold text-[10px] border border-white/5 group-hover:bg-cyan-primary group-hover:text-primary-dark transition-all">
+                        <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center font-bold text-[10px] border border-white/5 group-hover:bg-cyan-primary group-hover:text-white transition-all">
                            {m.name?.charAt(0)}
                         </div>
                         <div className="overflow-hidden">
