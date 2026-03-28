@@ -11,6 +11,7 @@ import {
 import { Link } from "react-router-dom";
 import BorderGlow from "../../components/ui/BorderGlow";
 import { Button, Card, SectionHeading } from "../../components/ui/Primitives";
+import SpotlightCard from "../../components/ui/SpotlightCard";
 import {
   FEATURED_PROJECTS,
   PORTFOLIO_GALLERY,
@@ -24,6 +25,13 @@ const categoryIcons = {
   "web-development": BriefcaseBusiness,
   "fix-optimization": Wrench,
   "templates-assets": Package,
+};
+
+const categorySpotlightColors = {
+  "presentation-design": "rgba(103, 248, 29, 0.18)",
+  "web-development": "rgba(98, 203, 44, 0.2)",
+  "fix-optimization": "rgba(103, 248, 29, 0.22)",
+  "templates-assets": "rgba(98, 203, 44, 0.18)",
 };
 
 const Home = () => {
@@ -271,12 +279,18 @@ const Home = () => {
                     </p>
                     <div className="mt-6 space-y-3">
                       {category.services.slice(0, 3).map((service) => (
-                        <div
+                        <SpotlightCard
                           key={service.id}
-                          className="rounded-2xl border border-white/8 bg-black/55 px-4 py-3 text-sm text-light-gray/72"
+                          spotlightColor={
+                            categorySpotlightColors[category.id] ??
+                            "rgba(103, 248, 29, 0.2)"
+                          }
+                          className="px-4 py-3"
                         >
-                          {service.name}
-                        </div>
+                          <div className="text-sm font-medium tracking-[0.01em] text-light-gray/76 transition-colors duration-300 group-hover:text-white">
+                            {service.name}
+                          </div>
+                        </SpotlightCard>
                       ))}
                     </div>
                     <Link

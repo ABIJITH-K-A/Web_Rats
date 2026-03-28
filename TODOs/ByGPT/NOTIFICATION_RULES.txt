@@ -1,0 +1,23 @@
+NOTIFICATION_RULES:
+
+PRIORITY:
+  - high: payment, disputes
+  - medium: order updates
+  - low: general
+
+THROTTLING:
+  - max 5/min per user
+
+BATCHING:
+  - group low priority notifications
+
+SYNC:
+  - read → update across devices
+
+CHANNELS:
+  - in_app (default)
+  - email (optional)
+  - whatsapp (optional)
+
+FAILSAFE:
+  - if delivery_fail → retry

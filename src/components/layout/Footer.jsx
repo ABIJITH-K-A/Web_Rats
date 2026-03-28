@@ -109,20 +109,8 @@ const Footer = () => {
                 Sign In / Join
               </Link>
             </div>
-
-            <div className="mt-8 rounded-2xl border border-white/8 bg-black/45 p-5">
-              <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary/72">
-                Service Lanes
-              </div>
-              <div className="mt-4 grid gap-2 text-sm text-light-gray/62">
-                {SERVICE_CATEGORIES.map((category) => (
-                  <div key={category.id}>{category.name}</div>
-                ))}
-              </div>
-            </div>
           </div>
         </div>
-
         <div className="mt-14 border-t border-white/8 pt-8 text-sm text-light-gray/45">
           2026 TNWebRats. Built for direct collaboration, faster delivery, and
           cleaner project handoffs.

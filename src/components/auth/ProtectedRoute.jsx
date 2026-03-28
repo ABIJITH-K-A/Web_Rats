@@ -1,5 +1,6 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { hasRoleAccess, normalizeRole } from '../../utils/systemRules';
 
 const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   const { user, userProfile, loading } = useAuth();
@@ -17,7 +18,14 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
     return <Navigate to="/join?login=1" state={{ from: location }} replace />;
   }
 
-  if (allowedRoles.length > 0 && !allowedRoles.includes(userProfile?.role)) {
+  const normalizedRole = normalizeRole(userProfile?.role);
+  const status = String(userProfile?.status || "active").toLowerCase();
+
+  if (["suspended", "fired"].includes(status)) {
+    return <Navigate to="/join?login=1" replace />;
+  }
+
+  if (allowedRoles.length > 0 && !hasRoleAccess(normalizedRole, allowedRoles)) {
     return <Navigate to="/profile" replace />;
   }
 

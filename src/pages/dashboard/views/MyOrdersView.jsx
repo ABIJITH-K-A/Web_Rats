@@ -12,34 +12,34 @@ import {
   addDoc,
   collection,
   doc,
-  getDocs,
-  orderBy,
-  query,
-  serverTimestamp,
   updateDoc,
-  where,
 } from 'firebase/firestore';
 import { db } from '../../../config/firebase';
 import { useAuth } from '../../../context/AuthContext';
+import { logAuditEvent } from '../../../services/auditService';
+import { notifyOrderStatusChanged } from '../../../services/notificationService';
+import { fetchOrdersAssignedToUser } from '../../../services/orderService';
 import {
+  buildOrderStatusPatch,
   getCustomerTypeLabel,
   getOrderDisplayId,
+  getNextWorkerOrderStatus,
   getOrderPriorityBadgeClass,
   getOrderPriorityLabel,
   getOrderProgress,
   getOrderStatusBadgeClass,
   getOrderStatusLabel,
+  getWorkerVisibleStatuses,
   normalizeOrderStatus,
-  toFirestoreOrderStatus,
 } from '../../../utils/orderHelpers';
 
-const FILTERS = ['active', 'accepted', 'in_progress', 'completed'];
+const FILTERS = getWorkerVisibleStatuses();
 
 const MyOrdersView = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState([]);
-  const [statusFilter, setStatusFilter] = useState('active');
+  const [statusFilter, setStatusFilter] = useState('assigned');
 
   useEffect(() => {
     if (!user?.uid) return;
@@ -48,34 +48,7 @@ const MyOrdersView = () => {
       setLoading(true);
 
       try {
-        const [assignedArray, assignedSingle] = await Promise.all([
-          getDocs(
-            query(
-              collection(db, 'orders'),
-              where('assignedWorkers', 'array-contains', user.uid),
-              orderBy('createdAt', 'desc')
-            )
-          ).catch(() => null),
-          getDocs(
-            query(
-              collection(db, 'orders'),
-              where('workerAssigned', '==', user.uid),
-              orderBy('createdAt', 'desc')
-            )
-          ).catch(() => null),
-        ]);
-
-        const mergedOrders = new Map();
-        [assignedArray, assignedSingle].forEach((snapshot) => {
-          snapshot?.docs.forEach((orderDoc) => {
-            mergedOrders.set(orderDoc.id, {
-              id: orderDoc.id,
-              ...orderDoc.data(),
-            });
-          });
-        });
-
-        setOrders(Array.from(mergedOrders.values()));
+        setOrders(await fetchOrdersAssignedToUser(user.uid));
       } catch (error) {
         console.error(error);
       } finally {
@@ -92,41 +65,37 @@ const MyOrdersView = () => {
 
   const handleUpdateStatus = async (order, nextStatus) => {
     try {
-      const firestoreStatus = toFirestoreOrderStatus(nextStatus);
+      const payload = buildOrderStatusPatch(nextStatus);
+      const statusLabel = getOrderStatusLabel(nextStatus);
 
-      await updateDoc(doc(db, 'orders', order.id), {
-        status: firestoreStatus,
-        orderStatus: firestoreStatus,
-        ...(nextStatus === 'accepted' ? { acceptedAt: serverTimestamp() } : {}),
-        ...(nextStatus === 'in_progress'
-          ? { inProgressAt: serverTimestamp() }
-          : {}),
-        ...(nextStatus === 'completed'
-          ? { completedAt: serverTimestamp() }
-          : {}),
-      });
+      await updateDoc(doc(db, 'orders', order.id), payload);
 
       const clientId = order.userId || order.customerId;
 
       if (clientId && clientId !== 'guest') {
-        await addDoc(collection(db, 'notifications'), {
+        await notifyOrderStatusChanged({
           recipientId: clientId,
-          title: 'Order Status Updated',
-          message: `${order.service || 'Your order'} is now ${firestoreStatus}.`,
-          type: 'order',
-          orderId: order.id,
-          read: false,
-          createdAt: serverTimestamp(),
+          order: { ...order, id: order.id },
+          statusLabel,
         });
       }
+
+      await logAuditEvent({
+        actorId: user?.uid || null,
+        actorRole: 'worker',
+        action: 'worker_status_updated',
+        targetType: 'order',
+        targetId: order.id,
+        severity: 'medium',
+        metadata: { nextStatus: normalizeOrderStatus(nextStatus) },
+      });
 
       setOrders((current) =>
         current.map((item) =>
           item.id === order.id
             ? {
                 ...item,
-                status: firestoreStatus,
-                orderStatus: firestoreStatus,
+                ...payload,
               }
             : item
         )
@@ -187,16 +156,8 @@ const MyOrdersView = () => {
           </div>
         ) : (
           filteredOrders.map((order) => {
-            const normalizedStatus = normalizeOrderStatus(order.status);
             const progress = getOrderProgress(order.status);
-            const nextStatus =
-              normalizedStatus === 'active'
-                ? 'accepted'
-                : normalizedStatus === 'accepted'
-                ? 'in_progress'
-                : normalizedStatus === 'in_progress'
-                ? 'completed'
-                : null;
+            const nextStatus = getNextWorkerOrderStatus(order);
 
             return (
               <div
@@ -296,7 +257,7 @@ const MyOrdersView = () => {
                     </button>
                   ) : (
                     <div className="flex items-center gap-2 rounded-2xl border border-green-500/20 bg-green-500/10 px-4 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-green-400">
-                      <CheckCircle size={14} /> Completed
+                      <CheckCircle size={14} /> Waiting On Client / Admin
                     </div>
                   )}
                 </div>

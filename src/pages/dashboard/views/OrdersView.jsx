@@ -22,18 +22,22 @@ import {
 import { db } from '../../../config/firebase';
 import { useAuth } from '../../../context/AuthContext';
 import { useDashboard } from '../../../context/DashboardContext';
+import { logAuditEvent } from '../../../services/auditService';
 import {
+  notifyOrderStatusChanged,
+  notifyWorkersAssigned,
+} from '../../../services/notificationService';
+import {
+  buildOrderStatusPatch,
   getCustomerTypeLabel,
   getOrderDisplayId,
   getOrderPriorityBadgeClass,
   getOrderPriorityLabel,
+  getOrderStatusOptions,
   getOrderStatusBadgeClass,
   getOrderStatusLabel,
   normalizeOrderStatus,
-  toFirestoreOrderStatus,
 } from '../../../utils/orderHelpers';
-
-const STATUS_OPTIONS = ['active', 'accepted', 'in_progress', 'completed', 'cancelled'];
 
 const OrdersView = () => {
   const { user, userProfile } = useAuth();
@@ -44,6 +48,7 @@ const OrdersView = () => {
   const [statusFilter, setStatusFilter] = useState('');
   const [assignModal, setAssignModal] = useState({ open: false, orderId: null });
   const [selectedWorkers, setSelectedWorkers] = useState([]);
+  const statusOptions = getOrderStatusOptions(userProfile?.role);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -89,34 +94,30 @@ const OrdersView = () => {
 
   const handleUpdateStatus = async (order, nextStatus) => {
     try {
-      const firestoreStatus = toFirestoreOrderStatus(nextStatus);
-      const payload = {
-        status: firestoreStatus,
-        orderStatus: firestoreStatus,
-        ...(nextStatus === 'accepted' ? { acceptedAt: serverTimestamp() } : {}),
-        ...(nextStatus === 'in_progress'
-          ? { inProgressAt: serverTimestamp() }
-          : {}),
-        ...(nextStatus === 'completed'
-          ? { completedAt: serverTimestamp() }
-          : {}),
-      };
+      const payload = buildOrderStatusPatch(nextStatus);
+      const statusLabel = getOrderStatusLabel(nextStatus);
 
       await updateDoc(doc(db, 'orders', order.id), payload);
 
       const clientId = order.userId || order.customerId;
 
       if (clientId && clientId !== 'guest') {
-        await addDoc(collection(db, 'notifications'), {
+        await notifyOrderStatusChanged({
           recipientId: clientId,
-          title: 'Order Status Updated',
-          message: `${order.service || 'Your order'} is now ${firestoreStatus}.`,
-          type: 'order',
-          orderId: order.id,
-          read: false,
-          createdAt: serverTimestamp(),
+          order: { ...order, id: order.id },
+          statusLabel,
         });
       }
+
+      await logAuditEvent({
+        actorId: user?.uid || null,
+        actorRole: userProfile?.role,
+        action: "order_status_updated",
+        targetType: "order",
+        targetId: order.id,
+        severity: "medium",
+        metadata: { nextStatus: normalizeOrderStatus(nextStatus) },
+      });
 
       setOrders((current) =>
         current.map((item) =>
@@ -163,6 +164,8 @@ const OrdersView = () => {
     try {
       const selectedOrder = orders.find((order) => order.id === assignModal.orderId);
       const isManager = userProfile?.role === 'manager';
+      const primaryWorkerId = selectedWorkers[0] || null;
+      const primaryWorker = workers.find((worker) => worker.id === primaryWorkerId);
 
       if (isManager && selectedWorkers.length > 2) {
         await addDoc(collection(db, 'assignmentRequests'), {
@@ -179,26 +182,41 @@ const OrdersView = () => {
           pendingAssignedWorkers: selectedWorkers,
         });
       } else {
+        const assignmentStatusPatch =
+          normalizeOrderStatus(selectedOrder?.status) === "pending_assignment"
+            ? buildOrderStatusPatch("assigned")
+            : {};
+
         await updateDoc(doc(db, 'orders', assignModal.orderId), {
+          ...assignmentStatusPatch,
           assignedWorkers: selectedWorkers,
-          workerAssigned: selectedWorkers[0] || null,
+          workerAssigned: primaryWorkerId,
+          workerAssignedName: primaryWorker?.name || null,
+          assignedTo: primaryWorkerId,
+          assignedToName: primaryWorker?.name || null,
           assignmentStatus: 'approved',
+          assignedAt: serverTimestamp(),
         });
 
-        await Promise.all(
-          selectedWorkers.map((workerId) =>
-            addDoc(collection(db, 'notifications'), {
-              recipientId: workerId,
-              title: 'New Order Assigned',
-              message: `You have been assigned to ${selectedOrder?.service || 'a new order'}.`,
-              type: 'order',
-              orderId: assignModal.orderId,
-              read: false,
-              createdAt: serverTimestamp(),
-            })
-          )
-        );
+        await notifyWorkersAssigned({
+          workerIds: selectedWorkers,
+          order: { ...selectedOrder, id: assignModal.orderId },
+        });
       }
+
+      await logAuditEvent({
+        actorId: user?.uid || null,
+        actorRole: userProfile?.role,
+        action: "order_assignment_updated",
+        targetType: "order",
+        targetId: assignModal.orderId,
+        severity: "medium",
+        metadata: {
+          workerIds: selectedWorkers,
+          assignmentMode:
+            isManager && selectedWorkers.length > 2 ? "approval_request" : "direct",
+        },
+      });
 
       setAssignModal({ open: false, orderId: null });
       setOrders((current) =>
@@ -207,10 +225,20 @@ const OrdersView = () => {
             ? {
                 ...order,
                 assignedWorkers: selectedWorkers,
-                workerAssigned: selectedWorkers[0] || null,
+                workerAssigned: primaryWorkerId,
+                workerAssignedName: primaryWorker?.name || null,
+                assignedTo: primaryWorkerId,
+                assignedToName: primaryWorker?.name || null,
                 assignmentStatus: isManager && selectedWorkers.length > 2
                   ? 'pending_approval'
                   : 'approved',
+                ...(isManager && selectedWorkers.length > 2
+                  ? {}
+                  : buildOrderStatusPatch(
+                      normalizeOrderStatus(order.status) === "pending_assignment"
+                        ? "assigned"
+                        : normalizeOrderStatus(order.status)
+                    )),
                 pendingAssignedWorkers:
                   isManager && selectedWorkers.length > 2 ? selectedWorkers : [],
               }
@@ -259,7 +287,7 @@ const OrdersView = () => {
             className="rounded-xl border border-white/8 bg-[#121417] px-4 py-2.5 text-[10px] font-mono uppercase tracking-[0.18em] outline-none focus:border-cyan-primary"
           >
             <option value="">All Status</option>
-            {STATUS_OPTIONS.map((status) => (
+            {statusOptions.map((status) => (
               <option key={status} value={status}>
                 {getOrderStatusLabel(status)}
               </option>
@@ -366,7 +394,7 @@ const OrdersView = () => {
                           order.status
                         )}`}
                       >
-                        {STATUS_OPTIONS.map((status) => (
+                        {statusOptions.map((status) => (
                           <option key={status} value={status}>
                             {getOrderStatusLabel(status)}
                           </option>

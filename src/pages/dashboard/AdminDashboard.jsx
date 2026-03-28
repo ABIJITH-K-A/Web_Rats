@@ -23,12 +23,14 @@ import {
   normalizeOrderStatus,
 } from '../../utils/orderHelpers';
 import OrdersView from './views/OrdersView';
+import OrderPoolView from './views/OrderPoolView';
 import UsersView from './views/UsersView';
 import ReferralsView from './views/ReferralsView';
 import ReviewsView from './views/ReviewsView';
 import WalletView from './views/WalletView';
 import ReportsView from './views/ReportsView';
 import SamplesView from './views/SamplesView';
+import DemoDataView from './views/DemoDataView';
 import PayrollView from './views/PayrollView';
 import TeamPayView from './views/TeamPayView';
 import ApprovalsView from './views/ApprovalsView';
@@ -36,6 +38,7 @@ import MyOrdersView from './views/MyOrdersView';
 import InviteKeysView from './views/InviteKeysView';
 import EarningsView from './views/EarningsView';
 import AnalyticsView from './views/AnalyticsView';
+import DisputeResolutionView from './views/DisputeResolutionView';
 
 const AdminDashboard = () => (
   <DashboardLayout>
@@ -57,13 +60,15 @@ const AdminDashboard = () => (
           {currentView === 'wallet' && <WalletView />}
           {currentView === 'reports' && <ReportsView />}
           {currentView === 'samples' && <SamplesView />}
+          {currentView === 'demodata' && <DemoDataView />}
           {currentView === 'payroll' && <PayrollView />}
           {currentView === 'teampay' && <TeamPayView />}
           {currentView === 'approvals' && <ApprovalsView />}
-          {currentView === 'myorders' && <MyOrdersView />}
+          {currentView === 'orderpool' && <OrderPoolView />}
           {currentView === 'invitekeys' && <InviteKeysView />}
           {currentView === 'earnings' && <EarningsView />}
           {currentView === 'analytics' && <AnalyticsView />}
+          {currentView === 'disputes' && <DisputeResolutionView />}
         </motion.div>
       </AnimatePresence>
     )}
@@ -135,10 +140,10 @@ const OverviewTab = () => {
         </div>
 
         <div className="flex gap-3">
-          <button className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-6 py-3 text-[10px] font-mono uppercase tracking-widest transition-colors hover:bg-white/10">
+          <button className="flex items-center gap-2 rounded-xl border border-white/10 bg-[#1a1f1a] px-6 py-3 text-[10px] font-mono uppercase tracking-widest transition-colors hover:bg-[#262B25]">
             <Calendar size={14} /> Live Range
           </button>
-          <button className="rounded-xl border border-cyan-primary/20 bg-cyan-primary/10 px-6 py-3 text-[10px] font-mono uppercase tracking-widest text-cyan-primary transition-colors hover:bg-cyan-primary/18">
+          <button className="rounded-xl border border-cyan-primary/20 bg-[#0f1f15] px-6 py-3 text-[10px] font-mono uppercase tracking-widest text-cyan-primary transition-colors hover:bg-[#0f2f1a]">
             Export Snapshot
           </button>
         </div>
@@ -157,7 +162,7 @@ const OverviewTab = () => {
               className="relative overflow-hidden rounded-[2rem] border border-white/8 bg-[#121417] p-8 shadow-2xl"
             >
               <div className="mb-6 flex items-start justify-between gap-4">
-                <div className={`flex h-14 w-14 items-center justify-center rounded-2xl bg-white/5 ${stat.color}`}>
+                <div className={`flex h-14 w-14 items-center justify-center rounded-2xl bg-[#1a1f1a] ${stat.color}`}>
                   <Icon size={22} />
                 </div>
                 <div className="flex items-center gap-1 text-[9px] font-mono font-black text-green-400">
@@ -175,7 +180,7 @@ const OverviewTab = () => {
 
       <div className="grid grid-cols-1 gap-8 pb-20 lg:grid-cols-3">
         <div className="overflow-hidden rounded-[2.5rem] border border-white/8 bg-[#121417] shadow-2xl lg:col-span-2">
-          <div className="flex items-center justify-between border-b border-white/8 bg-white/[0.01] p-8">
+          <div className="flex items-center justify-between border-b border-white/8 bg-[#0d0f0d] p-8">
             <h3 className="flex items-center gap-3 text-xs font-mono uppercase tracking-widest text-cyan-primary">
               <Box size={16} /> Latest Orders
             </h3>
@@ -198,7 +203,7 @@ const OverviewTab = () => {
                     .fill(0)
                     .map((_, index) => (
                       <tr key={index} className="animate-pulse">
-                        <td colSpan="5" className="h-12 bg-white/5 px-8 py-6" />
+                        <td colSpan="5" className="h-12 bg-[#1a1f1a] px-8 py-6" />
                       </tr>
                     ))
                 ) : recentOrders.length === 0 ? (
@@ -212,7 +217,7 @@ const OverviewTab = () => {
                   </tr>
                 ) : (
                   recentOrders.map((order) => (
-                    <tr key={order.id} className="hover:bg-white/[0.02]">
+                    <tr key={order.id} className="hover:bg-[#1a1f1a]">
                       <td className="px-8 py-6 font-mono text-[11px] text-cyan-primary/50">
                         #{order.id.slice(-8).toUpperCase()}
                       </td>

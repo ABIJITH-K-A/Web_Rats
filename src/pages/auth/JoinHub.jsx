@@ -10,6 +10,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { db } from '../../config/firebase';
 import { doc, getDoc } from 'firebase/firestore';
+import { normalizeRole } from '../../utils/systemRules';
 
 /* ─── Role routing ─────────────────────────────────────────── */
 const ROLE_ROUTES = {
@@ -39,7 +40,7 @@ const inputCls = (pl = 'pl-10') =>
 
 /* ─── Main Component ──────────────────────────────────────── */
 const JoinHub = () => {
-  const { login, signup, staffSignup, user } = useAuth();
+  const { login, signup, staffSignup, user, userProfile, role } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -56,8 +57,10 @@ const JoinHub = () => {
 
   /* redirect if already logged in */
   useEffect(() => {
-    if (user) navigate(ROLE_ROUTES[user.role] || '/profile', { replace: true });
-  }, [user, navigate]);
+    if (!user) return;
+    const resolvedRole = normalizeRole(role || userProfile?.role);
+    navigate(ROLE_ROUTES[resolvedRole] || '/profile', { replace: true });
+  }, [user, userProfile, role, navigate]);
 
   /* --- form state --- */
   const [loginData, setLoginData] = useState({ email: '', password: '' });

@@ -1,0 +1,1270 @@
+🏠 HOME PAGE
+
+Hero Section
+We Build. We Design. We Deliver.
+Welcome to TNWebRats — a creative studio run by two passionate developers and designers who turn ideas into polished digital experiences. Websites, presentations, posters — we do it all, and we do it right.
+
+"Two minds. One mission. Infinite creativity."
+
+
+Who We Are
+TNWebRats is a two-person creative powerhouse built on skill, hustle, and a shared obsession with great design. We're not a big agency — we're two people who actually care about what we build, and it shows in every pixel we push.
+From students to startups, from a single poster to a full-blown website — we help you show up like you mean it.
+
+Why TNWebRats? (3 Value Cards)
+🎯 Built With Purpose
+No lazy templates. No copy-paste work. Every project is custom-crafted with intention and precision.
+⚡ Fast & Reliable
+Deadlines are real and we respect them. Quality output without the endless waiting.
+🤝 You Work With Us Directly
+No middlemen. No confusion. Just you and the two people actually doing the work.
+
+CTA
+
+Ready to build something people will actually notice?
+[Explore Our Services] — [See Our Projects]
+
+
+
+🛠️ SERVICES PAGE
+
+Header
+What We Do
+We keep our focus sharp and our output sharper. Here's exactly what TNWebRats brings to the table — nothing more, nothing bloated.
+
+🖥️ Website Design & Development
+Your website is your first impression — and you only get one. We design and develop clean, modern, and fully responsive websites that don't just look good, they perform good.
+What you get:
+
+Custom UI/UX design tailored to your brand
+Mobile-first, fully responsive layouts
+Landing pages, portfolios & multi-page sites
+Built with React.js and modern web technologies
+
+Best for: Startups, small businesses, freelancers, student portfolios
+
+📊 Presentation Design (PPT)
+A great idea deserves a great slide deck. We design presentations that are structured, visually compelling, and built to make your message hit hard — whether it's a pitch, a project, or a proposal.
+What you get:
+
+Business, academic & competition presentations
+Pitch decks & startup proposals
+Custom slide templates & brand-consistent kits
+Smooth animations & professional transitions
+
+Best for: Students, entrepreneurs, college projects, business pitches
+
+🎨 Poster & Graphic Design
+We create visuals that stop the scroll. Whether it's a flyer, a banner, or a social media graphic — bold, clean, and made to get attention.
+What you get:
+
+Event posters & promotional flyers
+Social media creatives & banners
+Print-ready & digital format designs
+Custom illustrated visuals
+
+Best for: Events, college fests, businesses, personal branding
+
+CTA
+
+Not sure what you need exactly?
+[Talk to Us] — we'll figure it out together.
+
+
+
+📁 PROJECTS PAGE
+
+Header
+Our Work
+We let the work do the talking. Here's what we've built, designed, and shipped — and there's a lot more in the pipeline.
+
+Intro
+Every project here started with a problem and ended with something we're genuinely proud of. Real clients, real briefs, real results. This is TNWebRats in action.
+
+🔧 AutoBit
+Category: Web Development / Software
+Status: 🟡 Ongoing
+AutoBit is a project co-developed by both WaveWalker and Mr_Ratty — [placeholder: add 1–2 lines about what AutoBit does and who it's for once ready].
+Built by: WaveWalker & Mr_Ratty
+[View Project →]
+
+🔧 [Project Name — Placeholder]
+Category: [Website / Poster / PPT]
+Status: 🟡 Ongoing
+[Placeholder: Add a short description of the second ongoing project — what it is, what problem it solves, and who it's for.]
+Built by: WaveWalker & Mr_Ratty
+[View Project →]
+
+🔧 [Project Name — Placeholder]
+Category: [Website / Poster / PPT]
+[Placeholder: Drop in a real or upcoming project here — even a personal or college project counts.]
+[View Project →]
+
+
+We're always building. Check back for updates — or better yet, [start a project with us.]
+
+
+
+👥 ABOUT PAGE
+
+Header
+About TNWebRats
+
+Brand Story
+TNWebRats started as a simple conversation between two friends who realised they were already doing the work — building things, designing things, solving problems — so why not make it official?
+What started as a side passion turned into a proper creative studio. Two developers. Two designers. One shared drive to build things that actually matter. We work with students, startups, and small businesses who want quality output without the big agency price tag and impersonal experience.
+The name is bold. The work is bolder.
+
+The People Behind the Pixels
+
+[ LEFT COLUMN — Founder ]
+[Mr_Ratty's Photo Here]
+Mr_Ratty
+Founder & Creative Director
+
+"[Placeholder quote or tagline from Mr_Ratty]"
+
+[Placeholder bio — Add a short personal intro about Abhijith here. What drives him, his background, his design philosophy, or just who he is.]
+Skills & Tools:
+
+🎨 Graphic & Poster Design
+💻 Web Development (Python, HTML, CSS, JS, React.js)
+🖼️ UI/UX Design
+📊 Presentation Design
+
+🔗 Portfolio: [placeholder-portfolio-link.com]
+📸 Instagram: [@placeholder]
+🐦 Twitter/X: [@placeholder]
+💼 LinkedIn: [placeholder]
+📬 Email: [placeholder@email.com]
+
+[ RIGHT COLUMN — Co-Founder ]
+[WaveWalker's Photo Here]
+WaveWalker
+Co-Founder & Lead Developer
+
+"[Placeholder quote or tagline from WaveWalker]"
+
+[Placeholder bio — Add a short personal intro about Suriya here. His development focus, what he loves building, his coding philosophy, or just who he is.]
+Skills & Tools:
+
+💻 Web Development (React.js, UI/UX)
+🐍 Python, C++, Java
+🌐 Frontend Architecture
+🎯 Problem Solving & Technical Design
+
+🔗 Portfolio: [placeholder-portfolio-link.com]
+📸 Instagram: [@placeholder]
+🐦 Twitter/X: [@placeholder]
+💼 LinkedIn: [placeholder]
+📬 Email: [placeholder@email.com]
+
+Closing Note
+
+TNWebRats isn't just a service — it's a creative duo that genuinely loves what they do.
+If you've got an idea, a deadline, or just a rough thought you want to make real —
+[Let's talk. →]
+
+SERVICES PAGE STRUCTURE – TNWEBRATS
+
+---
+
+1. HERO SECTION
+
+Heading:
+"Our Services"
+
+Subheading:
+"Affordable digital solutions for students, creators, and small businesses."
+
+Buttons:
+
+* View Services
+* Contact Us
+
+---
+
+2. SERVICE NAVIGATION (Optional)
+
+* Design
+* Web Development
+* Fix & Optimization
+* Templates
+
+---
+
+3. PRESENTATION & DESIGN
+
+Title:
+"Presentation & Design"
+
+Description:
+"Professional designs for academic, business, and social media needs."
+
+Services:
+
+1. PPT Creation
+
+* Clean, modern slides
+* Academic & business use
+* Custom design
+* Fast delivery
+
+2. Poster Design
+
+* Event posters
+* Social media graphics
+* Eye-catching design
+* High quality
+
+3. Social Media Posts
+
+* Instagram post packs
+* Consistent branding
+* Monthly packages
+
+Pricing Hint:
+"Starting from ₹99"
+
+CTA:
+"Get Design Service"
+
+---
+
+4. WEB DEVELOPMENT
+
+Title:
+"Web Development"
+
+Description:
+"Modern, responsive websites tailored to your needs."
+
+Services:
+
+1. Portfolio Websites
+
+* For students & developers
+* Clean UI
+* Mobile responsive
+
+2. Landing Pages
+
+* For startups/products
+* Conversion-focused
+* Fast loading
+
+3. Business Websites
+
+* Multi-page
+* Professional design
+* SEO-friendly
+
+Pricing Hint:
+"Starting from ₹999"
+
+CTA:
+"Build My Website"
+
+---
+
+5. FIX & OPTIMIZATION
+
+Title:
+"Fix & Optimization"
+
+Description:
+"Improve and fix your existing website quickly and efficiently."
+
+Services:
+
+* Bug fixing
+* UI improvements
+* Speed optimization
+
+Pricing Hint:
+"Starting from ₹199"
+
+CTA:
+"Fix My Website"
+
+---
+
+6. TEMPLATES & ASSETS
+
+Title:
+"Templates & Assets"
+
+Description:
+"Ready-to-use templates for quick and professional results."
+
+Items:
+
+* Website templates
+* Portfolio templates
+* PPT templates
+
+Pricing Hint:
+"Starting from ₹49"
+
+CTA:
+"Browse Templates"
+
+---
+
+7. WHY CHOOSE US
+
+* Affordable pricing
+* Fast delivery
+* Beginner-friendly service
+* Custom solutions
+
+---
+
+8. TESTIMONIALS (Add later)
+
+* Client feedback
+* Ratings
+* Screenshots
+
+---
+
+9. FINAL CTA
+
+Heading:
+"Ready to get started?"
+
+Buttons:
+
+* Contact Us
+* Get a Quote
+
+---
+
+END OF STRUCTURE
+
+BOOKING PAGE – STEPPER FLOW (UPDATED WITH TERMS + PRIORITY PAY)
+
+---
+
+GLOBAL RULES:
+
+* Stepper (1 → 6) is visible but NOT clickable
+* User must proceed step-by-step
+* Validation required at each step
+
+---
+
+STEP 1: SELECT CATEGORY
+
+Title:
+"Choose a Service Category"
+
+Options:
+
+Presentation & Design
+Web Development
+Fix & Optimization
+Templates
+
+UI:
+
+Card selection (only one selectable)
+
+State:
+selectedCategory
+
+Validation:
+User must select one category
+
+CTA:
+"Next"
+
+STEP 2: SELECT SERVICE
+
+Title:
+"Choose a Service"
+
+Dynamic based on selectedCategory
+
+Example (Web Development):
+
+Portfolio Website
+Landing Page
+Business Website
+
+UI:
+
+Service cards
+
+State:
+selectedService
+
+Validation:
+User must select one service
+
+CTA:
+"Next"
+
+---
+
+STEP 3: SELECT PLAN
+
+Title:
+"Choose Your Plan"
+
+Plans:
+
+* Basic
+* Standard (Best Value ⭐)
+* Premium
+
+Each Plan Includes:
+
+* Price
+* Features
+* Highlight badge
+
+NEW ADDITION:
+
+[ ] Add Priority Delivery (Optional)
+
+Description:
+"Get your project delivered faster"
+
+Display:
+
+* Extra cost (example: +₹299 or +20%)
+
+State:
+isPriority = true / false
+
+NOTE:
+If selected → update total price
+
+CTA:
+"Next"
+
+---
+
+STEP 4: USER DETAILS & REQUIREMENTS
+
+(No major change)
+
+Fields:
+
+* Name
+* Email
+* Phone
+* Project Description
+* Features
+* References
+* Deadline
+
+CTA:
+"Next"
+
+---
+
+STEP 5: PAYMENT
+
+Title:
+"Secure Your Order"
+
+Display:
+
+* Base Price
+* Priority Fee (if selected)
+* Total Price
+
+Payment Logic:
+
+IF New Customer:
+
+* 70% upfront
+
+IF Returning Customer:
+
+* 50% upfront
+
+Display clearly:
+
+* Advance Payment
+* Remaining Payment
+
+CTA:
+"Proceed to Pay"
+
+---
+
+STEP 6: REVIEW & CONFIRM
+
+Title:
+"Review Your Order"
+
+Display:
+
+* Category
+* Service
+* Plan
+* Priority (Yes / No)
+* User Inputs
+* Payment Summary
+
+---
+
+NEW ADDITION (MANDATORY):
+
+[ ] I agree to the Terms & Conditions
+
+* "View Terms" link (opens modal or page)
+
+Validation:
+User MUST check this box to proceed
+
+---
+
+CTA:
+"Confirm Order"
+
+---
+
+FINAL ACTIONS (UPDATED):
+
+On Confirm:
+
+1. Save to Firebase:
+
+   * userId
+   * category
+   * service
+   * plan
+   * isPriority
+   * requirements
+   * payment status
+   * order status = "Active"
+   * timestamp
+
+2. Generate Order ID
+
+3. Send Notifications:
+
+   * Email
+   * WhatsApp
+
+4. Redirect:
+   → User Dashboard
+
+---
+
+PRIORITY LOGIC (IMPORTANT):
+
+* Mark order as "High Priority"
+* Show tag in Worker Dashboard
+* Workers handle priority orders first
+
+---
+
+WORKER DASHBOARD UPDATE:
+
+Each order shows:
+
+* Priority Tag (Normal / High)
+* Deadline
+* Customer type
+
+---
+
+END OF STRUCTURE
+
+CLIENT DASHBOARD – TNWEBRATS
+
+---
+
+MAIN PURPOSE:
+
+Allow users to:
+
+* Track orders
+* Manage profile
+* View payments
+* Communicate with team
+
+---
+
+LAYOUT STRUCTURE:
+
+Sidebar (Left):
+
+* Dashboard
+* My Orders
+* Payments
+* Profile
+* Support
+
+Top Bar:
+
+* User Name
+* Notifications (🔔)
+* Logout
+
+Main Content Area:
+
+* Dynamic based on selected tab
+
+---
+
+1. DASHBOARD (HOME)
+
+Title:
+"Welcome Back, [Name]"
+
+Sections:
+
+1. Quick Stats:
+
+* Active Orders
+* Completed Orders
+* Pending Payments
+
+2. Recent Orders:
+
+* Last 3 orders
+* Status + progress
+
+3. Quick Actions:
+
+* "Create New Order"
+* "Contact Support"
+
+---
+
+2. MY ORDERS
+
+Tabs:
+
+* Active Orders
+* Completed Orders
+
+---
+
+ACTIVE ORDERS:
+
+Each Order Card Shows:
+
+* Order ID (TNWR-001)
+
+* Service Name
+
+* Plan
+
+* Status:
+
+  * Active
+  * In Progress
+  * Completed
+
+* Priority Tag (if any)
+
+* Deadline
+
+* Progress Bar
+
+Buttons:
+
+* View Details
+* Contact Worker
+
+---
+
+ORDER DETAILS PAGE:
+
+Shows:
+
+* Full service info
+* Requirements submitted
+* Files / references
+* Payment status
+* Timeline
+
+Status Flow:
+Active → In Progress → Completed
+
+---
+
+COMPLETED ORDERS:
+
+* List of finished orders
+* Option to:
+
+  * Download files
+  * Leave review ⭐
+
+---
+
+3. PAYMENTS
+
+Sections:
+
+1. Payment Summary:
+
+* Total Paid
+* Pending Amount
+
+2. Payment History:
+   Each entry:
+
+* Order ID
+* Amount paid
+* Date
+* Status
+
+3. Pending Payments:
+
+* Show remaining balances
+* CTA: "Pay Now"
+
+---
+
+4. PROFILE
+
+Fields:
+
+* Name
+* Email
+* Phone
+* Password (change option)
+
+Additional:
+
+* Customer Type:
+
+  * New
+  * Returning
+
+---
+
+5. SUPPORT
+
+Options:
+
+* Contact Form
+* WhatsApp button
+* Email support
+
+Fields:
+
+* Subject
+* Message
+
+CTA:
+"Send Message"
+
+---
+
+6. NOTIFICATIONS SYSTEM
+
+Types:
+
+* Order updates
+* Payment reminders
+* Completion alerts
+
+Display:
+
+* Bell icon dropdown
+
+---
+
+7. ORDER STATUS SYSTEM
+
+Statuses:
+
+* Active
+* Accepted
+* In Progress
+* Completed
+
+Each status update:
+
+* Visible in dashboard
+* Sends notification
+
+---
+
+8. FIREBASE STRUCTURE (CLIENT SIDE)
+
+Collection: users
+
+* userId
+* name
+* email
+* phone
+* customerType
+
+Collection: orders
+
+* orderId
+* userId
+* category
+* service
+* plan
+* isPriority
+* status
+* paymentStatus
+* createdAt
+
+Collection: payments
+
+* paymentId
+* orderId
+* amount
+* status
+* timestamp
+
+---
+
+9. UI FLOW SUMMARY
+
+Login → Dashboard → My Orders → Order Details
+
+---
+
+END OF STRUCTURE
+
+CLIENT DASHBOARD – REORDER FEATURE (INTEGRATED)
+
+---
+
+PURPOSE:
+
+Allow users to quickly reorder a previously completed service
+with minimal input.
+
+---
+
+WHERE IT APPEARS:
+
+1. Completed Orders Tab
+2. Order Details Page
+
+Button:
+"Reorder"
+
+---
+
+REORDER FLOW
+
+---
+
+STEP 1: USER CLICKS "REORDER"
+
+Trigger:
+
+* Fetch previous order data
+
+Data Loaded:
+
+* Category
+* Service
+* Plan
+* isPriority
+* Previous requirements
+
+---
+
+STEP 2: AUTO-FILL STEPPER
+
+Redirect to Booking Stepper with pre-filled data:
+
+* Step 1 → Category (locked or pre-selected)
+* Step 2 → Service (pre-selected)
+* Step 3 → Plan (pre-selected)
+* Priority → pre-selected (optional toggle)
+
+User can:
+
+* Edit requirements
+* Update references
+* Change deadline
+
+---
+
+STEP 3: QUICK EDIT MODE
+
+Form shows:
+
+* Previous inputs (editable)
+* Add "Reuse Previous Data" toggle (default ON)
+
+---
+
+STEP 4: PAYMENT RULE
+
+Since user is returning:
+
+* Only 50% upfront required
+
+Display:
+"Returning Customer Discount Applied"
+
+---
+
+STEP 5: REVIEW & CONFIRM
+
+Same as normal flow but includes:
+
+* "Reorder of: TNWR-XXX"
+* Updated details
+
+---
+
+FINAL ACTIONS:
+
+1. Create NEW order (do NOT overwrite old)
+
+2. Firebase Save:
+
+* orderId (new)
+* parentOrderId (old order reference)
+* isReorder: true
+
+3. Status:
+
+* Active
+
+4. Notifications sent:
+
+* Email
+* WhatsApp
+
+---
+
+UI ADDITIONS
+
+---
+
+COMPLETED ORDER CARD:
+
+Add Button:
+[ Reorder 🔁 ]
+
+---
+
+ORDER DETAILS PAGE:
+
+Add:
+"Reorder This Service"
+
+---
+
+BADGE:
+
+Show:
+"Reordered Order" (on new order)
+
+---
+
+FIREBASE STRUCTURE UPDATE
+
+---
+
+orders collection:
+
+Add fields:
+
+* isReorder: true / false
+* parentOrderId: "TNWR-001"
+
+---
+
+LOGIC SNIPPET
+
+---
+
+const reorderData = {
+category: oldOrder.category,
+service: oldOrder.service,
+plan: oldOrder.plan,
+isPriority: oldOrder.isPriority,
+isReorder: true,
+parentOrderId: oldOrder.orderId
+};
+
+---
+
+UX ADVANTAGE
+
+---
+
+* Faster checkout
+* Less typing
+* Higher conversion
+* Encourages repeat customers
+
+---
+
+END OF FEATURE
+
+TNWEBRATS – AUTH & ROLE ACCESS SYSTEM (FINAL)
+
+---
+
+1. OWNER ACCESS SYSTEM
+
+---
+
+RULES:
+
+* Owners CANNOT sign up normally
+* Only login using INVITE KEY
+* Invite key = one-time use
+* Maximum 2 owners allowed in system
+
+---
+
+OWNER LOGIN FLOW
+
+1. Go to: /owner-login
+
+2. Enter:
+
+   * Email
+   * Password
+   * Invite Key
+
+3. Backend checks:
+
+   IF email (Gmail), name, and password match records
+   AND inviteKey is valid AND unused
+   AND total owners < 2:
+
+   → Allow account creation/login
+   → Mark inviteKey as used
+   → Assign role = "owner"
+   → Grant highest authority access (can view all profiles, payments, and payrolls across all roles)
+
+   ELSE:
+   → Reject access
+
+   NOTE:
+
+   * Super Admins and lower roles can only view data of roles below them in hierarchy
+
+---
+
+INVITE KEY STRUCTURE (Firebase)
+
+Collection: inviteKeys
+
+Fields:
+
+* key: "AJDN-AKSJ-1234-1234"
+* role: "owner"
+* isUsed: false
+* createdAt
+
+---
+
+OWNER LIMIT CHECK
+
+Before creating owner:
+
+* Count users where role == "owner"
+
+IF count >= 2:
+→ Block creation
+
+---
+
+2. STAFF AUTH SYSTEM (SEPARATE PORTAL)
+
+---
+
+ROLES:
+
+* super_admin
+* admin
+* manager
+* worker
+
+---
+
+ACCESS PAGE:
+
+/staff-login
+
+(Separate from client login)
+
+---
+
+SIGNUP RULES:
+
+* Only allowed via:
+  ✔ Invite key created by a higher role
+  ✔ Invite keys (recommended)
+
+---
+
+STAFF LOGIN FLOW:
+
+1. Go to: /staff-login
+
+2. Enter:
+
+   * Email
+   * Password
+
+3. System checks:
+
+   * User exists
+   * Role is valid (not client)
+
+4. Redirect based on role:
+
+   * super_admin → /superadmin
+   * admin → /admin
+   * manager → /manager
+   * worker → /worker
+
+---
+
+STAFF SIGNUP FLOW (INVITE KEY REQUIRED):
+
+1. Go to: /staff-signup
+
+2. Enter:
+
+   * Name
+   * Email
+   * Password
+   * Invite Key
+
+3. System checks:
+
+   * Invite key exists
+   * Invite key is not used
+   * Invite key role matches assigned role
+
+4. If valid:
+
+   * Create user with role from invite key
+   * Mark invite key as used
+
+5. If invalid:
+
+   * Reject signup
+
+NOTE:
+
+* Invite keys are created by owners first , then other roles except workers can make invite key and can only make them to get lower role invite keys.
+* Each invite key is tied to a specific role (admin / manager / worker)
+* Signup is NOT allowed without a valid invite key
+
+---
+
+3. CLIENT AUTH SYSTEM
+
+---
+
+Normal users (customers)
+
+Pages:
+
+* /login
+* /signup
+
+Access:
+
+* Booking
+* Client Dashboard
+
+---
+
+4. ROLE SEPARATION (VERY IMPORTANT)
+
+---
+
+OWNER:
+
+* /owner-login ONLY
+
+STAFF:
+
+* /staff-login ONLY
+
+CLIENT:
+
+* /login & /signup
+
+---
+
+5. FIREBASE USER STRUCTURE
+
+---
+
+users collection:
+
+* userId
+
+* name
+
+* email
+
+* role:
+  "owner"
+  "super_admin"
+  "admin"
+  "manager"
+  "worker"
+  "client"
+
+* createdAt
+
+---
+
+6. SECURITY RULES (LOGIC)
+
+---
+
+OWNER:
+✔ Highest access
+✔ Created only via invite key
+
+STAFF:
+✔ Cannot become owner
+✔ Cannot access client routes
+
+CLIENT:
+✔ Cannot access staff dashboards
+
+---
+
+7. OPTIONAL (HIGHLY RECOMMENDED)
+
+---
+
+Invite keys for staff roles:
+
+Fields:
+
+* role: "admin" / "manager" / "worker"
+* isUsed: false
+
+Flow:
+
+* Admin generates key
+* Staff signs up using key
+
+---
+
+8. EXTRA SAFETY
+
+---
+
+* Expire invite keys after use
+* Add timestamp + expiry
+* Log who used which key
+
+---
+
+END OF SYSTEM

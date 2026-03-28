@@ -10,9 +10,12 @@ import {
   orderBy, updateDoc, doc, serverTimestamp 
 } from 'firebase/firestore';
 import { useAuth } from '../../../context/AuthContext';
+import { logAuditEvent } from '../../../services/auditService';
+import { notifyWorkersAssigned } from '../../../services/notificationService';
+import { buildOrderStatusPatch } from '../../../utils/orderHelpers';
 
 const ApprovalsView = () => {
-  const { user, userData } = useAuth();
+  const { user, userProfile } = useAuth();
   const [loading, setLoading] = useState(true);
   const [requests, setRequests] = useState([]);
 
@@ -35,12 +38,21 @@ const ApprovalsView = () => {
 
   const handleAction = async (requestId, orderId, workers, status) => {
     try {
+      const primaryWorkerId = workers?.[0] || null;
+
       if (status === 'approved') {
         await updateDoc(doc(db, "orders", orderId), {
+          ...buildOrderStatusPatch('assigned'),
           assignedWorkers: workers,
-          workerAssigned: workers[0] || null,
+          workerAssigned: primaryWorkerId,
+          assignedTo: primaryWorkerId,
           assignmentStatus: "approved",
-          pendingAssignedWorkers: []
+          pendingAssignedWorkers: [],
+          assignedAt: serverTimestamp(),
+        });
+        await notifyWorkersAssigned({
+          workerIds: workers,
+          order: { id: orderId, service: "a new order" },
         });
       } else {
         await updateDoc(doc(db, "orders", orderId), {
@@ -52,8 +64,18 @@ const ApprovalsView = () => {
       await updateDoc(doc(db, "assignmentRequests", requestId), {
         status,
         processedBy: user.uid,
-        processedByName: userData.name,
+        processedByName: userProfile?.name || user?.email || "Admin",
         processedAt: serverTimestamp()
+      });
+
+      await logAuditEvent({
+        actorId: user?.uid || null,
+        actorRole: userProfile?.role || 'admin',
+        action: `assignment_request_${status}`,
+        targetType: 'assignment_request',
+        targetId: requestId,
+        severity: 'medium',
+        metadata: { orderId, workers },
       });
 
       setRequests(prev => prev.filter(r => r.id !== requestId));

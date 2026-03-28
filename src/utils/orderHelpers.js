@@ -1,118 +1,50 @@
+import { serverTimestamp } from "firebase/firestore";
 import { SERVICE_CATEGORIES } from "../data/siteData";
+import {
+  ORDER_STATUS_ALIASES,
+  ORDER_STATUS_FLOW,
+  ORDER_STATUS_META,
+  PAYMENT_STATUS_ALIASES,
+  PAYMENT_STATUS_META,
+  normalizeRole,
+  normalizeValue,
+} from "./systemRules";
 
-export const ORDER_STATUS_META = {
-  active: {
-    label: "Active",
-    progress: 24,
-    badgeClass: "border-yellow-500/20 bg-yellow-500/10 text-yellow-400",
-  },
-  accepted: {
-    label: "Accepted",
-    progress: 45,
-    badgeClass: "border-sky-500/20 bg-sky-500/10 text-sky-400",
-  },
-  in_progress: {
-    label: "In Progress",
-    progress: 72,
-    badgeClass: "border-blue-500/20 bg-blue-500/10 text-blue-400",
-  },
-  completed: {
-    label: "Completed",
-    progress: 100,
-    badgeClass: "border-cyan-primary/20 bg-cyan-primary/10 text-cyan-primary",
-  },
-  cancelled: {
-    label: "Cancelled",
-    progress: 0,
-    badgeClass: "border-red-500/20 bg-red-500/10 text-red-400",
-  },
-};
-
-export const PAYMENT_STATUS_META = {
-  pending: {
-    label: "Pending",
-    badgeClass: "border-yellow-500/20 bg-yellow-500/10 text-yellow-400",
-  },
-  partial: {
-    label: "Partial",
-    badgeClass: "border-blue-500/20 bg-blue-500/10 text-blue-400",
-  },
-  paid: {
-    label: "Paid",
-    badgeClass: "border-green-500/20 bg-green-500/10 text-green-400",
-  },
-};
-
-const normalizeValue = (value) =>
-  String(value || "")
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, "_");
+export { ORDER_STATUS_META, PAYMENT_STATUS_META, ORDER_STATUS_FLOW };
 
 export const normalizeOrderStatus = (value) => {
   const normalized = normalizeValue(value);
-
-  if (!normalized) return "active";
-
-  const aliasMap = {
-    pending: "active",
-    new: "active",
-    active: "active",
-    accepted: "accepted",
-    assigned: "accepted",
-    in_progress: "in_progress",
-    progress: "in_progress",
-    working: "in_progress",
-    complete: "completed",
-    completed: "completed",
-    done: "completed",
-    cancelled: "cancelled",
-    canceled: "cancelled",
-  };
-
-  return aliasMap[normalized] || "active";
+  if (!normalized) return "pending_assignment";
+  return ORDER_STATUS_ALIASES[normalized] || "pending_assignment";
 };
 
 export const toFirestoreOrderStatus = (value) =>
-  ORDER_STATUS_META[normalizeOrderStatus(value)]?.label || "Active";
+  ORDER_STATUS_META[normalizeOrderStatus(value)]?.label || "Pending Assignment";
 
 export const getOrderStatusLabel = (value) =>
-  ORDER_STATUS_META[normalizeOrderStatus(value)]?.label || "Active";
+  ORDER_STATUS_META[normalizeOrderStatus(value)]?.label || "Pending Assignment";
 
 export const getOrderStatusBadgeClass = (value) =>
   ORDER_STATUS_META[normalizeOrderStatus(value)]?.badgeClass ||
-  ORDER_STATUS_META.active.badgeClass;
+  ORDER_STATUS_META.pending_assignment.badgeClass;
 
 export const getOrderProgress = (value) =>
   ORDER_STATUS_META[normalizeOrderStatus(value)]?.progress ?? 0;
 
 export const isCompletedOrder = (order) =>
-  normalizeOrderStatus(order?.status || order?.orderStatus) === "completed";
+  ["completed", "closed"].includes(
+    normalizeOrderStatus(order?.status || order?.orderStatus)
+  );
 
 export const isOpenOrder = (order) =>
-  !["completed", "cancelled"].includes(
+  !["completed", "closed", "cancelled"].includes(
     normalizeOrderStatus(order?.status || order?.orderStatus)
   );
 
 export const normalizePaymentStatus = (value) => {
   const normalized = normalizeValue(value);
-
   if (!normalized) return "pending";
-
-  const aliasMap = {
-    pending: "pending",
-    unpaid: "pending",
-    due: "pending",
-    advance_due: "pending",
-    partial: "partial",
-    partly_paid: "partial",
-    partial_paid: "partial",
-    advance_paid: "partial",
-    paid: "paid",
-    completed: "paid",
-  };
-
-  return aliasMap[normalized] || "pending";
+  return PAYMENT_STATUS_ALIASES[normalized] || "pending";
 };
 
 export const getPaymentStatusLabel = (value) =>
@@ -132,6 +64,46 @@ export const toDateValue = (value) => {
 
   const fallback = new Date(value);
   return Number.isNaN(fallback.getTime()) ? null : fallback;
+};
+
+export const sortRecordsByCreatedAtDesc = (records = []) =>
+  [...records].sort((left, right) => {
+    const leftTime = toDateValue(left?.createdAt)?.getTime() || 0;
+    const rightTime = toDateValue(right?.createdAt)?.getTime() || 0;
+    return rightTime - leftTime;
+  });
+
+export const getAssignedWorkerIds = (order) =>
+  Array.from(
+    new Set(
+      [
+        ...(Array.isArray(order?.assignedWorkers) ? order.assignedWorkers : []),
+        order?.workerAssigned,
+        order?.assignedTo,
+      ].filter(Boolean)
+    )
+  );
+
+export const getPrimaryAssignedWorkerId = (order) =>
+  getAssignedWorkerIds(order)[0] || null;
+
+export const isOrderAssignedToWorker = (order, userId) =>
+  Boolean(userId) && getAssignedWorkerIds(order).includes(userId);
+
+export const isUnassignedOrder = (order) =>
+  getAssignedWorkerIds(order).length === 0;
+
+export const isClaimablePoolOrder = (order) => {
+  const normalizedStatus = normalizeOrderStatus(
+    order?.statusKey || order?.status || order?.orderStatus
+  );
+  const assignmentState = normalizeValue(order?.assignmentStatus || "unassigned");
+
+  return (
+    isUnassignedOrder(order) &&
+    assignmentState !== "pending_approval" &&
+    ["created", "pending_assignment"].includes(normalizedStatus)
+  );
 };
 
 export const formatDate = (value, options) => {
@@ -172,12 +144,16 @@ export const getOrderPlanLabel = (order) =>
   order?.plan || order?.package || "Custom";
 
 export const getOrderPriorityLabel = (order) =>
-  order?.isPriority || normalizeValue(order?.priorityLabel) === "high"
+  order?.isPriority ||
+  normalizeValue(order?.priorityLabel) === "high" ||
+  normalizeValue(order?.priority) === "high"
     ? "High Priority"
     : "Normal";
 
 export const getOrderPriorityBadgeClass = (order) =>
-  order?.isPriority || normalizeValue(order?.priorityLabel) === "high"
+  order?.isPriority ||
+  normalizeValue(order?.priorityLabel) === "high" ||
+  normalizeValue(order?.priority) === "high"
     ? "border-amber-400/20 bg-amber-400/10 text-amber-300"
     : "border-white/10 bg-white/5 text-white/55";
 
@@ -281,44 +257,79 @@ export const getOrderTimeline = (order) => {
 
   return [
     {
-      key: "active",
-      label: "Active",
-      done: ["active", "accepted", "in_progress", "completed"].includes(current),
+      key: "pending_assignment",
+      label: "Pending Assignment",
+      done: !["created"].includes(current),
       date: toDateValue(order?.createdAt),
     },
     {
-      key: "accepted",
-      label: "Accepted",
-      done: ["accepted", "in_progress", "completed"].includes(current),
-      date: toDateValue(order?.acceptedAt),
+      key: "assigned",
+      label: "Assigned",
+      done: [
+        "assigned",
+        "in_progress",
+        "delivered_preview",
+        "revision_requested",
+        "awaiting_final_payment",
+        "completed",
+        "closed",
+      ].includes(current),
+      date: toDateValue(order?.assignedAt || order?.acceptedAt),
     },
     {
       key: "in_progress",
       label: "In Progress",
-      done: ["in_progress", "completed"].includes(current),
+      done: [
+        "in_progress",
+        "delivered_preview",
+        "revision_requested",
+        "awaiting_final_payment",
+        "completed",
+        "closed",
+      ].includes(current),
       date: toDateValue(order?.startedAt || order?.inProgressAt),
+    },
+    {
+      key: "delivered_preview",
+      label: "Preview Delivered",
+      done: [
+        "delivered_preview",
+        "revision_requested",
+        "awaiting_final_payment",
+        "completed",
+        "closed",
+      ].includes(current),
+      date: toDateValue(order?.previewDeliveredAt || order?.deliveredPreviewAt),
+    },
+    {
+      key: "awaiting_final_payment",
+      label: "Awaiting Final Payment",
+      done: ["awaiting_final_payment", "completed", "closed"].includes(current),
+      date: toDateValue(order?.awaitingFinalPaymentAt),
     },
     {
       key: "completed",
       label: "Completed",
-      done: current === "completed",
-      date: toDateValue(order?.completedAt),
+      done: ["completed", "closed"].includes(current),
+      date: toDateValue(order?.completedAt || order?.closedAt),
     },
   ];
 };
 
 export const getOrderPaymentSummary = (order) => {
   const total = getOrderAmount(order);
-  const advance = Number(order?.advancePayment || 0);
+  const advance = Number(order?.advancePaid ?? order?.advancePayment ?? 0);
   const remaining = Number(
-    order?.remainingPayment ?? Math.max(total - advance, 0)
+    order?.remainingAmount ??
+      order?.remainingPayment ??
+      Math.max(total - advance, 0)
   );
   const paymentStatus = normalizePaymentStatus(order?.paymentStatus);
 
   if (paymentStatus === "paid") {
     return {
       total,
-      paid: total,
+      paid: Number(order?.totalPaid || total),
       pending: 0,
       dueNow: 0,
       status: paymentStatus,
@@ -345,3 +356,76 @@ export const getOrderPaymentSummary = (order) => {
 };
 
 export const getPaymentSummary = getOrderPaymentSummary;
+
+export const getOrderStatusOptions = (role = "admin") => {
+  const normalizedRole = normalizeRole(role);
+
+  if (normalizedRole === "worker") {
+    return ["assigned", "in_progress", "delivered_preview"];
+  }
+
+  if (normalizedRole === "manager") {
+    return [
+      "pending_assignment",
+      "assigned",
+      "in_progress",
+      "delivered_preview",
+      "revision_requested",
+      "awaiting_final_payment",
+      "completed",
+      "cancelled",
+    ];
+  }
+
+  return ORDER_STATUS_FLOW;
+};
+
+export const getWorkerVisibleStatuses = () => [
+  "assigned",
+  "in_progress",
+  "delivered_preview",
+  "revision_requested",
+  "awaiting_final_payment",
+  "completed",
+];
+
+export const getNextWorkerOrderStatus = (order) => {
+  const normalizedStatus = normalizeOrderStatus(order?.status || order?.orderStatus);
+
+  switch (normalizedStatus) {
+    case "pending_assignment":
+    case "assigned":
+      return "in_progress";
+    case "in_progress":
+    case "revision_requested":
+      return "delivered_preview";
+    default:
+      return null;
+  }
+};
+
+export const buildOrderStatusPatch = (nextStatus) => {
+  const normalized = normalizeOrderStatus(nextStatus);
+  const label = toFirestoreOrderStatus(normalized);
+
+  return {
+    status: label,
+    orderStatus: label,
+    statusKey: normalized,
+    updatedAt: serverTimestamp(),
+    ...(normalized === "assigned" ? { assignedAt: serverTimestamp() } : {}),
+    ...(normalized === "in_progress" ? { inProgressAt: serverTimestamp() } : {}),
+    ...(normalized === "delivered_preview"
+      ? { previewDeliveredAt: serverTimestamp() }
+      : {}),
+    ...(normalized === "revision_requested"
+      ? { revisionRequestedAt: serverTimestamp() }
+      : {}),
+    ...(normalized === "awaiting_final_payment"
+      ? { awaitingFinalPaymentAt: serverTimestamp() }
+      : {}),
+    ...(normalized === "completed" ? { completedAt: serverTimestamp() } : {}),
+    ...(normalized === "closed" ? { closedAt: serverTimestamp() } : {}),
+    ...(normalized === "cancelled" ? { cancelledAt: serverTimestamp() } : {}),
+  };
+};
