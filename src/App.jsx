@@ -12,7 +12,7 @@ import BookService from './pages/public/BookService';
 import JoinHub from './pages/auth/JoinHub';
 import ForgotPassword from './pages/auth/ForgotPassword';
 import Profile from './pages/auth/Profile';
-import AdminDashboard from './pages/dashboard/AdminDashboard';
+import RoleBasedDashboard from './components/dashboard/RoleBasedDashboard';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import ScrollToTop from './components/utils/ScrollToTop';
 
@@ -39,7 +39,7 @@ function App() {
                 path="/dashboard" 
                 element={
                   <ProtectedRoute allowedRoles={['owner', 'superadmin', 'admin', 'manager', 'worker']}>
-                    <AdminDashboard />
+                    <RoleBasedDashboard />
                   </ProtectedRoute>
                 } 
               />

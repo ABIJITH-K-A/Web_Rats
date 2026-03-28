@@ -1,0 +1,46 @@
+TNWEBRATS – COMPLETE FINANCIAL + CONTROL SYSTEM (MASTER)
+
+PURPOSE: Manage revenue, payouts, refunds, disputes, and withdrawals.
+
+1.  CORE REVENUE SPLIT
+
+-   Worker → 80%
+-   Company → 20% Referral:
+-   Worker → 82%
+-   Company → 18%
+
+2.  WALLET SYSTEM
+
+-   totalBalance
+-   pendingAmount
+-   withdrawableAmount
+
+3.  WITHDRAWAL RULES
+
+-   Minimum ₹100
+-   4 days/week
+-   Status: pending / approved / rejected
+
+4.  REFUND SYSTEM Regular:
+
+-   60% refund
+-   20% worker
+-   20% company
+
+Returning: - 70% refund - 20% worker - 10% company
+
+5.  DISPUTE SYSTEM Hierarchy: Owner > Super Admin > Admin > Manager >
+    Worker
+
+6.  PENALTY & BONUS
+
+-   Penalty: 5–20%
+-   Bonus: +5%
+
+7.  TRANSACTIONS
+
+-   income / expense
+-   categories: order, refund, salary, withdrawal
+
+8.  FINAL FLOW Client → Pay → Work → Complete → Split → Wallet →
+    Withdraw

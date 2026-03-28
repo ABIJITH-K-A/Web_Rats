@@ -14,11 +14,19 @@ import {
   User,
 } from "lucide-react";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { addDoc, collection, doc, serverTimestamp, setDoc } from "firebase/firestore";
+import {
+  deleteDoc,
+  doc,
+  setDoc,
+} from "firebase/firestore";
 import { db } from "../../config/firebase";
 import { useAuth } from "../../context/AuthContext";
 import { Button, Card, SectionHeading } from "../../components/ui/Primitives";
 import Stepper, { Step } from "../../components/ui/Stepper";
+import { initializeRazorpayCheckout } from "../../services/razorpayService";
+import { logAuditEvent } from "../../services/auditService";
+import { notifyAdmin } from "../../services/notificationService";
+import { createOrder } from "../../services/orderService";
 import {
   BOOKING_STEP_LABELS,
   buildPaymentBreakdown,
@@ -111,6 +119,11 @@ const BookService = () => {
     reorderDraft ? "returning" : userProfile?.customerType || "new"
   );
   const [reusePreviousData, setReusePreviousData] = useState(Boolean(reorderDraft));
+  const [stepErrors, setStepErrors] = useState({
+    step3: "",
+    step4: "",
+    step5: "",
+  });
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
@@ -189,9 +202,22 @@ const BookService = () => {
     goToStep(targetStep);
   };
 
+  const handleNextWithValidation = (targetStep, validationFn, errorKey, errorMessage) => {
+    if (validationFn()) {
+      setStepErrors((prev) => ({ ...prev, [errorKey]: "" }));
+      goToStep(targetStep);
+    } else {
+      setStepErrors((prev) => ({ ...prev, [errorKey]: errorMessage }));
+    }
+  };
+
   const handleChange = (event) => {
     const { name, value } = event.target;
     setFormData((current) => ({ ...current, [name]: value }));
+    // Clear step errors when user starts typing
+    if (stepErrors.step4) {
+      setStepErrors((prev) => ({ ...prev, step4: "" }));
+    }
   };
 
   const detailsValid =
@@ -241,6 +267,7 @@ const BookService = () => {
     setIsSubmitting(true);
 
     try {
+      // First create the order in Firebase
       const orderPayload = {
         userId: user?.uid || "guest",
         customerId: user?.uid || null,
@@ -259,7 +286,10 @@ const BookService = () => {
         priorityFee: payment.priorityFee,
         totalPrice: payment.total,
         advancePayment: payment.advancePayment,
+        advancePaid: 0,
         remainingPayment: payment.remainingPayment,
+        remainingAmount: payment.remainingPayment,
+        totalPaid: 0,
         advanceRate: payment.advanceRate,
         customerType: resolvedCustomerType,
         isPriority,
@@ -277,12 +307,18 @@ const BookService = () => {
           deadline: formData.deadline,
         },
         paymentStatus: "Pending",
-        status: "Active",
-        orderStatus: "Active",
-        createdAt: serverTimestamp(),
+        status: "Pending Assignment",
+        orderStatus: "Pending Assignment",
+        statusKey: "pending_assignment",
+        assignmentStatus: "unassigned",
       };
 
-      const orderRef = await addDoc(collection(db, "orders"), orderPayload);
+      const createdOrder = await createOrder(orderPayload);
+      const orderDocId = createdOrder?.id;
+
+      if (!orderDocId) {
+        throw new Error("Order could not be created.");
+      }
 
       if (user?.uid) {
         await setDoc(
@@ -294,36 +330,104 @@ const BookService = () => {
         );
       }
 
-      await addDoc(collection(db, "notifications"), {
-        recipientId: "admin",
-        title: "New booking received",
-        type: "order",
-        read: false,
-        orderId: orderRef.id,
-        message: `${formData.name.trim()} booked ${selectedService.name} (${selectedPlan.label})${
-          reorderDraft ? ` as a reorder of ${reorderDraft.parentOrderId}.` : "."
-        }`,
-        createdAt: serverTimestamp(),
+      // Now initiate Razorpay payment for advance
+      await initializeRazorpayCheckout({
+        amount: payment.advancePayment,
+        orderId: orderDocId.slice(-8).toUpperCase(),
+        orderDocId,
+        userDetails: {
+          name: formData.name.trim(),
+          email: formData.email.trim(),
+          phone: formData.phone.trim(),
+        },
+        paymentType: "advance",
+        onSuccess: async () => {
+          const whatsappMessage = createWhatsAppMessage(orderDocId);
+          await logAuditEvent({
+            actorId: user?.uid || null,
+            actorRole: userProfile?.role || "client",
+            action: "order_created",
+            targetType: "order",
+            targetId: orderDocId,
+            severity: "medium",
+            metadata: {
+              serviceId: selectedService.id,
+              planId: selectedPlan.id,
+              isPriority,
+              customerType: resolvedCustomerType,
+            },
+          });
+          if (whatsappMessage) {
+            window.open(
+              `https://wa.me/${CONTACT_INFO.whatsappNumber}?text=${encodeURIComponent(
+                whatsappMessage
+              )}`,
+              "_blank"
+            );
+          }
+
+          setOrderId(orderDocId);
+          setOrderConfirmed(true);
+          setIsSubmitting(false);
+        },
+        onError: async (error) => {
+          const paymentError =
+            error instanceof Error
+              ? error
+              : new Error(String(error || "Payment could not be completed."));
+
+          if (!paymentError.preserveOrder) {
+            try {
+              await deleteDoc(doc(db, "orders", orderDocId));
+              await logAuditEvent({
+                actorId: user?.uid || null,
+                actorRole: userProfile?.role || "client",
+                action: "order_payment_cancelled",
+                targetType: "order",
+                targetId: orderDocId,
+                severity: "low",
+                metadata: {
+                  reason: paymentError.message,
+                },
+              });
+            } catch (cleanupError) {
+              console.error("Order cleanup error:", cleanupError);
+              await notifyAdmin({
+                title: "Booking cleanup required",
+                message: `${formData.name.trim()} cancelled or failed payment for ${selectedService.name}, but the draft order ${orderDocId} could not be cleaned automatically.`,
+                category: "payment",
+                orderId: orderDocId,
+              });
+            }
+
+            setSubmitError(
+              `Payment failed: ${paymentError.message} No order was created.`
+            );
+            setIsSubmitting(false);
+            return;
+          }
+
+          await notifyAdmin({
+            title: "Booking needs manual payment review",
+            message: `${formData.name.trim()} reached payment confirmation for ${selectedService.name}, but follow-up sync failed. Review order ${orderDocId}.`,
+            category: "payment",
+            orderId: orderDocId,
+          });
+
+          setSubmitError(
+            `Payment issue: ${paymentError.message} The order was kept for manual review.`
+          );
+          setIsSubmitting(false);
+          setOrderId(orderDocId);
+          setOrderConfirmed(true);
+        },
       });
 
-      const whatsappMessage = createWhatsAppMessage(orderRef.id);
-      if (whatsappMessage) {
-        window.open(
-          `https://wa.me/${CONTACT_INFO.whatsappNumber}?text=${encodeURIComponent(
-            whatsappMessage
-          )}`,
-          "_blank"
-        );
-      }
-
-      setOrderId(orderRef.id);
-      setOrderConfirmed(true);
     } catch (error) {
       console.error("Booking error:", error);
       setSubmitError(
         "We could not save the booking right now. Please try again in a moment."
       );
-    } finally {
       setIsSubmitting(false);
     }
   };
@@ -398,9 +502,9 @@ const BookService = () => {
                   key={category.id}
                   type="button"
                   onClick={() => handleCategorySelect(category.id)}
-                  className={`rounded-[28px] border border-white/8 bg-gradient-to-br ${
+                  className={`rounded-[2rem] border border-white/8 bg-gradient-to-br ${
                     categoryGradients[category.id]
-                  } p-7 text-left transition-transform duration-300 hover:-translate-y-1 hover:border-cyan-primary/20`}
+                  } p-8 text-left transition-transform duration-300 hover:-translate-y-1 hover:border-cyan-primary/20`}
                 >
                   <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary/72">
                     {category.pricingHint}
@@ -415,7 +519,7 @@ const BookService = () => {
                     {category.services.map((service) => (
                       <div
                         key={service.id}
-                        className="rounded-2xl border border-white/8 bg-black/45 px-4 py-3 text-sm text-light-gray/72"
+                        className="rounded-[1.5rem] border border-white/8 bg-black/45 px-5 py-4 text-sm text-light-gray/72"
                       >
                         {service.name}
                       </div>
@@ -447,7 +551,7 @@ const BookService = () => {
                   key={service.id}
                   type="button"
                   onClick={() => handleServiceSelect(service.id)}
-                  className="rounded-[26px] border border-white/8 bg-black/65 p-6 text-left transition-transform duration-300 hover:-translate-y-1 hover:border-cyan-primary/20"
+                  className="rounded-[2rem] border border-white/8 bg-black/65 p-8 text-left transition-transform duration-300 hover:-translate-y-1 hover:border-cyan-primary/20 hover:bg-black/75"
                 >
                   <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary/72">
                     From {formatPrice(Math.min(...service.plans.map((plan) => plan.price)))}
@@ -481,7 +585,7 @@ const BookService = () => {
               Step 3 - Choose your plan
             </div>
 
-            <div className="grid gap-6 xl:grid-cols-[1.3fr_0.7fr]">
+            <div className="space-y-6">
               <div className="grid gap-5 lg:grid-cols-3">
                 {selectedService?.plans.map((plan) => {
                   const isSelected = selectedPlanId === plan.id;
@@ -490,10 +594,10 @@ const BookService = () => {
                       key={plan.id}
                       type="button"
                       onClick={() => handlePlanSelect(plan.id)}
-                      className={`rounded-[28px] border p-6 text-left transition-all duration-300 ${
+                      className={`rounded-[2rem] border p-8 text-left transition-all duration-300 ${
                         isSelected
-                          ? "border-cyan-primary bg-cyan-primary/10 shadow-[0_0_24px_rgba(103,248,29,0.12)]"
-                          : "border-white/8 bg-black/65 hover:border-cyan-primary/18"
+                          ? "border-cyan-primary bg-cyan-primary/10 shadow-[0_0_30px_rgba(103,248,29,0.15)]"
+                          : "border-white/8 bg-black/65 hover:border-cyan-primary/18 hover:bg-black/80"
                       }`}
                     >
                       <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary/72">
@@ -535,55 +639,72 @@ const BookService = () => {
               </div>
 
               <Card className="border-white/8 bg-secondary-dark/70">
-                <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-cyan-primary/72">
-                  Optional Add-on
-                </div>
-                <h2 className="mt-4 text-3xl font-black text-white">
-                  Priority delivery
-                </h2>
-                <p className="mt-4 text-sm leading-7 text-light-gray/68">
-                  Get your project handled faster. The extra fee is added to the
-                  total before review and the order is tagged as high priority.
-                </p>
+                <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+                  <div className="flex-1">
+                    <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-cyan-primary/72">
+                      Optional Add-on
+                    </div>
+                    <h2 className="mt-2 text-2xl font-black text-white">
+                      Priority delivery
+                    </h2>
+                    <p className="mt-2 text-sm leading-6 text-light-gray/68">
+                      Get your project handled faster. Extra fee: +20% (min ₹99)
+                    </p>
+                  </div>
 
-                <button
-                  type="button"
-                  onClick={() => setIsPriority((current) => !current)}
-                  className={`mt-8 flex w-full items-start gap-4 rounded-2xl border p-5 text-left transition-colors ${
-                    isPriority
-                      ? "border-cyan-primary bg-cyan-primary/10"
-                      : "border-white/8 bg-black/50"
-                  }`}
-                >
-                  <div
-                    className={`mt-0.5 flex h-5 w-5 items-center justify-center rounded border ${
+                  <button
+                    type="button"
+                    onClick={() => setIsPriority((current) => !current)}
+                    className={`flex shrink-0 items-start gap-4 rounded-[1.5rem] border p-5 text-left transition-colors md:w-auto ${
                       isPriority
-                        ? "border-cyan-primary bg-cyan-primary text-primary-dark"
-                        : "border-white/20 bg-transparent text-transparent"
+                        ? "border-cyan-primary bg-cyan-primary/10"
+                        : "border-white/8 bg-black/50"
                     }`}
                   >
-                    <Check size={13} />
-                  </div>
-                  <div>
-                    <div className="font-semibold text-white">
-                      Add priority delivery
+                    <div
+                      className={`mt-0.5 flex h-5 w-5 items-center justify-center rounded border ${
+                        isPriority
+                          ? "border-cyan-primary bg-cyan-primary text-primary-dark"
+                          : "border-white/20 bg-transparent text-transparent"
+                      }`}
+                    >
+                      <Check size={13} />
                     </div>
-                    <div className="mt-1 text-sm text-light-gray/58">
-                      {selectedPlan
-                        ? `Fee: ${formatPrice(payment.priorityFee)}`
-                        : "Select a plan to see the fee."}
+                    <div>
+                      <div className="font-semibold text-white">
+                        Add priority
+                      </div>
+                      <div className="mt-1 text-sm text-cyan-primary">
+                        {selectedPlan
+                          ? `+${formatPrice(payment.priorityFee)}`
+                          : "Select plan first"}
+                      </div>
                     </div>
-                  </div>
-                </button>
+                  </button>
+                </div>
 
-                <div className="mt-8">
+                <div className="mt-6">
                   <Button
-                    onClick={() => goToStep(4)}
-                    disabled={!selectedPlanId}
+                    onClick={() =>
+                      handleNextWithValidation(
+                        4,
+                        () => selectedPlanId !== null,
+                        "step3",
+                        "Please select a plan before continuing."
+                      )
+                    }
                     className="w-full"
                   >
                     Next <ArrowRight size={16} />
                   </Button>
+                  {stepErrors.step3 && (
+                    <div className="mt-3 flex items-center gap-2 rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-300">
+                      <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                      {stepErrors.step3}
+                    </div>
+                  )}
                 </div>
               </Card>
             </div>
@@ -770,10 +891,27 @@ const BookService = () => {
               <Button variant="outline" onClick={() => handleBack(3)}>
                 <ArrowLeft size={16} /> Back
               </Button>
-              <Button onClick={() => goToStep(5)} disabled={!detailsValid}>
+              <Button
+                onClick={() =>
+                  handleNextWithValidation(
+                    5,
+                    () => detailsValid,
+                    "step4",
+                    "Please fill in all required fields: Name, Email, Phone, Deadline, Project Description (min 20 chars), and Features (min 10 chars)."
+                  )
+                }
+              >
                 Next <ArrowRight size={16} />
               </Button>
             </div>
+            {stepErrors.step4 && (
+              <div className="flex items-center gap-2 rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-300">
+                <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                {stepErrors.step4}
+              </div>
+            )}
           </div>
         </Step>
 
@@ -903,10 +1041,21 @@ const BookService = () => {
               <Button variant="outline" onClick={() => handleBack(4)}>
                 <ArrowLeft size={16} /> Back
               </Button>
-              <Button onClick={() => goToStep(6)}>
+              <Button
+                onClick={() => goToStep(6)}
+                disabled={!payment || !selectedCategory || !selectedService || !selectedPlan}
+              >
                 Proceed To Review <ArrowRight size={16} />
               </Button>
             </div>
+            {(!payment || !selectedCategory || !selectedService || !selectedPlan) && (
+              <div className="flex items-center gap-2 rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-300">
+                <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                Please complete all previous steps before proceeding.
+              </div>
+            )}
           </div>
         </Step>
 

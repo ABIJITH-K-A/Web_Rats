@@ -1,0 +1,77 @@
+DATABASE:
+
+  users/{uid}:
+    - name: string
+    - email: string (unique)
+    - phone: string
+    - role: enum [owner, superadmin, admin, manager, worker, client]
+    - customerType: enum [new, returning]
+    - referralCode: string (unique)
+    - usedReferralCode: string/null
+    - referredBy: uid/null
+    - status: enum [active, suspended, fired]
+    - createdAt: timestamp
+
+  wallets/{uid}:
+    - totalBalance: number
+    - pendingAmount: number
+    - withdrawableAmount: number
+    - lastUpdated: timestamp
+
+  orders/{orderId}:
+    - userId
+    - assignedTo
+    - categoryId
+    - serviceId
+    - planId
+    - basePrice
+    - priorityFee
+    - totalPrice
+    - advancePaid
+    - remainingAmount
+    - paymentStatus: enum [pending, partial, paid]
+    - status: enum (full lifecycle)
+    - requirements: object
+    - deliveryLink
+    - createdAt
+    - updatedAt
+
+  transactions/{id}:
+    - userId
+    - type: enum [income, expense]
+    - category: enum [order, refund, withdrawal]
+    - amount
+    - referenceId (orderId)
+    - createdAt
+
+  withdrawals/{id}:
+    - userId
+    - amount
+    - status: enum [pending, approved, rejected, completed]
+    - requestedAt
+    - processedAt
+
+  disputes/{id}:
+    - orderId
+    - raisedBy
+    - assignedToRole
+    - status: enum [open, under_review, resolved]
+    - resolution: enum [refund, penalty, bonus]
+    - createdAt
+
+  notifications/{id}:
+    - recipientId (uid | role | all)
+    - title
+    - message
+    - read: boolean
+    - createdAt
+
+INDEXING:
+  - orders(userId, status)
+  - notifications(recipientId, createdAt desc)
+  - transactions(userId)
+
+RELATIONS:
+  user → orders (1:N)
+  order → transactions (1:N)
+  user → wallet (1:1)

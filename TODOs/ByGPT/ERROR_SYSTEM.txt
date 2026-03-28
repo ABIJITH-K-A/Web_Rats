@@ -1,0 +1,29 @@
+ERROR_SYSTEM:
+
+PAYMENT:
+  - if payment_fail:
+      → retry_allowed
+      → order_not_created
+
+  - if payment_verified_but_order_fail:
+      → auto_refund_trigger
+
+ORDER:
+  - if worker_not_accept:
+      → reassign_worker
+
+  - if deadline_exceeded:
+      → auto_escalate_to_admin
+
+WALLET:
+  - if mismatch_detected:
+      → lock_wallet
+      → trigger_audit
+
+NETWORK:
+  - retry (max 3)
+  - fallback queue system
+
+LOGGING:
+  - all_errors → stored
+  - severity levels: low, medium, critical

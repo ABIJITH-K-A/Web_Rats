@@ -1,0 +1,27 @@
+EDGE_CASES:
+
+PAYMENT:
+  - duplicate_payment:
+      → reject_second
+      → refund_if_needed
+
+  - partial_payment_mismatch:
+      → lock_order
+
+ORDER:
+  - double_order_submission:
+      → debounce + unique_token
+
+  - worker_abandon:
+      → auto_reassign
+
+WALLET:
+  - double_withdraw_request:
+      → reject
+
+  - concurrent_update:
+      → use_transaction_lock
+
+DISPUTE:
+  - multiple_disputes_same_order:
+      → merge_cases

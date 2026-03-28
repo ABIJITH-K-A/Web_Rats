@@ -1,13 +1,20 @@
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { 
   Menu, X, Home, List, Users, Ticket, Star, Wallet, 
-  Bug, Box, CheckSquare, DollarSign, Briefcase, Key, 
-  LogOut, ExternalLink, User, Bell, Clock, Search, TrendingUp
+  Bug, Box, CheckSquare, DollarSign, Briefcase, Key, AlertCircle,
+  LogOut, ExternalLink, Bell, Clock, Search, TrendingUp, Package
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useDashboard } from '../../context/DashboardContext';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import NeuralBackground from '../layout/NeuralBackground';
+import {
+  canAccessDashboardView,
+  getAllowedDashboardViews,
+  normalizeRole,
+} from '../../utils/systemRules';
+import { formatDateTime } from '../../utils/orderHelpers';
 
 const DashboardLayout = ({ children }) => {
   const { user, userProfile, logout } = useAuth();
@@ -30,26 +37,39 @@ const DashboardLayout = ({ children }) => {
     return () => clearInterval(timer);
   }, []);
 
-  const role = userProfile?.role || 'client';
+  const role = normalizeRole(userProfile?.role);
   
   const navItems = [
     { id: 'overview', label: 'Overview', icon: <Home size={18} />, roles: ['owner', 'superadmin', 'admin', 'manager', 'worker'] },
     { id: 'analytics', label: 'Analytics', icon: <TrendingUp size={18} />, roles: ['owner', 'superadmin', 'admin'] },
     { id: 'orders', label: 'Orders', icon: <List size={18} />, roles: ['owner', 'superadmin', 'admin', 'manager'] },
+    { id: 'orderpool', label: 'Order Pool', icon: <Package size={18} />, roles: ['worker', 'manager'] },
     { id: 'users', label: 'Users', icon: <Users size={18} />, roles: ['owner', 'superadmin', 'admin'] },
     { id: 'referrals', label: 'Referrals', icon: <Ticket size={18} />, roles: ['owner', 'superadmin', 'admin'] },
     { id: 'reviews', label: 'Reviews', icon: <Star size={18} />, roles: ['owner', 'superadmin', 'admin', 'manager', 'worker'] },
     { id: 'wallet', label: 'Wallet', icon: <Wallet size={18} />, roles: ['owner', 'superadmin', 'admin', 'manager', 'worker'] },
     { id: 'reports', label: 'Reports', icon: <Bug size={18} />, roles: ['owner', 'superadmin', 'admin', 'manager', 'worker'] },
     { id: 'samples', label: 'Samples', icon: <Box size={18} />, roles: ['owner', 'superadmin', 'admin', 'manager', 'worker'] },
+    { id: 'demodata', label: 'Demo Data', icon: <Package size={18} />, roles: ['owner', 'superadmin', 'admin'] },
     { id: 'payroll', label: 'Payroll', icon: <DollarSign size={18} />, roles: ['owner', 'superadmin', 'admin'] },
     { id: 'teampay', label: 'Team Payments', icon: <DollarSign size={18} />, roles: ['manager'] },
     { id: 'approvals', label: 'Approvals', icon: <CheckSquare size={18} />, roles: ['owner', 'superadmin', 'admin'] },
-    { id: 'myorders', label: 'My Orders', icon: <Briefcase size={18} />, roles: ['worker'] },
+    { id: 'myorders', label: 'My Orders', icon: <Briefcase size={18} />, roles: ['worker', 'manager'] },
     { id: 'invitekeys', label: 'Invite Keys', icon: <Key size={18} />, roles: ['owner', 'superadmin', 'admin', 'manager'] },
+    { id: 'disputes', label: 'Disputes', icon: <AlertCircle size={18} />, roles: ['owner', 'superadmin', 'admin', 'manager', 'worker'] },
   ];
 
-  const filteredNavItems = navItems.filter(item => item.roles.includes(role));
+  const filteredNavItems = navItems.filter((item) =>
+    canAccessDashboardView(role, item.id)
+  );
+
+  useEffect(() => {
+    const allowedViews = getAllowedDashboardViews(role);
+    if (!allowedViews.length) return;
+    if (!allowedViews.includes(currentView)) {
+      setCurrentView(allowedViews[0]);
+    }
+  }, [role, currentView]);
 
   const handleLogout = async () => {
     await logout();
@@ -57,7 +77,10 @@ const DashboardLayout = ({ children }) => {
   };
 
   return (
-    <div className="min-h-screen bg-[#262B25] text-light-gray flex overflow-hidden font-rajdhani">
+    <div className="min-h-screen text-light-gray flex overflow-hidden font-rajdhani relative">
+      {/* Neural Background */}
+      <NeuralBackground />
+      
       {/* Sidebar Overlay */}
       <AnimatePresence>
         {isSidebarOpen && window.innerWidth < 1024 && (
@@ -78,7 +101,7 @@ const DashboardLayout = ({ children }) => {
         {/* Brand */}
         <div className="p-6 border-b border-white/5 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3">
-            <img src="/RATTY.png" alt="TN WR" className="w-8 h-8" />
+            <img src="./Images/Icons/WebRatTransparentLight.png" alt="TN WR" className="w-8 h-8" />
             <div>
               <div className="text-sm font-black text-white leading-tight">TN WEB RATS</div>
               <div className="text-[9px] font-mono text-cyan-primary uppercase tracking-widest">{role} Portal</div>
@@ -211,7 +234,7 @@ const DashboardLayout = ({ children }) => {
                                  <div className="text-xs font-bold text-white/90 mb-1">{notif.title}</div>
                                  <div className="text-[10px] text-white/40 leading-snug">{notif.message}</div>
                                  <div className="text-[8px] font-mono text-white/20 mt-2 uppercase">
-                                   {notif.createdAt?.toDate().toLocaleTimeString()}
+                                   {formatDateTime(notif.createdAt)}
                                  </div>
                                </div>
                                {!notif.read && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-cyan-primary" />}
@@ -232,7 +255,7 @@ const DashboardLayout = ({ children }) => {
         </header>
 
         {/* View Port */}
-        <main className="flex-grow overflow-y-auto px-6 py-8 lg:px-10 bg-[#262B25] no-scrollbar">
+        <main className="flex-grow overflow-y-auto px-6 py-8 lg:px-10 bg-[#262B25] no-scrollbar relative z-10">
           {children({ currentView })}
         </main>
       </div>

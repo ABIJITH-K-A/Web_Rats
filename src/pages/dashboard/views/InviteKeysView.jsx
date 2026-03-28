@@ -6,13 +6,15 @@ import {
 } from 'lucide-react';
 import { db } from '../../../config/firebase';
 import { 
-  collection, getDocs, addDoc, deleteDoc, 
-  doc, serverTimestamp, query, orderBy 
+  collection, getDocs, deleteDoc, 
+  doc, serverTimestamp, query, orderBy, setDoc 
 } from 'firebase/firestore';
 import { useAuth } from '../../../context/AuthContext';
+import { logAuditEvent } from '../../../services/auditService';
+import { canGenerateInviteForRole, normalizeRole } from '../../../utils/systemRules';
 
 const InviteKeysView = () => {
-  const { user, userData } = useAuth();
+  const { user, userProfile } = useAuth();
   const [keys, setKeys] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedRole, setSelectedRole] = useState('worker');
@@ -21,9 +23,9 @@ const InviteKeysView = () => {
 
   useEffect(() => {
     // Default role based on hierarchy
-    if (userData.role === 'manager') setSelectedRole('worker');
+    if (userProfile?.role === 'manager') setSelectedRole('worker');
     fetchKeys();
-  }, [userData.role]);
+  }, [userProfile?.role]);
 
   const fetchKeys = async () => {
     setLoading(true);
@@ -41,13 +43,39 @@ const InviteKeysView = () => {
     setIsGenerating(true);
     try {
       const keyStr = `RAT-INV-${Math.random().toString(36).toUpperCase().slice(-6)}`;
-      await addDoc(collection(db, "inviteKeys"), {
+      const roleValue = normalizeRole(selectedRole);
+
+      if (!canGenerateInviteForRole(userProfile?.role, roleValue)) {
+        throw new Error("You cannot generate invite keys for that role.");
+      }
+
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 14);
+
+      await setDoc(doc(db, "inviteKeys", keyStr), {
         keyCode: keyStr,
-        role: selectedRole,
-        generatedBy: user.uid,
-        generatedByName: userData.name,
+        role: roleValue,
+        scope: "staff",
+        status: "active",
         used: false,
-        createdAt: serverTimestamp()
+        multiUse: false,
+        maxUses: 1,
+        usedCount: 0,
+        generatedBy: user.uid,
+        generatedByName: userProfile?.name || user?.email,
+        generatedByRole: normalizeRole(userProfile?.role),
+        expiresAt,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+      await logAuditEvent({
+        actorId: user.uid,
+        actorRole: userProfile?.role,
+        action: "invite_key_created",
+        targetType: "invite_key",
+        targetId: keyStr,
+        severity: "medium",
+        metadata: { role: roleValue },
       });
       fetchKeys();
       alert(`Key Generated: ${keyStr}`);
@@ -62,6 +90,14 @@ const InviteKeysView = () => {
     if (!window.confirm("Delete this invite key?")) return;
     try {
       await deleteDoc(doc(db, "inviteKeys", id));
+      await logAuditEvent({
+        actorId: user.uid,
+        actorRole: userProfile?.role,
+        action: "invite_key_deleted",
+        targetType: "invite_key",
+        targetId: id,
+        severity: "medium",
+      });
       setKeys(prev => prev.filter(k => k.id !== id));
     } catch (e) {
       console.error(e);
@@ -74,9 +110,9 @@ const InviteKeysView = () => {
     setTimeout(() => setCopyStatus({ ...copyStatus, [id]: false }), 2000);
   };
 
-  const roles = userData.role === 'owner' || userData.role === 'superadmin' 
+  const roles = userProfile?.role === 'owner' || userProfile?.role === 'superadmin' 
     ? ['superadmin', 'admin', 'manager', 'worker']
-    : userData.role === 'admin' 
+    : userProfile?.role === 'admin' 
       ? ['manager', 'worker']
       : ['worker'];
 
@@ -109,7 +145,7 @@ const InviteKeysView = () => {
                  </select>
               </div>
               
-              <div className="p-4 bg-primary-dark/50 rounded-xl border border-white/5 flex gap-3 text-white/30">
+              <div className="p-4 bg-[#1a1f1a] rounded-xl border border-white/5 flex gap-3 text-white/30">
                  <Shield size={16} className="shrink-0 mt-0.5" />
                  <p className="text-[9px] font-mono leading-relaxed uppercase">
                    Keys are single-use. The recipient will be automatically assigned their role upon signup. Expire after 1 use.
@@ -133,13 +169,13 @@ const InviteKeysView = () => {
               {loading ? (
                  <div className="col-span-2 p-20 text-center opacity-20 uppercase font-mono text-[10px] tracking-widest animate-pulse italic">Scanning Vault...</div>
               ) : keys.length === 0 ? (
-                 <div className="col-span-2 p-20 text-center bg-white/5 border border-dashed border-white/10 rounded-3xl opacity-20 uppercase font-mono text-xs tracking-widest italic flex flex-col items-center">
+                 <div className="col-span-2 p-20 text-center bg-[#121417] border border-dashed border-white/10 rounded-3xl opacity-20 uppercase font-mono text-xs tracking-widest italic flex flex-col items-center">
                     <Key size={40} className="mb-4" />
                     No active tokens in forge
                  </div>
               ) : (
                  keys.map(k => (
-                    <div key={k.id} className={`p-6 rounded-3xl border transition-all group ${k.used ? 'bg-black/20 border-white/5 opacity-50 grayscale' : 'bg-[#121417] border-white/5 hover:border-cyan-primary/20 hover:scale-[1.02]'}`}>
+                    <div key={k.id} className={`p-6 rounded-3xl border transition-all group ${k.used ? 'bg-[#1a1f1a] border-white/5 opacity-50 grayscale' : 'bg-[#121417] border-white/5 hover:border-cyan-primary/20 hover:scale-[1.02]'}`}>
                        <div className="flex justify-between items-start mb-6">
                           <span className={`px-2 py-0.5 rounded-full border text-[8px] font-black uppercase tracking-widest ${k.used ? 'bg-white/5 text-white/20 border-white/5' : 'bg-green-500/10 text-green-500 border-green-500/20 shadow-[0_0_10px_rgba(34,197,94,0.1)]'}`}>
                              {k.used ? 'Burned' : 'Active Token'}
@@ -147,14 +183,14 @@ const InviteKeysView = () => {
                           <span className="text-[9px] font-mono text-white/30 uppercase tracking-[0.1em]">{k.role}</span>
                        </div>
                        
-                       <div className="text-lg font-black font-mono text-white tracking-[0.15em] mb-1 group-hover:text-cyan-primary transition-colors">{k.keyCode}</div>
+                        <div className="text-lg font-black font-mono text-white tracking-[0.15em] mb-1 group-hover:text-cyan-primary transition-colors">{k.keyCode || k.id}</div>
                        <div className="text-[9px] font-mono text-white/10 uppercase tracking-widest mb-6 italic">Forged By: {k.generatedByName}</div>
                        
                        <div className="flex gap-2">
                           <button 
                             disabled={k.used}
-                            onClick={() => handleCopy(k.keyCode, k.id)}
-                            className="flex-grow py-2.5 bg-white/5 border border-white/5 rounded-xl font-bold font-mono text-[9px] uppercase tracking-widest text-white/40 hover:text-white hover:bg-white/10 transition-all flex items-center justify-center gap-2"
+                             onClick={() => handleCopy(k.keyCode || k.id, k.id)}
+                            className="flex-grow py-2.5 bg-[#262B25] border border-white/5 rounded-xl font-bold font-mono text-[9px] uppercase tracking-widest text-white/40 hover:text-white hover:bg-[#2f362f] transition-all flex items-center justify-center gap-2"
                           >
                              {copyStatus[k.id] ? <Check size={14} className="text-cyan-primary" /> : <Copy size={14} />} 
                              {copyStatus[k.id] ? 'Copied' : 'Copy'}
@@ -172,7 +208,7 @@ const InviteKeysView = () => {
            </div>
 
            {/* Warnings */}
-           <div className="p-6 bg-red-500/5 border border-red-500/10 rounded-2xl flex items-start gap-4 shadow-xl">
+           <div className="p-6 bg-[#1a0f0f] border border-red-500/10 rounded-2xl flex items-start gap-4 shadow-xl">
               <AlertTriangle size={20} className="text-red-500 shrink-0 mt-0.5" />
               <div>
                  <h4 className="text-xs font-black text-red-500/80 mb-2 uppercase tracking-widest flex items-center gap-2 italic underline underline-offset-4 decoration-red-500/20">

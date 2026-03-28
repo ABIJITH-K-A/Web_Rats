@@ -7,10 +7,11 @@ import {
 import { db } from '../../../config/firebase';
 import { 
   collection, query, getDocs, updateDoc, 
-  doc, orderBy, setDoc, serverTimestamp, addDoc 
+  doc, orderBy, setDoc, serverTimestamp 
 } from 'firebase/firestore';
 import { useAuth } from '../../../context/AuthContext';
 import { useDashboard } from '../../../context/DashboardContext';
+import { notifyRoleUpdated } from '../../../services/notificationService';
 
 const UsersView = () => {
   const { user: currentUser, userData: currentUserData } = useAuth();
@@ -70,14 +71,10 @@ const UsersView = () => {
 
       await updateDoc(doc(db, "users", uid), updates);
       
-      // Notify the user of their new role
-      await addDoc(collection(db, 'notifications'), {
+      await notifyRoleUpdated({
         recipientId: uid,
-        title: 'Promotion System Update',
-        message: `Your account protocol has been updated to: ${newRole.toUpperCase()}.`,
-        type: 'system',
-        read: false,
-        createdAt: serverTimestamp(),
+        nextRole: newRole,
+        actorName: currentUserData?.name || currentUser?.email || 'Admin',
       });
 
       setUsers(prev => prev.map(u => u.id === uid ? { ...u, ...updates } : u));

@@ -41,6 +41,7 @@ import { db } from "../../config/firebase";
 import { useAuth } from "../../context/AuthContext";
 import { useDashboard } from "../../context/DashboardContext";
 import { CONTACT_INFO } from "../../data/siteData";
+import { notifySupportRequest } from "../../services/notificationService";
 import {
   formatCurrency,
   formatDate,
@@ -343,7 +344,7 @@ const Profile = () => {
     setSupportState({ sending: true, feedback: "", error: "" });
 
     try {
-      await addDoc(collection(db, "supportMessages"), {
+      const supportRef = await addDoc(collection(db, "supportMessages"), {
         userId: user.uid,
         name: displayName,
         email: user.email || "",
@@ -353,13 +354,11 @@ const Profile = () => {
         createdAt: serverTimestamp(),
       });
 
-      await addDoc(collection(db, "notifications"), {
-        recipientId: "admin",
-        title: "New support request",
-        type: "system",
-        read: false,
-        message: `${displayName} sent a support request: ${supportForm.subject.trim()}`,
-        createdAt: serverTimestamp(),
+      await notifySupportRequest({
+        supportId: supportRef.id,
+        senderId: user.uid,
+        senderName: displayName,
+        subject: supportForm.subject.trim(),
       });
 
       setSupportForm({ subject: "", message: "" });
