@@ -23,3 +23,7 @@ dist-ssr
 *.sln
 *.sw?
 .env
+
+# Firebase service account keys
+*firebase-adminsdk*.json
+serviceAccount*.json
