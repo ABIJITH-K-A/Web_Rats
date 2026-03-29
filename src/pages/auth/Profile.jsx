@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowRight,
+  ArrowRightLeft,
   Bell,
+  Briefcase,
   Check,
   CheckCircle2,
   Clock3,
@@ -24,6 +26,7 @@ import {
   X,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import ChatWidget from "../../components/chat/ChatWidget";
 import {
   addDoc,
   collection,
@@ -42,6 +45,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useDashboard } from "../../context/DashboardContext";
 import { CONTACT_INFO } from "../../data/siteData";
 import { notifySupportRequest } from "../../services/notificationService";
+import { STAFF_ROLES } from "../../utils/systemRules";
 import {
   formatCurrency,
   formatDate,
@@ -71,11 +75,12 @@ const NAV_ITEMS = [
   { id: "orders", label: "My Orders", icon: Package },
   { id: "payments", label: "Payments", icon: CreditCard },
   { id: "profile", label: "Profile", icon: User },
+  { id: "notifications", label: "Notifications", icon: Bell },
   { id: "support", label: "Support", icon: LifeBuoy },
 ];
 
 const Profile = () => {
-  const { user, userProfile, logout } = useAuth();
+  const { user, userProfile, logout, fetchError, refreshProfile } = useAuth();
   const {
     notifications,
     unreadCount,
@@ -91,6 +96,7 @@ const Profile = () => {
   const [payments, setPayments] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [showNotifSettings, setShowNotifSettings] = useState(false);
   const [supportForm, setSupportForm] = useState({ subject: "", message: "" });
   const [supportState, setSupportState] = useState({
     sending: false,
@@ -107,6 +113,14 @@ const Profile = () => {
     feedback: "",
     error: "",
   });
+
+  const [notificationPrefs, setNotificationPrefs] = useState({
+    email: true,
+    whatsapp: true,
+    inApp: true,
+  });
+  const [notifState, setNotifState] = useState({ saving: false, error: "", feedback: "" });
+
   const [reviewState, setReviewState] = useState({
     open: false,
     order: null,
@@ -114,6 +128,14 @@ const Profile = () => {
     comment: "",
     submitting: false,
     error: "",
+  });
+
+  const [qrPaymentModal, setQrPaymentModal] = useState({
+    open: false,
+    order: null,
+    dueNow: 0,
+    utr: "",
+    submitting: false,
   });
 
   useEffect(() => {
@@ -180,6 +202,21 @@ const Profile = () => {
             ...paymentDoc.data(),
           })) || [];
 
+        // Fetch Notification Preferences
+        try {
+          const token = await user.getIdToken();
+          const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+          const res = await fetch(`${apiUrl}/notification-settings`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.preferences) setNotificationPrefs(data.preferences);
+          }
+        } catch (err) {
+          console.error("Failed to fetch notification preferences", err);
+        }
+
         if (!isMounted) return;
 
         setOrders(nextOrders);
@@ -220,6 +257,7 @@ const Profile = () => {
   }, [orders, userProfile]);
 
   const isClient = !userProfile?.role || userProfile.role === "client";
+  const isStaff = STAFF_ROLES.includes(userProfile?.role?.toLowerCase?.());
   const activeOrders = orders.filter(isOpenOrder);
   const completedOrders = orders.filter(isCompletedOrder);
   const recentOrders = orders.slice(0, 3);
@@ -326,6 +364,36 @@ const Profile = () => {
     }
   };
 
+  const handleNotifToggle = async (key) => {
+    const newPrefs = { ...notificationPrefs, [key]: !notificationPrefs[key] };
+    setNotificationPrefs(newPrefs);
+    setNotifState({ saving: true, error: "", feedback: "" });
+    try {
+      const token = await user.getIdToken();
+      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+      const res = await fetch(`${apiUrl}/notification-settings`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(newPrefs),
+      });
+
+      if (!res.ok) throw new Error("Failed to update");
+      setNotifState({ saving: false, error: "", feedback: "Preferences saved." });
+      setTimeout(() => setNotifState((s) => ({ ...s, feedback: "" })), 3000);
+    } catch (err) {
+      setNotifState({
+        saving: false,
+        error: "Failed to save preferences.",
+        feedback: "",
+      });
+      // revert on failure
+      setNotificationPrefs(notificationPrefs);
+    }
+  };
+
   const handleSupportChange = (event) => {
     const { name, value } = event.target;
 
@@ -386,37 +454,44 @@ const Profile = () => {
   };
 
   const openContactThread = (order) => {
-    const message = [
-      "Hi TNWebRats, I need an update on my order.",
-      "",
-      `Order ID: ${getOrderDisplayId(order)}`,
-      `Service: ${order.service || "Project"}`,
-      `Plan: ${getOrderPlanLabel(order)}`,
-    ].join("\n");
-
-    window.open(
-      `https://wa.me/${CONTACT_INFO.whatsappNumber}?text=${encodeURIComponent(
-        message
-      )}`,
-      "_blank"
+    window.dispatchEvent(
+      new CustomEvent("open-chat", {
+        detail: { activeOrder: { id: order.id, serviceTitle: order.service } }
+      })
     );
   };
 
   const openPaymentThread = (order, dueNow) => {
-    const message = [
-      "Hi TNWebRats, I want to clear the pending payment for my order.",
-      "",
-      `Order ID: ${getOrderDisplayId(order)}`,
-      `Service: ${order.service || "Project"}`,
-      `Amount Due: ${formatCurrency(dueNow)}`,
-    ].join("\n");
+    setQrPaymentModal({
+      open: true,
+      order,
+      dueNow,
+      utr: "",
+      submitting: false,
+    });
+  };
 
-    window.open(
-      `https://wa.me/${CONTACT_INFO.whatsappNumber}?text=${encodeURIComponent(
-        message
-      )}`,
-      "_blank"
-    );
+  const handleQRPaySubmit = async () => {
+    if (!qrPaymentModal.utr.trim()) return;
+
+    setQrPaymentModal(prev => ({ ...prev, submitting: true }));
+    try {
+      await updateDoc(doc(db, "orders", qrPaymentModal.order.id), {
+        utrNumber: qrPaymentModal.utr.trim(),
+        paymentStatus: "Pending Verification",
+        statusKey: "pending_payment_verification",
+      });
+
+      alert("Payment submitted for verification. Thank you!");
+      setQrPaymentModal({ open: false, order: null, dueNow: 0, utr: "", submitting: false });
+      
+      // Refresh orders
+      setOrders(prev => prev.map(o => o.id === qrPaymentModal.order.id ? { ...o, paymentStatus: "Pending Verification" } : o));
+    } catch (error) {
+      console.error(error);
+      alert("Failed to submit payment proof.");
+      setQrPaymentModal(prev => ({ ...prev, submitting: false }));
+    }
   };
 
   const openReviewModal = (order) => {
@@ -505,39 +580,10 @@ const Profile = () => {
 
   if (!user) return null;
 
-  if (!isClient) {
-    return (
-      <div className="mx-auto flex min-h-[calc(100vh-6rem)] max-w-4xl items-center px-6 py-12">
-        <Card className="w-full border-cyan-primary/15 bg-black/75 p-10 text-center">
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full border border-cyan-primary/20 bg-cyan-primary/10 text-cyan-primary">
-            <ShieldCheck size={34} />
-          </div>
-          <h1 className="mt-6 text-3xl font-black text-white">
-            Staff accounts use the internal dashboard.
-          </h1>
-          <p className="mx-auto mt-4 max-w-2xl text-base leading-8 text-light-gray/64">
-            Your account is registered as{" "}
-            <span className="font-semibold text-cyan-primary">
-              {userProfile?.role}
-            </span>
-            . Open the staff workspace for orders, reports, payroll, and team
-            tools.
-          </p>
-          <div className="mt-8 flex flex-wrap justify-center gap-4">
-            <Button onClick={() => navigate("/dashboard")}>
-              Open Staff Dashboard
-            </Button>
-            <Link to="/">
-              <Button variant="outline">Back To Home</Button>
-            </Link>
-          </div>
-        </Card>
-      </div>
-    );
-  }
+
 
   return (
-    <div className="min-h-screen bg-primary-dark text-light-gray">
+    <div className="min-h-screen bg-[#121417] text-light-gray">
       <div className="mx-auto flex min-h-screen max-w-[1560px]">
         <aside className="hidden w-72 shrink-0 border-r border-white/6 bg-[#0f1217] lg:flex lg:flex-col">
           <div className="border-b border-white/6 px-6 py-6">
@@ -575,6 +621,23 @@ const Profile = () => {
               );
             })}
           </nav>
+
+          {isStaff && (
+            <div className="border-t border-white/6 px-4 py-4">
+              <button
+                type="button"
+                onClick={() => navigate("/dashboard")}
+                className="flex w-full items-center gap-3 rounded-2xl border border-cyan-primary/20 bg-cyan-primary/8 px-4 py-3 text-left transition-colors hover:bg-cyan-primary/14"
+              >
+                <Briefcase size={18} className="text-cyan-primary" />
+                <div>
+                  <div className="text-sm font-semibold text-cyan-primary">Switch to Work Mode</div>
+                  <div className="text-[10px] text-light-gray/40">Open {userProfile?.role} dashboard</div>
+                </div>
+                <ArrowRightLeft size={14} className="ml-auto text-cyan-primary/50" />
+              </button>
+            </div>
+          )}
 
           <div className="border-t border-white/6 px-6 py-6">
             <div className="rounded-[24px] border border-white/8 bg-white/5 p-5">
@@ -640,7 +703,7 @@ const Profile = () => {
                             </button>
                           )}
                         </div>
-                        <div className="max-h-[24rem] overflow-y-auto">
+                        <div className="max-h-96 overflow-y-auto">
                           {notifications.length === 0 ? (
                             <div className="px-5 py-10 text-center text-sm text-light-gray/42">
                               No notifications yet.
@@ -719,7 +782,29 @@ const Profile = () => {
           </header>
 
           <main className="px-5 py-6 md:px-6 lg:px-8 lg:py-8">
-            {loading ? (
+            {fetchError ? (
+              <div className="flex min-h-[50vh] flex-col items-center justify-center gap-6 text-center">
+                <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-red-500/10 text-red-500">
+                  <AlertCircle size={32} />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white">Connection Issue</h3>
+                  <p className="mt-2 max-w-sm text-sm text-light-gray/60 px-4">
+                    {fetchError.includes("INTERNAL ASSERTION") 
+                      ? "A core engine synchronization error occurred. Please refresh the page to restore the connection." 
+                      : "We had trouble syncing your latest profile data from the server."}
+                  </p>
+                </div>
+                <div className="flex gap-3">
+                  <Button variant="outline" onClick={() => window.location.reload()}>
+                    Refresh Page
+                  </Button>
+                  <Button onClick={() => refreshProfile()}>
+                    Try Again
+                  </Button>
+                </div>
+              </div>
+            ) : loading ? (
               <div className="flex min-h-[50vh] items-center justify-center">
                 <div className="flex flex-col items-center gap-4 text-center">
                   <div className="h-12 w-12 animate-spin rounded-full border-2 border-cyan-primary border-t-transparent" />
@@ -1223,6 +1308,212 @@ const Profile = () => {
                     </div>
                   )}
 
+                  {activeSection === "notifications" && (
+                    <div className="max-w-4xl space-y-8 animate-in fade-in slide-in-from-bottom-4">
+                      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                        <div>
+                          <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary/72">
+                            Activity Center
+                          </div>
+                          <h3 className="mt-3 text-3xl font-black text-white">
+                            Notifications
+                          </h3>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => setShowNotifSettings(!showNotifSettings)}
+                            className={`flex items-center gap-2 rounded-xl border px-5 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all ${
+                              showNotifSettings 
+                                ? "border-cyan-primary bg-cyan-primary/10 text-cyan-primary" 
+                                : "border-white/10 bg-white/5 text-light-gray/60 hover:border-white/20 hover:text-white"
+                            }`}
+                          >
+                            <ShieldCheck size={14} />
+                            Settings
+                          </button>
+                          {notifications.length > 0 && !showNotifSettings && (
+                            <button
+                              onClick={markAllAsRead}
+                              disabled={unreadCount === 0}
+                              className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-light-gray/60 transition-all hover:border-white/20 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+                            >
+                              <CheckCircle2 size={14} />
+                              Mark All Read
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      <AnimatePresence mode="wait">
+                        {showNotifSettings ? (
+                          <motion.div
+                            key="settings-drawer"
+                            initial={{ opacity: 0, scale: 0.98 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.98 }}
+                            transition={{ duration: 0.2 }}
+                          >
+                            <Card className="border-white/8 bg-[#10141a]/80 backdrop-blur-md p-1">
+                              <div className="p-6 border-b border-white/5">
+                                <h4 className="text-sm font-bold uppercase tracking-widest text-white/80">Communication Preferences</h4>
+                                <p className="mt-2 text-xs text-light-gray/40">Choose how we reach you for important updates on your projects.</p>
+                              </div>
+                              <div className="space-y-1 p-2">
+                                {/* Email Toggle */}
+                                <div className="flex items-center justify-between gap-4 p-4 rounded-2xl transition-colors hover:bg-white/5">
+                                  <div className="flex items-center gap-4">
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/8 bg-white/5 text-cyan-primary">
+                                      <Mail size={20} />
+                                    </div>
+                                    <div>
+                                      <div className="font-semibold text-white">Email Notifications</div>
+                                      <div className="text-sm text-light-gray/50">Receive project digests and payment receipts</div>
+                                    </div>
+                                  </div>
+                                  <button
+                                    onClick={() => handleNotifToggle("email")}
+                                    className={`relative h-6 w-11 rounded-full transition-colors ${
+                                      notificationPrefs.email ? "bg-cyan-primary shadow-[0_0_15px_rgba(103,248,19,0.3)]" : "bg-white/10"
+                                    }`}
+                                  >
+                                    <div
+                                      className={`absolute inset-y-1 left-1 h-4 w-4 rounded-full bg-white transition-transform ${
+                                        notificationPrefs.email ? "translate-x-5" : "translate-x-0"
+                                      }`}
+                                    />
+                                  </button>
+                                </div>
+
+                                {/* WhatsApp Toggle */}
+                                <div className="flex items-center justify-between gap-4 p-4 rounded-2xl transition-colors hover:bg-white/5">
+                                  <div className="flex items-center gap-4">
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/8 bg-white/5 text-emerald-400">
+                                      <MessageSquareText size={20} />
+                                    </div>
+                                    <div>
+                                      <div className="font-semibold text-white">WhatsApp Updates</div>
+                                      <div className="text-sm text-light-gray/50">Instant alerts for chat and status changes</div>
+                                    </div>
+                                  </div>
+                                  <button
+                                    onClick={() => handleNotifToggle("whatsapp")}
+                                    className={`relative h-6 w-11 rounded-full transition-colors ${
+                                      notificationPrefs.whatsapp ? "bg-cyan-primary shadow-[0_0_15px_rgba(103,248,19,0.3)]" : "bg-white/10"
+                                    }`}
+                                  >
+                                    <div
+                                      className={`absolute inset-y-1 left-1 h-4 w-4 rounded-full bg-white transition-transform ${
+                                        notificationPrefs.whatsapp ? "translate-x-5" : "translate-x-0"
+                                      }`}
+                                    />
+                                  </button>
+                                </div>
+
+                                {/* In-App Toggle */}
+                                <div className="flex items-center justify-between gap-4 p-4 rounded-2xl transition-colors hover:bg-white/5">
+                                  <div className="flex items-center gap-4">
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/8 bg-white/5 text-cyan-primary">
+                                      <Bell size={20} />
+                                    </div>
+                                    <div>
+                                      <div className="font-semibold text-white">In-Portal Badge</div>
+                                      <div className="text-sm text-light-gray/50">Real-time alerts while you are browsing</div>
+                                    </div>
+                                  </div>
+                                  <button
+                                    onClick={() => handleNotifToggle("inApp")}
+                                    className={`relative h-6 w-11 rounded-full transition-colors ${
+                                      notificationPrefs.inApp ? "bg-cyan-primary shadow-[0_0_15px_rgba(103,248,19,0.3)]" : "bg-white/10"
+                                    }`}
+                                  >
+                                    <div
+                                      className={`absolute inset-y-1 left-1 h-4 w-4 rounded-full bg-white transition-transform ${
+                                        notificationPrefs.inApp ? "translate-x-5" : "translate-x-0"
+                                      }`}
+                                    />
+                                  </button>
+                                </div>
+                              </div>
+
+                              <AnimatePresence>
+                                {(notifState.feedback || notifState.error) && (
+                                  <motion.div 
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: "auto" }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    className={`mx-6 mb-6 rounded-2xl border p-4 text-xs font-bold uppercase tracking-widest text-center ${
+                                      notifState.error ? "border-red-500/18 bg-red-500/8 text-red-300" : "border-cyan-primary/18 bg-cyan-primary/8 text-cyan-primary"
+                                    }`}>
+                                    {notifState.feedback || notifState.error}
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            </Card>
+                          </motion.div>
+                        ) : (
+                          <motion.div
+                            key="notification-list"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            className="space-y-4"
+                          >
+                            {notifications.length === 0 ? (
+                              <div className="flex flex-col items-center justify-center py-20 text-center rounded-[3rem] border border-dashed border-white/10 bg-black/20">
+                                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-white/5 text-white/10 mb-6 group hover:text-cyan-primary/20 transition-colors">
+                                  <Bell size={40} className="group-hover:scale-110 transition-transform" />
+                                </div>
+                                <h4 className="text-xl font-black text-white/50">All Caught Up</h4>
+                                <p className="mt-2 max-w-sm text-xs text-light-gray/30 uppercase tracking-[0.2em] font-mono">
+                                  You don't have any notifications right now.
+                                </p>
+                              </div>
+                            ) : (
+                              <div className="grid gap-3">
+                                {notifications.map((notif) => (
+                                  <button
+                                    key={notif.id}
+                                    onClick={() => markAsRead(notif.id)}
+                                    className={`group flex items-start gap-6 rounded-[2.5rem] border p-8 text-left transition-all ${
+                                      notif.read 
+                                        ? "border-white/5 bg-[#10141a]/40 opacity-50 hover:opacity-100 hover:bg-[#10141a]" 
+                                        : "border-cyan-primary/20 bg-cyan-primary/[0.03] hover:bg-cyan-primary/[0.07] shadow-lg shadow-cyan-primary/[0.02]"
+                                    }`}
+                                  >
+                                    <div className={`mt-1 flex h-14 w-14 shrink-0 items-center justify-center rounded-[1.25rem] border transition-all duration-300 ${
+                                      notif.read 
+                                        ? "border-white/8 bg-white/5 text-white/20 group-hover:text-cyan-primary/50" 
+                                        : "border-cyan-primary/30 bg-cyan-primary/10 text-cyan-primary shadow-[0_0_20px_rgba(103,248,19,0.1)] group-hover:scale-105"
+                                    }`}>
+                                      <Bell size={24} />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center justify-between gap-4">
+                                        <h4 className={`text-lg font-black transition-colors ${notif.read ? "text-white/60" : "text-white"}`}>
+                                          {notif.title}
+                                        </h4>
+                                        <span className="text-[10px] font-mono uppercase tracking-widest text-light-gray/20">
+                                          {formatDateTime(notif.createdAt)}
+                                        </span>
+                                      </div>
+                                      <p className={`mt-3 text-[13px] leading-relaxed ${notif.read ? "text-light-gray/30" : "text-light-gray/60"}`}>
+                                        {notif.message}
+                                      </p>
+                                    </div>
+                                    {!notif.read && (
+                                      <div className="mt-2 h-2.5 w-2.5 rounded-full bg-cyan-primary shadow-[0_0_15px_rgba(103,248,19,0.8)] animate-pulse" />
+                                    )}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  )}
+
+
                   {activeSection === "support" && (
                     <div className="grid gap-6 xl:grid-cols-[1fr_0.86fr]">
                       <Card className="border-white/8 bg-[#10141a]">
@@ -1359,6 +1650,16 @@ const Profile = () => {
           />
         )}
       </AnimatePresence>
+      <AnimatePresence>
+        {qrPaymentModal.open && (
+          <QRPaymentModal 
+            state={qrPaymentModal}
+            setState={setQrPaymentModal}
+            onSubmit={handleQRPaySubmit}
+          />
+        )}
+      </AnimatePresence>
+      <ChatWidget />
     </div>
   );
 };
@@ -1546,7 +1847,7 @@ const OrderDetailsModal = ({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[120] flex items-center justify-center bg-black/70 p-5 backdrop-blur"
+      className="fixed inset-0 z-120 flex items-center justify-center bg-black/70 p-5 backdrop-blur"
     >
       <motion.div
         initial={{ opacity: 0, y: 20, scale: 0.97 }}
@@ -1716,7 +2017,7 @@ const ReviewModal = ({ state, setState, onClose, onSubmit }) => (
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
     exit={{ opacity: 0 }}
-    className="fixed inset-0 z-[130] flex items-center justify-center bg-black/70 p-5 backdrop-blur"
+    className="fixed inset-0 z-130 flex items-center justify-center bg-black/70 p-5 backdrop-blur"
   >
     <motion.div
       initial={{ opacity: 0, y: 20, scale: 0.97 }}
@@ -1869,5 +2170,84 @@ const DetailBlock = ({ label, value }) => (
     </div>
   </div>
 );
+
+const QRPaymentModal = ({ state, setState, onSubmit }) => {
+  const upiId = CONTACT_INFO.upiId || "tnwebrats@okaxis";
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(
+    `upi://pay?pa=${upiId}&pn=TNWebRats&am=${state.dueNow}&cu=INR&tn=Order_${state.order?.id?.slice(-8)}`
+  )}`;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-130 flex items-center justify-center bg-black/80 p-5 backdrop-blur-md"
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        className="w-full max-w-lg rounded-[32px] border border-white/10 bg-[#10141a] p-8 shadow-2xl text-center"
+      >
+        <div className="flex justify-between items-center mb-6">
+          <div className="text-left">
+            <div className="text-[10px] font-mono uppercase tracking-widest text-cyan-primary">Secure Payment</div>
+            <h3 className="text-xl font-black text-white mt-1">Settle Balance</h3>
+          </div>
+          <button onClick={() => setState({ ...state, open: false })} className="p-2 hover:bg-white/5 rounded-full text-white/40"><X size={20} /></button>
+        </div>
+
+        <div className="bg-white p-4 rounded-3xl inline-block mb-6 shadow-xl">
+          <img src={qrUrl} alt="Payment QR" className="w-48 h-48" />
+        </div>
+
+        <div className="flex flex-col gap-3 mb-6 w-full max-w-sm mx-auto">
+          <a 
+            href={`upi://pay?pa=${upiId}&pn=TNWebRats&am=${state.dueNow}&cu=INR&tn=Order_${state.order?.id?.slice(-8)}`}
+            className="flex items-center justify-center gap-2 w-full py-4 bg-white text-black font-bold rounded-xl hover:bg-light-gray/90 transition-all shadow-lg md:hidden"
+          >
+            <ExternalLink size={18} /> Pay via UPI App
+          </a>
+        </div>
+
+        <div className="space-y-4 mb-8">
+          <div className="text-2xl font-black text-white">₹{state.dueNow?.toLocaleString()}</div>
+          <p className="text-xs text-light-gray/40 leading-relaxed font-mono uppercase tracking-wider">
+            Scan with any UPI App (GPay, PhonePe, Paytm)<br/>
+            to pay the remaining balance.
+          </p>
+        </div>
+
+        <div className="relative mb-6">
+          <input 
+            type="text" 
+            placeholder="Enter Transaction ID (UTR)"
+            value={state.utr}
+            onChange={(e) => setState({ ...state, utr: e.target.value })}
+            className="w-full bg-black/40 border border-white/10 rounded-2xl px-6 py-4 text-white font-mono text-sm focus:border-cyan-primary outline-none transition-all text-center"
+          />
+          {state.utr.length > 5 && (
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-cyan-primary animate-in zoom-in">
+              <CheckCircle2 size={20} />
+            </div>
+          )}
+        </div>
+
+        <Button 
+          onClick={onSubmit}
+          disabled={!state.utr.trim() || state.submitting}
+          className="w-full py-6 text-lg"
+        >
+          {state.submitting ? "Verifying..." : "Settle via QR Pay"}
+        </Button>
+
+        <p className="mt-6 text-[10px] text-light-gray/20 font-mono uppercase tracking-widest">
+          Payments are verified by admin within 2-4 hours.
+        </p>
+      </motion.div>
+    </motion.div>
+  );
+};
 
 export default Profile;

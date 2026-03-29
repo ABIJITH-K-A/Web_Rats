@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import {
   createUserWithEmailAndPassword,
   onAuthStateChanged,
@@ -23,21 +23,29 @@ import {
   makeReferralCode,
   normalizeRole,
 } from "../utils/systemRules";
+import useIdleTimeout from "../hooks/useIdleTimeout";
 
 const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
 
 const userFriendlyError = (code) => {
   const map = {
-    "auth/invalid-email": "Enter a valid email.",
-    "auth/invalid-credential": "Invalid email or password.",
-    "auth/wrong-password": "Invalid email or password.",
-    "auth/user-not-found": "Account not found.",
-    "auth/email-already-in-use": "Email already registered.",
-    "auth/weak-password": "Password must be at least 6 characters.",
-    "auth/too-many-requests": "Too many attempts. Please try again later.",
+    "auth/invalid-email": "The email address is not valid. Please check for typos.",
+    "auth/invalid-credential": "Incorrect email or password. Please try again or reset your password.",
+    "auth/wrong-password": "The password you entered is incorrect.",
+    "auth/user-not-found": "We couldn't find an account with that email address.",
+    "auth/email-already-in-use": "This email is already registered. Try signing in instead.",
+    "auth/weak-password": "Your password is too weak. It must be at least 6 characters.",
+    "auth/too-many-requests": "Too many failed attempts. Your account is temporarily locked for security. Please wait a few minutes.",
+    "auth/network-request-failed": "Network error. Please check your internet connection.",
+    "auth/internal-error": "A server error occurred. Please try again in a moment.",
+    "auth/user-disabled": "This account has been disabled. Please contact support.",
+    "auth/popup-closed-by-user": "The sign-in popup was closed before completion.",
+    "auth/operation-not-allowed": "This sign-in method is currently disabled.",
   };
-  return map[code] || "Something went wrong. Please try again.";
+  
+  if (typeof code !== 'string') return "An unexpected error occurred. Please try again.";
+  return map[code] || `Error: ${code.split('/').pop()?.replace(/-/g, ' ')} (Please try again).`;
 };
 
 const sanitizeString = (value) => String(value || "").trim();
@@ -52,28 +60,61 @@ export const AuthProvider = ({ children }) => {
   const [userProfile, setUserProfile] = useState(null);
   const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(null);
+  const [sessionExpired, setSessionExpired] = useState(false);
+
+  const handleSessionTimeout = useCallback(async () => {
+    setSessionExpired(true);
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error("Session timeout logout error:", error);
+    }
+  }, []);
+
+  const { resetIdleTimer } = useIdleTimeout(handleSessionTimeout);
+
+  const refreshProfile = useCallback(async (uid) => {
+    const targetUid = uid || user?.uid;
+    if (!targetUid) return;
+
+    try {
+      const data = await fetchUserProfile(targetUid);
+      if (data) {
+        setUserProfile(data);
+        setRole(normalizeRole(data.role));
+        setFetchError(null);
+      }
+    } catch (error) {
+      console.error("Error refreshing profile:", error);
+      // Don't clear userProfile/role here to keep the UI from breaking
+      // Just set the error for the UI to show a 'Retry' if needed
+      setFetchError(error.message);
+      
+      // If it's the internal assertion error, log a specific warning
+      if (error.message?.includes("INTERNAL ASSERTION")) {
+        console.warn("Firestore SDK internal crash detected. A page refresh is recommended.");
+      }
+    }
+  }, [user?.uid]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
-        try {
-          const data = await fetchUserProfile(currentUser.uid);
-          setUserProfile(data);
-          setRole(normalizeRole(data?.role));
-        } catch (error) {
-          console.error("Error fetching user profile:", error);
-        }
+        setLoading(true);
+        await refreshProfile(currentUser.uid);
       } else {
         setUser(null);
         setUserProfile(null);
         setRole(null);
+        setFetchError(null);
       }
       setLoading(false);
     });
 
     return unsubscribe;
-  }, []);
+  }, [refreshProfile]);
 
   const login = async (email, password) => {
     try {
@@ -95,6 +136,8 @@ export const AuthProvider = ({ children }) => {
         throw new Error("This account is not currently active.");
       }
 
+      resetIdleTimer();
+      setSessionExpired(false);
       return profile;
     } catch (error) {
       if (error instanceof Error && !error.message.startsWith("auth/")) {
@@ -271,23 +314,15 @@ export const AuthProvider = ({ children }) => {
         createdAt: serverTimestamp(),
       });
 
-      if (isMulti) {
-        batch.update(keyRef, {
-          usedCount: usedCount + 1,
-          usedByLast: uid,
-          usedAtLast: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        });
-      } else {
-        batch.update(keyRef, {
-          used: true,
-          status: "used",
-          usedBy: uid,
-          usedByName: name,
-          usedAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        });
-      }
+      // Force each invite key to be single-use
+      batch.update(keyRef, {
+        used: true,
+        status: "used",
+        usedBy: uid,
+        usedByName: name,
+        usedAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
 
       await batch.commit();
 
@@ -340,6 +375,10 @@ export const AuthProvider = ({ children }) => {
     isWorker: role === "worker",
     isClient: role === "client",
     isStaff: ["admin", "manager", "worker", "superadmin", "owner"].includes(role),
+    fetchError,
+    refreshProfile,
+    sessionExpired,
+    clearSessionExpired: () => setSessionExpired(false),
   };
 
   return (

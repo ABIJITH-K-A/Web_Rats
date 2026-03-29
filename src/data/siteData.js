@@ -4,6 +4,7 @@ export const CONTACT_INFO = {
   whatsappDisplay: "+91 8300920680",
   instagramHandle: "@tn_web_rats",
   instagramUrl: "https://www.instagram.com/tn_web_rats",
+  upiId: "tnwebrats@okaxis", // Placeholder: please update with real VPA
 };
 
 export const VALUE_POINTS = [

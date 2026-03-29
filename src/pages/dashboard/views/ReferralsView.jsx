@@ -52,7 +52,7 @@ const ReferralsView = () => {
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <h2 className="text-2xl font-black text-white italic">Referral <span className="text-cyan-primary not-italic font-mono uppercase text-sm tracking-[0.2em] ml-2">// Registry</span></h2>
+          <h2 className="text-2xl font-black text-white italic">Referral <span className="text-cyan-primary not-italic font-mono uppercase text-sm tracking-[0.2em] ml-2">Registry</span></h2>
           <p className="text-[10px] font-mono text-white/20 uppercase tracking-widest mt-1">Live tracking of active discount tokens and distribution analytics</p>
         </div>
         <div className="bg-[#121417] border border-white/5 px-6 py-3 rounded-2xl flex items-center gap-6 divide-x divide-white/5 shadow-xl">
@@ -70,7 +70,7 @@ const ReferralsView = () => {
       <div className="bg-[#121417] border border-white/5 rounded-3xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
-            <thead className="bg-white/[0.02] border-b border-white/5 text-[10px] font-mono uppercase tracking-widest text-white/30">
+            <thead className="bg-white/2 border-b border-white/5 text-[10px] font-mono uppercase tracking-widest text-white/30">
               <tr>
                 <th className="px-6 py-5">Token Code</th>
                 <th className="px-6 py-5">Owner / Origin</th>
@@ -87,7 +87,7 @@ const ReferralsView = () => {
                 <tr><td colSpan="6" className="px-6 py-20 text-center text-white/20 font-mono text-xs uppercase tracking-widest">No active referrals found</td></tr>
               ) : (
                 codes.map(c => (
-                  <tr key={c.id} className="hover:bg-white/[0.01] transition-colors group">
+                  <tr key={c.id} className="hover:bg-white/5 transition-colors group">
                     <td className="px-6 py-4">
                        <span className="font-mono text-xs font-black text-cyan-primary bg-cyan-primary/5 border border-cyan-primary/10 px-3 py-1.5 rounded-lg tracking-widest uppercase">
                          {c.id}

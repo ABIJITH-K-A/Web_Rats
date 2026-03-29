@@ -54,7 +54,7 @@ const ReviewsView = () => {
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <h2 className="text-2xl font-black text-white italic">Customer <span className="text-cyan-primary not-italic font-mono uppercase text-sm tracking-[0.2em] ml-2">// Feedbacks</span></h2>
+          <h2 className="text-2xl font-black text-white italic">Customer <span className="text-cyan-primary not-italic font-mono uppercase text-sm tracking-[0.2em] ml-2">Feedbacks</span></h2>
           <p className="text-[10px] font-mono text-white/20 uppercase tracking-widest mt-1">Live ratings, service reviews, and quality metrics</p>
         </div>
       </div>
@@ -80,7 +80,7 @@ const ReviewsView = () => {
       <div className="bg-[#121417] border border-white/5 rounded-3xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
-            <thead className="bg-white/[0.02] border-b border-white/5 text-[10px] font-mono uppercase tracking-widest text-white/30">
+            <thead className="bg-white/5 border-b border-white/5 text-[10px] font-mono uppercase tracking-widest text-white/30">
               <tr>
                 <th className="px-6 py-5">Metric / Rating</th>
                 <th className="px-6 py-5">Customer Voice</th>
@@ -95,7 +95,7 @@ const ReviewsView = () => {
                 <tr><td colSpan="4" className="px-6 py-20 text-center text-white/20 font-mono text-xs uppercase tracking-widest">No customer feedback yet</td></tr>
               ) : (
                 reviews.map(r => (
-                  <tr key={r.id} className="hover:bg-white/[0.01] transition-colors group">
+                  <tr key={r.id} className="hover:bg-white/5 transition-colors group">
                     <td className="px-6 py-8">
                        <div className="flex gap-1 mb-2">{renderStars(r.rating || 0)}</div>
                        <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-cyan-primary/40 group-hover:text-cyan-primary transition-colors">Digital Signature</div>

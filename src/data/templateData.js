@@ -1,0 +1,161 @@
+export const TEMPLATE_CATEGORIES = [
+  { id: "all", label: "All Templates" },
+  { id: "website", label: "Website" },
+  { id: "portfolio", label: "Portfolio" },
+  { id: "ppt", label: "Presentations" },
+  { id: "poster", label: "Posters & Graphics" },
+];
+
+export const TEMPLATE_ITEMS = [
+  {
+    id: "tpl-web-01",
+    title: "Starter Business Site",
+    category: "website",
+    description: "Clean single-page layout for small businesses. Includes hero, about, services, and contact sections.",
+    price: 0,
+    isFree: true,
+    isPro: false,
+    image: "/Images/Project_Preview/Project_Preview_1.png",
+    tags: ["html", "responsive", "landing"],
+  },
+  {
+    id: "tpl-web-02",
+    title: "SaaS Landing Pro",
+    category: "website",
+    description: "Modern SaaS product landing page with pricing tables, feature grids, testimonials, and CTA strips.",
+    price: 499,
+    isFree: false,
+    isPro: true,
+    image: "/Images/Project_Preview/Project_Preview_6.png",
+    tags: ["react", "saas", "dark-mode"],
+  },
+  {
+    id: "tpl-web-03",
+    title: "Restaurant Menu Site",
+    category: "website",
+    description: "Warm-toned restaurant website with menu cards, gallery, reservation section, and embedded map.",
+    price: 299,
+    isFree: false,
+    isPro: false,
+    image: "/Images/Project_Preview/Project_Preview_3.png",
+    tags: ["html", "food", "gallery"],
+  },
+  {
+    id: "tpl-port-01",
+    title: "Minimal Portfolio",
+    category: "portfolio",
+    description: "Dark-theme developer portfolio with project grid, skill bars, timeline, and contact form.",
+    price: 0,
+    isFree: true,
+    isPro: false,
+    image: "/Images/Project_Preview/Project_Preview_4.jpg",
+    tags: ["developer", "dark", "minimal"],
+  },
+  {
+    id: "tpl-port-02",
+    title: "Creative Studio Portfolio",
+    category: "portfolio",
+    description: "Bold portfolio for designers and studios. Full-screen project showcase with filtering and lightbox.",
+    price: 399,
+    isFree: false,
+    isPro: true,
+    image: "/Images/Project_Preview/Project_Preview_3.png",
+    tags: ["designer", "studio", "grid"],
+  },
+  {
+    id: "tpl-port-03",
+    title: "Photographer Showcase",
+    category: "portfolio",
+    description: "Image-heavy layout optimized for photography with masonry grid and fullscreen gallery viewer.",
+    price: 349,
+    isFree: false,
+    isPro: false,
+    image: "/Images/Project_Preview/Project_Preview_1.png",
+    tags: ["photography", "gallery", "masonry"],
+  },
+  {
+    id: "tpl-ppt-01",
+    title: "Corporate Pitch Deck",
+    category: "ppt",
+    description: "30-slide professional pitch deck for startups and businesses. Clean charts, icons, and infographics.",
+    price: 0,
+    isFree: true,
+    isPro: false,
+    image: "/Images/Project_Preview/Project_Preview_6.png",
+    tags: ["pitch", "startup", "corporate"],
+  },
+  {
+    id: "tpl-ppt-02",
+    title: "Academic Research Slides",
+    category: "ppt",
+    description: "Structured academic presentation template with data visualization, citations layout, and professor-ready styling.",
+    price: 199,
+    isFree: false,
+    isPro: false,
+    image: "/Images/Project_Preview/Project_Preview_4.jpg",
+    tags: ["academic", "research", "thesis"],
+  },
+  {
+    id: "tpl-ppt-03",
+    title: "Marketing Campaign Deck",
+    category: "ppt",
+    description: "Vibrant marketing deck with social media mockups, campaign timelines, KPI dashboards, and brand guidelines.",
+    price: 349,
+    isFree: false,
+    isPro: true,
+    image: "/Images/Project_Preview/Project_Preview_3.png",
+    tags: ["marketing", "campaign", "social"],
+  },
+  {
+    id: "tpl-poster-01",
+    title: "Event Poster Pack",
+    category: "poster",
+    description: "Set of 5 event poster templates in PSD and Figma. Festival, concert, workshop, and meetup styles.",
+    price: 0,
+    isFree: true,
+    isPro: false,
+    image: "/Images/Project_Preview/Project_Preview_4.jpg",
+    tags: ["event", "concert", "figma"],
+  },
+  {
+    id: "tpl-poster-02",
+    title: "Social Media Kit",
+    category: "poster",
+    description: "Instagram, LinkedIn, and Twitter post templates with consistent branding. 20+ post and story designs.",
+    price: 299,
+    isFree: false,
+    isPro: true,
+    image: "/Images/Project_Preview/Project_Preview_1.png",
+    tags: ["social", "instagram", "branding"],
+  },
+  {
+    id: "tpl-poster-03",
+    title: "Product Launch Graphics",
+    category: "poster",
+    description: "Hero banners, ad creatives, and product shots template set for e-commerce launches.",
+    price: 249,
+    isFree: false,
+    isPro: false,
+    image: "/Images/Project_Preview/Project_Preview_6.png",
+    tags: ["product", "ecommerce", "launch"],
+  },
+];
+
+export const getTemplatesByCategory = (categoryId) =>
+  categoryId === "all"
+    ? TEMPLATE_ITEMS
+    : TEMPLATE_ITEMS.filter((t) => t.category === categoryId);
+
+export const searchTemplates = (query) => {
+  const q = query.toLowerCase().trim();
+  if (!q) return TEMPLATE_ITEMS;
+  return TEMPLATE_ITEMS.filter(
+    (t) =>
+      t.title.toLowerCase().includes(q) ||
+      t.description.toLowerCase().includes(q) ||
+      t.tags.some((tag) => tag.includes(q))
+  );
+};
+
+export const formatTemplatePrice = (price) =>
+  price === 0 ? "Free" : `₹${price.toLocaleString("en-IN")}`;

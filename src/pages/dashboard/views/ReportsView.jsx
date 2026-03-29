@@ -99,7 +99,7 @@ const ReportsView = () => {
     <div className="space-y-10 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <h2 className="text-2xl font-black text-white italic">Reports <span className="text-cyan-primary not-italic font-mono uppercase text-sm tracking-[0.2em] ml-2">// Center</span></h2>
+          <h2 className="text-2xl font-black text-white italic">Reports <span className="text-cyan-primary not-italic font-mono uppercase text-sm tracking-[0.2em] ml-2">Center</span></h2>
           <p className="text-[10px] font-mono text-white/20 uppercase tracking-widest mt-1">Submit issues, report bugs, or request assistance from hierarchy</p>
         </div>
       </div>
@@ -157,7 +157,7 @@ const ReportsView = () => {
            {/* Incoming Reports Inbox (Staff) */}
            {inbox.length > 0 && (
               <div className="bg-[#121417] border border-white/5 rounded-3xl overflow-hidden shadow-2xl">
-                 <div className="p-6 border-b border-white/5 bg-white/[0.01] flex items-center justify-between">
+                 <div className="p-6 border-b border-white/5 bg-white/1 flex items-center justify-between">
                     <h3 className="text-xs font-mono uppercase tracking-widest text-cyan-primary flex items-center gap-2">
                        <Inbox size={14} /> Inbox
                     </h3>
@@ -171,7 +171,7 @@ const ReportsView = () => {
                         r.details?.toLowerCase().includes(searchQuery.toLowerCase())
                       )
                       .map(r => (
-                       <div key={r.id} className="p-6 hover:bg-white/[0.01] transition-all group relative">
+                       <div key={r.id} className="p-6 hover:bg-white/1 transition-all group relative">
                           <div className="flex justify-between items-start mb-4">
                              <div>
                                 <div className="text-sm font-bold text-white group-hover:text-cyan-primary transition-colors">{r.subject}</div>
@@ -205,14 +205,14 @@ const ReportsView = () => {
 
            {/* My Submissions */}
            <div className="bg-[#121417] border border-white/5 rounded-3xl overflow-hidden self-start">
-              <div className="p-6 border-b border-white/5 bg-white/[0.01]">
+              <div className="p-6 border-b border-white/5 bg-white/1">
                  <h3 className="text-xs font-mono uppercase tracking-widest text-cyan-primary flex items-center gap-2">
                     <History size={14} /> My Reports History
                  </h3>
               </div>
               <div className="overflow-x-auto">
                  <table className="w-full text-left">
-                    <thead className="bg-[#262B25] text-[9px] font-mono uppercase tracking-widest text-white/20">
+                    <thead className="bg-white/1 border-b border-white/5 text-[10px] font-mono uppercase tracking-widest text-white/30">
                        <tr>
                           <th className="px-6 py-4">ID / Subject</th>
                           <th className="px-6 py-4">To Role</th>
@@ -238,7 +238,7 @@ const ReportsView = () => {
                               r.details?.toLowerCase().includes(searchQuery.toLowerCase())
                             )
                             .map(r => (
-                            <tr key={r.id} className="hover:bg-white/[0.01] transition-colors group">
+                            <tr key={r.id} className="hover:bg-white/1 transition-colors group">
                               <td className="px-6 py-4">
                                  <div className="text-sm font-bold text-white group-hover:text-cyan-primary transition-colors">{r.subject}</div>
                                  <div className="text-[9px] font-mono text-white/20 uppercase tracking-widest">ID: {r.id.slice(-8).toUpperCase()}</div>

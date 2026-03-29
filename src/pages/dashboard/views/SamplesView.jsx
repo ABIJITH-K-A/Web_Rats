@@ -86,7 +86,7 @@ const SamplesView = () => {
     <div className="space-y-10 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <h2 className="text-2xl font-black text-white italic">Samples <span className="text-cyan-primary not-italic font-mono uppercase text-sm tracking-[0.2em] ml-2">// Exchange</span></h2>
+          <h2 className="text-2xl font-black text-white italic">Samples <span className="text-cyan-primary not-italic font-mono uppercase text-sm tracking-[0.2em] ml-2">Exchange</span></h2>
           <p className="text-[10px] font-mono text-white/20 uppercase tracking-widest mt-1">Manage physical/digital sample logistics for client projects</p>
         </div>
       </div>
@@ -181,7 +181,7 @@ const SamplesView = () => {
 
         {/* Samples Table */}
         <div className="lg:col-span-2 bg-[#121417] border border-white/5 rounded-3xl overflow-hidden self-start flex flex-col shadow-2xl">
-           <div className="p-6 border-b border-white/5 bg-white/[0.01] flex items-center justify-between">
+           <div className="p-6 border-b border-white/5 bg-white/1 flex items-center justify-between">
               <h3 className="text-xs font-mono uppercase tracking-widest text-cyan-primary flex items-center gap-2">
                  <List size={14} /> Logistics Registry
               </h3>
@@ -191,7 +191,7 @@ const SamplesView = () => {
            </div>
            <div className="overflow-x-auto">
               <table className="w-full text-left">
-                 <thead className="bg-[#262B25] text-[9px] font-mono uppercase tracking-widest text-white/20">
+                 <thead className="bg-white/1 border-b border-white/5 text-[10px] font-mono uppercase tracking-widest text-white/30 truncate select-none">
                     <tr>
                        <th className="px-6 py-4">Status / Type</th>
                        <th className="px-6 py-4">Client Detail</th>
@@ -209,7 +209,7 @@ const SamplesView = () => {
                        </td></tr>
                     ) : (
                        samples.map(s => (
-                         <tr key={s.id} className="hover:bg-white/[0.01] transition-colors group">
+                         <tr key={s.id} className="hover:bg-white/1 transition-colors group">
                            <td className="px-6 py-8">
                               <div className={`px-2.5 py-0.5 rounded-full border text-[8px] font-black uppercase tracking-widest mb-2 inline-block ${getStatusColor(s.status)}`}>
                                 {s.status || 'pending'}

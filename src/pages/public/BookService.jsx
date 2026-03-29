@@ -23,6 +23,7 @@ import { db } from "../../config/firebase";
 import { useAuth } from "../../context/AuthContext";
 import { Button, Card, SectionHeading } from "../../components/ui/Primitives";
 import Stepper, { Step } from "../../components/ui/Stepper";
+import QRPaymentStep from "../../components/temp/QRPaymentStep";
 import { initializeRazorpayCheckout } from "../../services/razorpayService";
 import { logAuditEvent } from "../../services/auditService";
 import { notifyAdmin } from "../../services/notificationService";
@@ -115,6 +116,8 @@ const BookService = () => {
   const [selectedServiceId, setSelectedServiceId] = useState(initialServiceId);
   const [selectedPlanId, setSelectedPlanId] = useState(initialPlanId);
   const [isPriority, setIsPriority] = useState(Boolean(reorderDraft?.isPriority));
+  const [paymentMethod, setPaymentMethod] = useState("qpay"); // Temporary: default to qpay
+  const [utrNumber, setUtrNumber] = useState("");
   const [customerType, setCustomerType] = useState(
     reorderDraft ? "returning" : userProfile?.customerType || "new"
   );
@@ -129,6 +132,11 @@ const BookService = () => {
   const [submitError, setSubmitError] = useState("");
   const [orderConfirmed, setOrderConfirmed] = useState(false);
   const [orderId, setOrderId] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({
+    projectDescription: "",
+    features: "",
+    references: "",
+  });
   const [formData, setFormData] = useState({
     name:
       userProfile?.name ||
@@ -214,7 +222,19 @@ const BookService = () => {
   const handleChange = (event) => {
     const { name, value } = event.target;
     setFormData((current) => ({ ...current, [name]: value }));
-    // Clear step errors when user starts typing
+    
+    // Real-time validation
+    if (name === "projectDescription") {
+      setFieldErrors(prev => ({ ...prev, projectDescription: value.trim().length >= 50 ? "" : `Need ${50 - value.trim().length} more characters` }));
+    } else if (name === "features") {
+      setFieldErrors(prev => ({ ...prev, features: value.trim().length >= 30 ? "" : `Need ${30 - value.trim().length} more characters` }));
+    } else if (name === "references" && value.trim().length > 0) {
+      setFieldErrors(prev => ({ ...prev, references: value.trim().length >= 20 ? "" : `Need ${20 - value.trim().length} more characters` }));
+    } else if (name === "references") {
+      setFieldErrors(prev => ({ ...prev, references: "" }));
+    }
+
+    // Clear step errors
     if (stepErrors.step4) {
       setStepErrors((prev) => ({ ...prev, step4: "" }));
     }
@@ -224,8 +244,9 @@ const BookService = () => {
     formData.name.trim() &&
     formData.email.trim() &&
     formData.phone.trim() &&
-    formData.projectDescription.trim().length >= 20 &&
-    formData.features.trim().length >= 10 &&
+    formData.projectDescription.trim().length >= 50 &&
+    formData.features.trim().length >= 30 &&
+    (formData.references.trim().length === 0 || formData.references.trim().length >= 20) &&
     formData.deadline;
 
   const createWhatsAppMessage = (newOrderId) => {
@@ -311,6 +332,12 @@ const BookService = () => {
         orderStatus: "Pending Assignment",
         statusKey: "pending_assignment",
         assignmentStatus: "unassigned",
+        ...orderPayload,
+        paymentMethod,
+        utrNumber,
+        status: (paymentMethod === "qpay" && utrNumber !== "TEST_BYPASS") ? "Awaiting Payment Verification" : "Pending Assignment",
+        statusKey: (paymentMethod === "qpay" && utrNumber !== "TEST_BYPASS") ? "pending_payment_verification" : "pending_assignment",
+        isTestOrder: utrNumber === "TEST_BYPASS",
       };
 
       const createdOrder = await createOrder(orderPayload);
@@ -320,17 +347,39 @@ const BookService = () => {
         throw new Error("Order could not be created.");
       }
 
-      if (user?.uid) {
-        await setDoc(
-          doc(db, "users", user.uid),
-          {
-            customerType: resolvedCustomerType,
+      // If QPay, we are done with payment steps. Show success immediately.
+      if (paymentMethod === "qpay") {
+        const whatsappMessage = createWhatsAppMessage(orderDocId);
+        await logAuditEvent({
+          actorId: user?.uid || null,
+          actorRole: userProfile?.role || "client",
+          action: "order_created_qpay",
+          targetType: "order",
+          targetId: orderDocId,
+          severity: "medium",
+          metadata: {
+            serviceId: selectedService.id,
+            planId: selectedPlan.id,
+            utrNumber,
           },
-          { merge: true }
-        );
+        });
+
+        if (whatsappMessage) {
+          window.open(
+            `https://wa.me/${CONTACT_INFO.whatsappNumber}?text=${encodeURIComponent(
+              whatsappMessage
+            )}`,
+            "_blank"
+          );
+        }
+
+        setOrderId(orderDocId);
+        setOrderConfirmed(true);
+        setIsSubmitting(false);
+        return;
       }
 
-      // Now initiate Razorpay payment for advance
+      // Otherwise proceed to Razorpay
       await initializeRazorpayCheckout({
         amount: payment.advancePayment,
         orderId: orderDocId.slice(-8).toUpperCase(),
@@ -401,7 +450,7 @@ const BookService = () => {
             }
 
             setSubmitError(
-              `Payment failed: ${paymentError.message} No order was created.`
+              `Payment verification failed: ${paymentError.message}. For your safety, the draft order was removed. Please retry or contact us.`
             );
             setIsSubmitting(false);
             return;
@@ -415,7 +464,7 @@ const BookService = () => {
           });
 
           setSubmitError(
-            `Payment issue: ${paymentError.message} The order was kept for manual review.`
+            `Payment connection issue: ${paymentError.message}. Your order was kept for manual review by our team. Please don't re-submit.`
           );
           setIsSubmitting(false);
           setOrderId(orderDocId);
@@ -426,8 +475,108 @@ const BookService = () => {
     } catch (error) {
       console.error("Booking error:", error);
       setSubmitError(
-        "We could not save the booking right now. Please try again in a moment."
+        `We're having trouble saving your order right now (${error.message || 'Server Busy'}). Please check your connection and try again in 30 seconds.`
       );
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleBypassPayment = async () => {
+    if (!payment || !selectedCategory || !selectedService || !selectedPlan) {
+      return;
+    }
+
+    setSubmitError("");
+    setIsSubmitting(true);
+
+    try {
+      const orderPayload = {
+        userId: user?.uid || "guest",
+        customerId: user?.uid || null,
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        phone: formData.phone.trim(),
+        category: selectedCategory.name,
+        categoryId: selectedCategory.id,
+        service: selectedService.name,
+        serviceId: selectedService.id,
+        plan: selectedPlan.label,
+        planId: selectedPlan.id,
+        package: selectedPlan.label,
+        price: payment.total,
+        basePrice: payment.basePrice,
+        priorityFee: payment.priorityFee,
+        totalPrice: payment.total,
+        advancePayment: payment.advancePayment,
+        advancePaid: payment.advancePayment,
+        remainingPayment: payment.remainingPayment,
+        remainingAmount: payment.remainingPayment,
+        totalPaid: payment.advancePayment,
+        advanceRate: payment.advanceRate,
+        customerType: resolvedCustomerType,
+        isPriority,
+        priorityLabel: isPriority ? "High" : "Normal",
+        isReorder: Boolean(reorderDraft),
+        parentOrderId: reorderDraft?.parentOrderId || null,
+        projectDescription: formData.projectDescription.trim(),
+        features: formData.features.trim(),
+        references: formData.references.trim(),
+        deadline: formData.deadline,
+        requirements: {
+          projectDescription: formData.projectDescription.trim(),
+          features: formData.features.trim(),
+          references: formData.references.trim(),
+          deadline: formData.deadline,
+        },
+        paymentStatus: "Test Paid",
+        status: "Pending Assignment",
+        orderStatus: "Pending Assignment",
+        statusKey: "pending_assignment",
+        assignmentStatus: "unassigned",
+        utrNumber: utrNumber || null,
+      };
+
+      const createdOrder = await createOrder(orderPayload);
+      const orderDocId = createdOrder?.id;
+
+      if (!orderDocId) throw new Error("Order could not be created.");
+
+      if (user?.uid) {
+        await setDoc(doc(db, "users", user.uid), { customerType: resolvedCustomerType }, { merge: true });
+      }
+
+      const whatsappMessage = createWhatsAppMessage(orderDocId);
+      await logAuditEvent({
+        actorId: user?.uid || null,
+        actorRole: userProfile?.role || "client",
+        action: "order_created_bypass",
+        targetType: "order",
+        targetId: orderDocId,
+        severity: "low",
+        metadata: {
+          serviceId: selectedService.id,
+          planId: selectedPlan.id,
+          isPriority,
+          customerType: resolvedCustomerType,
+          isTesting: true,
+        },
+      });
+
+      if (whatsappMessage) {
+        window.open(
+          `https://wa.me/${CONTACT_INFO.whatsappNumber}?text=${encodeURIComponent(
+            whatsappMessage
+          )}`,
+          "_blank"
+        );
+      }
+
+      setOrderId(orderDocId);
+      setOrderConfirmed(true);
+      setIsSubmitting(false);
+    } catch (error) {
+      console.error("Booking bypass error:", error);
+      setSubmitError("Bypass failed. Could not save the booking.");
       setIsSubmitting(false);
     }
   };
@@ -841,9 +990,16 @@ const BookService = () => {
                       name="projectDescription"
                       value={formData.projectDescription}
                       onChange={handleChange}
-                      placeholder="What are you trying to build and who is it for?"
-                      className="min-h-[140px] w-full rounded-2xl border border-white/10 bg-secondary-dark/70 px-12 py-4 text-sm text-white outline-none transition-colors focus:border-cyan-primary"
+                      placeholder="What are you trying to build and who is it for? (Min 50 chars)"
+                      className={`min-h-[140px] w-full rounded-2xl border bg-secondary-dark/70 px-12 py-4 text-sm text-white outline-none transition-colors ${
+                        fieldErrors.projectDescription ? "border-amber-500/50" : "border-white/10 focus:border-cyan-primary"
+                      }`}
                     />
+                    {fieldErrors.projectDescription && (
+                      <p className="mt-2 text-[10px] font-mono text-amber-400/80 uppercase tracking-wider pl-12 flex items-center gap-2">
+                        <Info size={10} /> {fieldErrors.projectDescription}
+                      </p>
+                    )}
                   </div>
                 </label>
 
@@ -860,9 +1016,16 @@ const BookService = () => {
                       name="features"
                       value={formData.features}
                       onChange={handleChange}
-                      placeholder="List the sections, pages, assets, or expectations you already know."
-                      className="min-h-[130px] w-full rounded-2xl border border-white/10 bg-secondary-dark/70 px-12 py-4 text-sm text-white outline-none transition-colors focus:border-cyan-primary"
+                      placeholder="List the sections, pages, assets, or expectations. (Min 30 chars)"
+                      className={`min-h-[130px] w-full rounded-2xl border bg-secondary-dark/70 px-12 py-4 text-sm text-white outline-none transition-colors ${
+                        fieldErrors.features ? "border-amber-500/50" : "border-white/10 focus:border-cyan-primary"
+                      }`}
                     />
+                    {fieldErrors.features && (
+                      <p className="mt-2 text-[10px] font-mono text-amber-400/80 uppercase tracking-wider pl-12 flex items-center gap-2">
+                        <Info size={10} /> {fieldErrors.features}
+                      </p>
+                    )}
                   </div>
                 </label>
 
@@ -879,9 +1042,16 @@ const BookService = () => {
                       name="references"
                       value={formData.references}
                       onChange={handleChange}
-                      placeholder="Drop inspiration links, style references, or supporting notes."
-                      className="min-h-[120px] w-full rounded-2xl border border-white/10 bg-secondary-dark/70 px-12 py-4 text-sm text-white outline-none transition-colors focus:border-cyan-primary"
+                      placeholder="Drop inspiration links or style references. (Optional, min 20 chars if entered)"
+                      className={`min-h-[120px] w-full rounded-2xl border bg-secondary-dark/70 px-12 py-4 text-sm text-white outline-none transition-colors ${
+                        fieldErrors.references ? "border-amber-500/50" : "border-white/10 focus:border-cyan-primary"
+                      }`}
                     />
+                    {fieldErrors.references && (
+                      <p className="mt-2 text-[10px] font-mono text-amber-400/80 uppercase tracking-wider pl-12 flex items-center gap-2">
+                        <Info size={10} /> {fieldErrors.references}
+                      </p>
+                    )}
                   </div>
                 </label>
               </div>
@@ -897,7 +1067,7 @@ const BookService = () => {
                     5,
                     () => detailsValid,
                     "step4",
-                    "Please fill in all required fields: Name, Email, Phone, Deadline, Project Description (min 20 chars), and Features (min 10 chars)."
+                    "Please provide more detail: Description (50+), Features (30+), and References (20+ if used)."
                   )
                 }
               >
@@ -917,145 +1087,70 @@ const BookService = () => {
 
         <Step>
           <div className="space-y-8">
-            <button
-              type="button"
-              onClick={() => handleBack(4)}
-              className="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-[0.18em] text-light-gray/42 transition-colors hover:text-cyan-primary"
-            >
-              <ArrowLeft size={14} /> Back to details
-            </button>
-
             <div className="text-[11px] font-mono uppercase tracking-[0.22em] text-cyan-primary/72">
               Step 5 - Secure your order
             </div>
 
-            <div className="grid gap-6 lg:grid-cols-[0.92fr_1.08fr]">
-              <Card className="border-white/8 bg-black/72">
-                <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-cyan-primary/72">
-                  Customer Type
-                </div>
-                <h2 className="mt-4 text-3xl font-black text-white">
-                  Upfront amount depends on whether you are new or returning.
-                </h2>
+            <div className="grid gap-8 lg:grid-cols-[1fr_400px]">
+              <QRPaymentStep 
+                amount={payment.advancePayment}
+                onUtrSubmit={(utr) => {
+                  setUtrNumber(utr);
+                  goToStep(6);
+                }}
+                isSubmitting={isSubmitting}
+              />
 
-                {reorderDraft ? (
-                  <div className="mt-8 rounded-2xl border border-cyan-primary/15 bg-cyan-primary/10 p-5">
-                    <div className="text-lg font-bold text-white">
-                      Returning Customer Discount Applied
-                    </div>
-                    <div className="mt-2 text-sm leading-7 text-light-gray/64">
-                      This booking is linked to{" "}
-                      <span className="font-semibold text-cyan-primary">
-                        {reorderDraft.parentOrderId}
+              <div className="space-y-6">
+                <Card className="border-white/8 bg-black/72">
+                  <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-cyan-primary/72">
+                    Payment Breakdown
+                  </div>
+                  <div className="mt-8 space-y-5">
+                    <div className="flex items-center justify-between text-sm text-light-gray/66">
+                      <span>Base price</span>
+                      <span className="font-semibold text-white">
+                        {formatPrice(payment.basePrice)}
                       </span>
-                      , so only 50 percent is shown as the upfront amount.
+                    </div>
+                    <div className="flex items-center justify-between text-sm text-light-gray/66">
+                      <span>Priority fee</span>
+                      <span className="font-semibold text-white">
+                        {payment.priorityFee > 0
+                          ? formatPrice(payment.priorityFee)
+                          : "Not added"}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between border-t border-white/8 pt-5 text-sm text-light-gray/66">
+                      <span>Total price</span>
+                      <span className="text-2xl font-black text-cyan-primary">
+                        {formatPrice(payment.total)}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm text-light-gray/66">
+                      <span>Advance payment</span>
+                      <span className="font-semibold text-white underline decoration-cyan-primary/30 decoration-2 underline-offset-4">
+                        {formatPrice(payment.advancePayment)}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm text-light-gray/66">
+                      <span>Remaining payment</span>
+                      <span className="font-semibold text-white">
+                        {formatPrice(payment.remainingPayment)}
+                      </span>
                     </div>
                   </div>
-                ) : (
-                  <div className="mt-8 grid gap-4">
-                    {[
-                      {
-                        id: "new",
-                        title: "New Customer",
-                        detail: "70 percent upfront before work begins.",
-                      },
-                      {
-                        id: "returning",
-                        title: "Returning Customer",
-                        detail: "50 percent upfront if you have worked with us before.",
-                      },
-                    ].map((option) => {
-                      const active = customerType === option.id;
-                      return (
-                        <button
-                          key={option.id}
-                          type="button"
-                          onClick={() => setCustomerType(option.id)}
-                          className={`rounded-2xl border p-5 text-left transition-colors ${
-                            active
-                              ? "border-cyan-primary bg-cyan-primary/10"
-                              : "border-white/8 bg-secondary-dark/70"
-                          }`}
-                        >
-                          <div className="font-semibold text-white">
-                            {option.title}
-                          </div>
-                          <div className="mt-2 text-sm text-light-gray/60">
-                            {option.detail}
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </Card>
 
-              <Card className="border-cyan-primary/10 bg-secondary-dark/75">
-                <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-cyan-primary/72">
-                  Payment Summary
-                </div>
-                <div className="mt-8 space-y-5">
-                  <div className="flex items-center justify-between text-sm text-light-gray/66">
-                    <span>Base price</span>
-                    <span className="font-semibold text-white">
-                      {formatPrice(payment.basePrice)}
-                    </span>
+                  <div className="mt-8 rounded-2xl border border-cyan-primary/12 bg-black/45 p-5 text-sm leading-7 text-light-gray/64">
+                    Please pay the <strong className="text-cyan-primary">Advance Payment</strong> amount via QR to proceed. The remaining amount will be due upon project completion.
                   </div>
-                  <div className="flex items-center justify-between text-sm text-light-gray/66">
-                    <span>Priority fee</span>
-                    <span className="font-semibold text-white">
-                      {payment.priorityFee > 0
-                        ? formatPrice(payment.priorityFee)
-                        : "Not added"}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between border-t border-white/8 pt-5 text-sm text-light-gray/66">
-                    <span>Total price</span>
-                    <span className="text-2xl font-black text-cyan-primary">
-                      {formatPrice(payment.total)}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm text-light-gray/66">
-                    <span>Advance payment</span>
-                    <span className="font-semibold text-white">
-                      {formatPrice(payment.advancePayment)}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm text-light-gray/66">
-                    <span>Remaining payment</span>
-                    <span className="font-semibold text-white">
-                      {formatPrice(payment.remainingPayment)}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="mt-8 rounded-2xl border border-cyan-primary/12 bg-black/45 p-5 text-sm leading-7 text-light-gray/64">
-                  Payment collection is reflected here so you can review the
-                  base price, optional priority fee, and the exact split before
-                  confirmation.
-                </div>
-              </Card>
-            </div>
-
-            <div className="flex justify-between gap-4">
-              <Button variant="outline" onClick={() => handleBack(4)}>
-                <ArrowLeft size={16} /> Back
-              </Button>
-              <Button
-                onClick={() => goToStep(6)}
-                disabled={!payment || !selectedCategory || !selectedService || !selectedPlan}
-              >
-                Proceed To Review <ArrowRight size={16} />
-              </Button>
-            </div>
-            {(!payment || !selectedCategory || !selectedService || !selectedPlan) && (
-              <div className="flex items-center gap-2 rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-300">
-                <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-                Please complete all previous steps before proceeding.
+                </Card>
+                
+                <Button variant="outline" onClick={() => handleBack(4)} className="w-full">
+                  <ArrowLeft size={16} /> Back to requirements
+                </Button>
               </div>
-            )}
+            </div>
           </div>
         </Step>
 
@@ -1184,7 +1279,18 @@ const BookService = () => {
                 <div>
                   <div className="flex items-center gap-2 font-semibold text-white">
                     <ShieldCheck size={16} className="text-cyan-primary" />
-                    I agree to the Terms & Conditions
+                    <span>
+                      I agree to the{" "}
+                      <Link
+                        to="/terms"
+                        target="_blank"
+                        rel="noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-cyan-primary underline hover:text-cyan-primary/80"
+                      >
+                        Terms & Conditions
+                      </Link>
+                    </span>
                   </div>
                   <div className="mt-2 text-sm text-light-gray/58">
                     The booking will only be confirmed once this is accepted.
@@ -1208,6 +1314,16 @@ const BookService = () => {
                 <Button variant="outline" onClick={() => handleBack(5)}>
                   <ArrowLeft size={16} /> Edit Review
                 </Button>
+                {import.meta.env.DEV && (
+                  <Button
+                    variant="outline"
+                    className="border-amber-500/50 text-amber-500 hover:bg-amber-500/10"
+                    onClick={handleBypassPayment}
+                    disabled={!termsAccepted || isSubmitting}
+                  >
+                    Bypass Payment (Test)
+                  </Button>
+                )}
                 <Button
                   onClick={handleSubmit}
                   disabled={!termsAccepted || isSubmitting}

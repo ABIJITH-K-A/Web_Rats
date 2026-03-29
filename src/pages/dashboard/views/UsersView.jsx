@@ -114,16 +114,16 @@ const UsersView = () => {
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <h2 className="text-2xl font-black text-white italic">User <span className="text-cyan-primary not-italic font-mono uppercase text-sm tracking-[0.2em] ml-2">// Management</span></h2>
+          <h2 className="text-2xl font-black text-white italic">User <span className="text-cyan-primary not-italic font-mono uppercase text-sm tracking-[0.2em] ml-2">Management</span></h2>
           <p className="text-[10px] font-mono text-white/20 uppercase tracking-widest mt-1">Promote roles, view team IDs, manage referral eligibility</p>
         </div>
         <div className="flex flex-wrap gap-3">
-           <div className="md:hidden relative group">
+           <div className="hidden md:block relative group">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-cyan-primary transition-colors" size={16} />
               <input 
                 type="text" 
                 placeholder="Name or email..." 
-                className="bg-[#121417] border border-white/5 hover:border-white/10 focus:border-cyan-primary outline-none px-10 py-2.5 rounded-xl text-xs w-full sm:w-64 transition-all"
+                className="bg-[#121417] border border-white/5 hover:border-white/10 focus:border-cyan-primary outline-none px-10 py-2.5 rounded-xl text-xs w-64 transition-all"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -147,7 +147,7 @@ const UsersView = () => {
       <div className="bg-[#121417] border border-white/5 rounded-3xl overflow-hidden shadow-2xl">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
-            <thead className="bg-white/[0.02] border-b border-white/5 text-[10px] font-mono uppercase tracking-widest text-white/30">
+            <thead className="bg-white/2 border-b border-white/5 text-[10px] font-mono uppercase tracking-widest text-white/30">
               <tr>
                 <th className="px-6 py-5">Identities</th>
                 <th className="px-6 py-5">Communication</th>
@@ -164,7 +164,7 @@ const UsersView = () => {
                 <tr><td colSpan="6" className="px-6 py-20 text-center text-white/20 font-mono text-xs uppercase tracking-widest italic">No search results found</td></tr>
               ) : (
                 filteredUsers.map(u => (
-                  <tr key={u.id} className="hover:bg-white/[0.01] transition-colors group">
+                  <tr key={u.id} className="hover:bg-white/1 transition-colors group">
                     <td className="px-6 py-4">
                        <div className="flex items-center gap-3">
                           <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs border ${getRoleColor(u.role)}`}>

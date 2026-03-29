@@ -14,6 +14,8 @@ import { isAdminLikeRole, isManagerLikeRole, normalizeValue } from '../lib/roles
 import { serializeDocument } from '../lib/serialize.js';
 import { authGuard, optionalAuthGuard } from '../middleware/authGuard.js';
 import { validateBody } from '../middleware/validate.js';
+import { creditWorkerForOrder } from '../services/financialService.js';
+import { dispatchNotification } from '../services/notificationDispatcher.js';
 
 const router = Router();
 
@@ -124,6 +126,16 @@ router.post(
 
     const orderRef = await adminDb().collection('orders').add(orderData);
     const createdSnapshot = await orderRef.get();
+    const createdOrder = { id: createdSnapshot.id, ...createdSnapshot.data() };
+
+    // Dispatch confirmation notification
+    await dispatchNotification(createdOrder.userId, 'orderConfirmation', {
+      orderId: createdOrder.id.slice(-8).toUpperCase(),
+      service: createdOrder.service,
+      plan: createdOrder.plan,
+      amount: createdOrder.totalPrice,
+      customerName: createdOrder.name,
+    });
 
     res.status(201).json({
       order: serializeDocument(createdSnapshot),
@@ -213,6 +225,28 @@ router.patch(
     await orderRef.update(patch);
 
     const updatedSnapshot = await orderRef.get();
+    const updatedOrder = { id: updatedSnapshot.id, ...updatedSnapshot.data() };
+
+    // Financial Credit Logic
+    if (nextStatus === 'completed') {
+      try {
+        await creditWorkerForOrder(orderId);
+      } catch (err) {
+        console.error('Failed to credit workers for order:', err);
+      }
+    }
+
+    // Dispatch status update notification
+    const isCompleted = ['completed', 'delivered'].includes(nextStatus);
+    const eventType = isCompleted ? 'orderCompleted' : 'statusUpdate';
+    
+    await dispatchNotification(updatedOrder.userId, eventType, {
+      orderId: updatedOrder.id.slice(-8).toUpperCase(),
+      service: updatedOrder.service,
+      status: getOrderStatusLabel(nextStatus),
+      customerName: updatedOrder.name,
+    });
+
     res.json({
       order: serializeDocument(updatedSnapshot),
     });

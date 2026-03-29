@@ -120,7 +120,7 @@ const InviteKeysView = () => {
     <div className="space-y-10 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <h2 className="text-2xl font-black text-white italic">Invite <span className="text-cyan-primary not-italic font-mono uppercase text-sm tracking-[0.2em] ml-2">// Team Keys</span></h2>
+          <h2 className="text-2xl font-black text-white italic">Invite <span className="text-cyan-primary not-italic font-mono uppercase text-sm tracking-[0.2em] ml-2">Team Keys</span></h2>
           <p className="text-[10px] font-mono text-white/20 uppercase tracking-widest mt-1">Generate single-use verification tokens for staff onboarding</p>
         </div>
       </div>
@@ -180,7 +180,7 @@ const InviteKeysView = () => {
                           <span className={`px-2 py-0.5 rounded-full border text-[8px] font-black uppercase tracking-widest ${k.used ? 'bg-white/5 text-white/20 border-white/5' : 'bg-green-500/10 text-green-500 border-green-500/20 shadow-[0_0_10px_rgba(34,197,94,0.1)]'}`}>
                              {k.used ? 'Burned' : 'Active Token'}
                           </span>
-                          <span className="text-[9px] font-mono text-white/30 uppercase tracking-[0.1em]">{k.role}</span>
+                          <span className="text-[9px] font-mono text-white/30 uppercase tracking-widest">{k.role}</span>
                        </div>
                        
                         <div className="text-lg font-black font-mono text-white tracking-[0.15em] mb-1 group-hover:text-cyan-primary transition-colors">{k.keyCode || k.id}</div>
@@ -190,7 +190,7 @@ const InviteKeysView = () => {
                           <button 
                             disabled={k.used}
                              onClick={() => handleCopy(k.keyCode || k.id, k.id)}
-                            className="flex-grow py-2.5 bg-[#262B25] border border-white/5 rounded-xl font-bold font-mono text-[9px] uppercase tracking-widest text-white/40 hover:text-white hover:bg-[#2f362f] transition-all flex items-center justify-center gap-2"
+                            className="grow py-2.5 bg-[#262B25] border border-white/5 rounded-xl font-bold font-mono text-[9px] uppercase tracking-widest text-white/40 hover:text-white hover:bg-[#2f362f] transition-all flex items-center justify-center gap-2"
                           >
                              {copyStatus[k.id] ? <Check size={14} className="text-cyan-primary" /> : <Copy size={14} />} 
                              {copyStatus[k.id] ? 'Copied' : 'Copy'}
@@ -214,7 +214,7 @@ const InviteKeysView = () => {
                  <h4 className="text-xs font-black text-red-500/80 mb-2 uppercase tracking-widest flex items-center gap-2 italic underline underline-offset-4 decoration-red-500/20">
                    Security Breach Warning
                  </h4>
-                 <p className="text-[10px] font-mono text-white/30 uppercase tracking-[0.1em] leading-relaxed">
+                 <p className="text-[10px] font-mono text-white/30 uppercase tracking-widest leading-relaxed">
                    NEVER post invite keys <u>Publicly</u>. If a key is compromised, purge it immediately using the trash icon. Burned keys remain in history for 7 days before auto-pruning.
                  </p>
               </div>

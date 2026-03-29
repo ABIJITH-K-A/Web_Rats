@@ -17,7 +17,7 @@ const PayrollView = () => {
   const [payrolls, setPayrolls] = useState([]);
   const [managers, setManagers] = useState([]);
   const [showCreate, setShowCreate] = useState(false);
-  const [newPayroll, setNewPayroll] = useState({ month: '', totalIncome: '' });
+  const [newPayroll, setNextPayroll] = useState({ month: '', totalIncome: '' });
   const [selectedPayroll, setSelectedPayroll] = useState(null);
   const [allocations, setAllocations] = useState({});
 
@@ -54,7 +54,7 @@ const PayrollView = () => {
         createdBy: user.uid,
         createdAt: serverTimestamp()
       });
-      setNewPayroll({ month: '', totalIncome: '' });
+      setNextPayroll({ month: '', totalIncome: '' });
       setShowCreate(false);
       fetchData();
       alert("Payroll period generated.");
@@ -96,7 +96,7 @@ const PayrollView = () => {
     <div className="space-y-10 animate-in fade-in duration-500 pb-20">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <h2 className="text-2xl font-black text-white italic">Payroll <span className="text-cyan-primary not-italic font-mono uppercase text-sm tracking-[0.2em] ml-2">// Control System</span></h2>
+          <h2 className="text-2xl font-black text-white italic">Payroll <span className="text-cyan-primary not-italic font-mono uppercase text-sm tracking-widest ml-2">Control System</span></h2>
           <p className="text-[10px] font-mono text-white/20 uppercase tracking-widest mt-1">Manage platform income distribution and manager budget allocation</p>
         </div>
         {!showCreate && !selectedPayroll && (
@@ -117,14 +117,14 @@ const PayrollView = () => {
             <form onSubmit={handleCreatePayroll} className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
                <div className="space-y-1">
                   <label className="text-[10px] uppercase font-mono tracking-widest text-white/20">Target Month *</label>
-                  <input required type="month" className="w-full bg-[#262B25] border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-cyan-primary outline-none transition-all" value={newPayroll.month} onChange={(e)=>setNewPayroll({...newPayroll, month: e.target.value})} />
+                  <input required type="month" className="w-full bg-[#262B25] border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-cyan-primary outline-none transition-all" value={newPayroll.month} onChange={(e)=>setNextPayroll({...newPayroll, month: e.target.value})} />
                </div>
                <div className="space-y-1">
                   <label className="text-[10px] uppercase font-mono tracking-widest text-white/20">Total Platform Income (₹) *</label>
-                  <input required type="number" className="w-full bg-[#262B25] border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-cyan-primary outline-none transition-all" placeholder="50000" value={newPayroll.totalIncome} onChange={(e)=>setNewPayroll({...newPayroll, totalIncome: e.target.value})} />
+                  <input required type="number" className="w-full bg-[#262B25] border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-cyan-primary outline-none transition-all" placeholder="50000" value={newPayroll.totalIncome} onChange={(e)=>setNextPayroll({...newPayroll, totalIncome: e.target.value})} />
                </div>
                <div className="flex gap-3">
-                  <button type="submit" className="flex-grow py-3 bg-cyan-primary text-primary-dark font-black text-[10px] uppercase tracking-widest rounded-xl shadow-[0_0_15px_rgba(103, 248, 29,0.1)]">Generate Period</button>
+                  <button type="submit" className="grow py-3 bg-cyan-primary text-primary-dark font-black text-[10px] uppercase tracking-widest rounded-xl shadow-[0_0_15px_rgba(103, 248, 29,0.1)]">Generate Period</button>
                   <button type="button" onClick={()=>setShowCreate(false)} className="px-4 py-3 bg-white/5 border border-white/5 rounded-xl text-white/40 hover:text-white transition-colors "><X size={18}/></button>
                </div>
             </form>
@@ -174,7 +174,7 @@ const PayrollView = () => {
 
             <div className="flex gap-4">
                <button onClick={() => setSelectedPayroll(null)} className="px-8 py-3 bg-white/5 border border-white/5 rounded-xl font-bold font-mono text-[10px] uppercase tracking-widest text-white/40 hover:text-white transition-all">Cancel</button>
-               <button onClick={handleSaveAllocations} className="flex-grow py-3 bg-cyan-primary text-primary-dark font-black font-mono text-[10px] uppercase tracking-[0.2em] rounded-xl hover:scale-[1.01] shadow-[0_0_20px_rgba(103, 248, 29,0.1)] flex items-center justify-center gap-3">
+               <button onClick={handleSaveAllocations} className="grow py-3 bg-cyan-primary text-primary-dark font-black font-mono text-[10px] uppercase tracking-widest rounded-xl hover:scale-[1.01] shadow-[0_0_20px_rgba(103, 248, 29,0.1)] flex items-center justify-center gap-3">
                   <Save size={14} /> Commit Allocation Map
                </button>
             </div>
@@ -183,7 +183,7 @@ const PayrollView = () => {
 
       {/* History Table */}
       <div className="bg-[#121417] border border-white/5 rounded-3xl overflow-hidden shadow-2xl">
-         <div className="p-6 border-b border-white/5 bg-white/[0.01]">
+         <div className="p-6 border-b border-white/5 bg-white/1">
             <h3 className="text-xs font-mono uppercase tracking-widest text-cyan-primary flex items-center gap-2">
                <History size={14} /> Execution History
             </h3>
@@ -206,8 +206,8 @@ const PayrollView = () => {
                      <tr><td colSpan="5" className="px-6 py-32 text-center text-white/10 opacity-20 uppercase font-mono text-xs italic tracking-widest">No payroll records initialized</td></tr>
                   ) : (
                      payrolls.map(p => (
-                       <tr key={p.id} className="hover:bg-white/[0.01] transition-colors group">
-                         <td className="px-6 py-4 font-mono text-sm font-bold text-white group-hover:text-cyan-primary transition-colors uppercase tracking-[0.1em]">{p.month}</td>
+                       <tr key={p.id} className="hover:bg-white/1 transition-colors group">
+                         <td className="px-6 py-4 font-mono text-sm font-bold text-white group-hover:text-cyan-primary transition-colors uppercase tracking-widest">{p.month}</td>
                          <td className="px-6 py-4 font-black italic text-cyan-primary">₹{(p.totalIncome || 0).toLocaleString()}</td>
                          <td className="px-6 py-4">
                             <div className="flex items-center gap-2">
@@ -240,7 +240,7 @@ const PayrollView = () => {
          <Info size={20} className="text-cyan-primary shrink-0 mt-0.5" />
          <div>
             <h4 className="text-[10px] font-bold text-white/40 mb-2 uppercase tracking-widest">Administrator Protocol</h4>
-            <p className="text-[10px] font-mono text-white/20 uppercase tracking-[0.15em] leading-relaxed">
+            <p className="text-[10px] font-mono text-white/20 uppercase tracking-widest leading-relaxed">
               Platform Income is the total revenue collected from clients. Admins must allocate budgets to Managers, who then distribute to workers based on project metrics. Allocations are immutable once the period status moves to "COMMIT".
             </p>
          </div>

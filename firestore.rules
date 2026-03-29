@@ -1,0 +1,101 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    function hasRole(role) {
+      return request.auth.token.role == role;
+    }
+    
+    function isAdmin() {
+      return hasRole('admin') || hasRole('owner');
+    }
+
+    function isStaff() {
+      return hasRole('admin') || hasRole('owner') || hasRole('manager') || hasRole('worker');
+    }
+
+    // --- Collections ---
+
+    // Users
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (isOwner(userId) || isStaff());
+      allow create: if isAuthenticated() && isOwner(userId);
+      allow update: if isAuthenticated() && (isOwner(userId) || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    // Orders
+    match /orders/{orderId} {
+      allow read: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid || 
+        resource.data.customerId == request.auth.uid || 
+        isStaff()
+      );
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid || 
+        isStaff()
+      );
+      allow delete: if isAdmin();
+    }
+
+    // Notifications
+    match /notifications/{notifId} {
+      allow read, update: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated(); // or restrict to backend only
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    // Chats
+    match /chats/{chatId} {
+      allow read, create: if isAuthenticated() && (
+        request.auth.uid in resource.data.participants || 
+        isStaff()
+      );
+      allow update: if isAuthenticated() && request.auth.uid in resource.data.participants;
+      
+      match /messages/{messageId} {
+        allow read, create: if isAuthenticated();
+      }
+    }
+
+    // Audit Logs (Backend Only Write)
+    match /auditLogs/{logId} {
+      allow read: if isAdmin();
+      allow write: if false; // Only Admin SDK (Backend) can write
+    }
+
+    // Support Messages
+    match /supportMessages/{msgId} {
+      allow create: if isAuthenticated();
+      allow read, update: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
+    }
+
+    // Reviews
+    match /reviews/{revId} {
+      allow read: if true; // Public reviews
+      allow create: if isAuthenticated();
+      allow update, delete: if isAdmin();
+    }
+
+    // Wallet
+    match /wallet/{walletId} {
+      allow read: if isAuthenticated() && (isOwner(walletId) || isAdmin());
+      allow write: if false; // Managed by backend only
+    }
+
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

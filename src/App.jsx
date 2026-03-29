@@ -9,28 +9,34 @@ import About from './pages/public/About';
 import Projects from './pages/public/Projects';
 import Help from './pages/public/Help';
 import BookService from './pages/public/BookService';
+import Templates from './pages/public/Templates';
 import JoinHub from './pages/auth/JoinHub';
 import ForgotPassword from './pages/auth/ForgotPassword';
+import NotFound from './pages/public/NotFound';
+import Terms from './pages/public/Terms';
+import Privacy from './pages/public/Privacy';
 import Profile from './pages/auth/Profile';
 import RoleBasedDashboard from './components/dashboard/RoleBasedDashboard';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import ScrollToTop from './components/utils/ScrollToTop';
+import ErrorBoundary from './components/ui/ErrorBoundary';
 
 function App() {
   return (
-    <AuthProvider>
-      <DashboardProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <DashboardProvider>
         <BrowserRouter>
           <ScrollToTop />
           <RootLayout>
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/services" element={<Services />} />
-              <Route path="/service/:serviceId" element={<ServiceDetail />} />
               <Route path="/about" element={<About />} />
               <Route path="/projects" element={<Projects />} />
               <Route path="/help" element={<Help />} />
               <Route path="/book" element={<BookService />} />
+              <Route path="/templates" element={<Templates />} />
               <Route path="/join" element={<JoinHub />} />
               <Route path="/signup" element={<JoinHub />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -43,16 +49,15 @@ function App() {
                   </ProtectedRoute>
                 } 
               />
-              <Route path="*" element={
-                <div className="min-h-screen flex items-center justify-center text-light-gray">
-                  404 | Page Under Construction
-                </div>
-              } />
+              <Route path="/terms" element={<Terms />} />
+              <Route path="/privacy" element={<Privacy />} />
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </RootLayout>
         </BrowserRouter>
       </DashboardProvider>
     </AuthProvider>
+    </ErrorBoundary>
   );
 }
 

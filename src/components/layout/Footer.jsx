@@ -1,10 +1,13 @@
 import { ArrowRight, Instagram, Mail, MessageCircle } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import { CONTACT_INFO, SERVICE_CATEGORIES } from "../../data/siteData";
 
 const Footer = () => {
+  const { user } = useAuth();
+
   return (
-    <footer className="relative z-10 mt-auto border-t border-cyan-primary/10 bg-secondary-dark/55 pb-8 pt-16 backdrop-blur-md">
+    <footer className="relative z-10 mt-auto border-t border-cyan-primary/10 bg-[#121417]/95 pb-8 pt-16 backdrop-blur-md">
       <div className="container mx-auto px-6">
         <div className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr_1fr]">
           <div>
@@ -79,6 +82,16 @@ const Footer = () => {
                 Projects
               </Link>
               <Link
+                to="/templates"
+                className="group flex items-center gap-2 text-light-gray/68 transition-colors hover:text-cyan-primary"
+              >
+                <ArrowRight
+                  size={14}
+                  className="transition-transform group-hover:translate-x-1"
+                />
+                Templates
+              </Link>
+              <Link
                 to="/about"
                 className="group flex items-center gap-2 text-light-gray/68 transition-colors hover:text-cyan-primary"
               >
@@ -98,16 +111,29 @@ const Footer = () => {
                 />
                 Book Service
               </Link>
-              <Link
-                to="/join"
-                className="group flex items-center gap-2 text-light-gray/68 transition-colors hover:text-cyan-primary"
-              >
-                <ArrowRight
-                  size={14}
-                  className="transition-transform group-hover:translate-x-1"
-                />
-                Sign In / Join
-              </Link>
+              {user ? (
+                <Link
+                  to="/profile"
+                  className="group flex items-center gap-2 text-light-gray/68 transition-colors hover:text-cyan-primary"
+                >
+                  <ArrowRight
+                    size={14}
+                    className="transition-transform group-hover:translate-x-1"
+                  />
+                  Profile
+                </Link>
+              ) : (
+                <Link
+                  to="/join"
+                  className="group flex items-center gap-2 text-light-gray/68 transition-colors hover:text-cyan-primary"
+                >
+                  <ArrowRight
+                    size={14}
+                    className="transition-transform group-hover:translate-x-1"
+                  />
+                  Sign In / Join
+                </Link>
+              )}
             </div>
           </div>
         </div>

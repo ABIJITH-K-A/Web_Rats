@@ -13,6 +13,18 @@ const attachCurrentUser = async (req, decodedToken) => {
   const userSnapshot = await userRef.get();
   const profile = userSnapshot.exists ? userSnapshot.data() : {};
 
+  // Check token age (8 hours max)
+  const EIGHT_HOURS_SEC = 8 * 60 * 60;
+  const currentTimeSec = Math.floor(Date.now() / 1000);
+  if (decodedToken.auth_time && (currentTimeSec - decodedToken.auth_time > EIGHT_HOURS_SEC)) {
+    throw new HttpError(401, 'Session expired. Please log in again.');
+  }
+
+  // Check account status
+  if (profile.status === 'suspended' || profile.status === 'fired') {
+    throw new HttpError(403, 'Account has been suspended.');
+  }
+
   req.currentUser = {
     uid: decodedToken.uid,
     email: decodedToken.email || profile.email || null,

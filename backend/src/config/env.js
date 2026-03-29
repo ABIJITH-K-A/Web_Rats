@@ -24,6 +24,15 @@ export const env = {
   razorpayKeyId: String(process.env.RAZORPAY_KEY_ID || '').trim(),
   razorpayKeySecret: String(process.env.RAZORPAY_KEY_SECRET || '').trim(),
   razorpayWebhookSecret: String(process.env.RAZORPAY_WEBHOOK_SECRET || '').trim(),
+  // Email (Gmail SMTP)
+  smtpUser: String(process.env.SMTP_USER || '').trim(),
+  smtpPass: String(process.env.SMTP_PASS || '').trim(),
+  // WhatsApp (Twilio)
+  twilioAccountSid: String(process.env.TWILIO_ACCOUNT_SID || '').trim(),
+  twilioAuthToken: String(process.env.TWILIO_AUTH_TOKEN || '').trim(),
+  twilioWhatsAppFrom: String(process.env.TWILIO_WHATSAPP_FROM || '+14155238886').trim(),
+  // Frontend URL for links in notifications
+  frontendUrl: String(process.env.FRONTEND_URL || 'http://localhost:5173').trim(),
 };
 
 export default env;

@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   UserPlus, LogIn, User, Mail, Smartphone, Lock,
   Eye, EyeOff, Ticket, Check, ArrowRight, KeyRound,
-  Bolt, ShieldCheck, Users
+  Bolt, ShieldCheck, Users, Info
 } from 'lucide-react';
 import { Button, Card } from '../../components/ui/Primitives';
 import { useAuth } from '../../context/AuthContext';
@@ -39,8 +39,71 @@ const inputCls = (pl = 'pl-10') =>
   `w-full bg-primary-dark border border-white/10 rounded-xl ${pl} pr-4 py-3 outline-none focus:border-cyan-primary text-sm transition-colors placeholder:text-white/20`;
 
 /* ─── Main Component ──────────────────────────────────────── */
+
+/* ─── Password Strength ────────────────────────────────────── */
+const getStrength = (pass) => {
+  if (!pass) return { score: 0, label: '', color: 'bg-white/10' };
+  let s = 0;
+  if (pass.length >= 8) s++;
+  if (/[0-9]/.test(pass)) s++;
+  if (/[A-Z]/.test(pass) && /[a-z]/.test(pass)) s++;
+  if (/[^A-Za-z0-9]/.test(pass)) s++;
+  
+  if (s === 1) return { score: 1, label: 'Weak', color: 'bg-red-500' };
+  if (s === 2) return { score: 2, label: 'Fair', color: 'bg-amber-500' }; // Reddish Yellow
+  if (s === 3) return { score: 3, label: 'Strong', color: 'bg-emerald-400' }; // Soft Green
+  if (s === 4) return { score: 4, label: 'Excellent', color: 'bg-emerald-500' };
+  return { score: 0, label: '', color: 'bg-white/10' };
+};
+
+const PasswordChecklist = ({ pass }) => {
+  const checks = [
+    { label: '8+ Characters', valid: pass.length >= 8 },
+    { label: 'Upper & Lowercase', valid: /[A-Z]/.test(pass) && /[a-z]/.test(pass) },
+    { label: 'Numbers (0-9)', valid: /[0-9]/.test(pass) },
+    { label: 'Special Symbols', valid: /[^A-Za-z0-9]/.test(pass) },
+  ];
+
+  return (
+    <div className="grid grid-cols-2 gap-x-5 gap-y-1 mt-3 mx-auto w-fit">
+      {checks.map((c, i) => (
+        <div key={i} className="flex items-center gap-1.5">
+          <div className={`w-3 h-3 rounded-full flex items-center justify-center transition-colors ${c.valid ? 'bg-emerald-500/20' : 'bg-white/5'}`}>
+            <Check size={8} className={c.valid ? 'text-emerald-500' : 'text-white/10'} />
+          </div>
+          <span className={`text-[9px] font-mono whitespace-nowrap transition-colors ${c.valid ? 'text-emerald-500/80' : 'text-white/20'}`}>
+            {c.label}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const StrengthBar = ({ pass }) => {
+  const { score, label, color } = getStrength(pass);
+  if (!pass) return null;
+  return (
+    <div className="mt-2 space-y-1.5 animate-in fade-in slide-in-from-top-1 duration-300">
+      <div className="flex justify-between items-center text-[10px] font-mono uppercase tracking-wider">
+        <span className="text-light-gray/40">Strength:</span>
+        <span className={score === 1 ? 'text-red-500' : score === 2 ? 'text-amber-500' : 'text-emerald-400'}>{label}</span>
+      </div>
+      <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+        <motion.div 
+          animate={{ width: `${(score / 4) * 100}%` }}
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          className={`h-full ${color} shadow-[0_0_10px_rgba(0,0,0,0.3)]`}
+        />
+      </div>
+      <PasswordChecklist pass={pass} />
+    </div>
+  );
+};
+
+/* ─── Main Component ──────────────────────────────────────── */
 const JoinHub = () => {
-  const { login, signup, staffSignup, user, userProfile, role } = useAuth();
+  const { login, signup, staffSignup, user, userProfile, role, sessionExpired, clearSessionExpired } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -73,22 +136,37 @@ const JoinHub = () => {
     email: '', phone: '', password: '', confirmPassword: ''
   });
   const [refStatus, setRefStatus] = useState({ valid: false, msg: '' });
+  const [inviteStatus, setInviteStatus] = useState({ valid: false, msg: '' });
 
-  const reset = () => { setError(''); setSuccess(''); };
+  const reset = () => { setError(''); setSuccess(''); clearSessionExpired?.(); };
   const switchTab = (t) => { reset(); setShowPass(false); setTab(t); };
 
-  /* --- referral validation --- */
+  /* --- real-time validation --- */
   const validateReferral = async (code) => {
     if (!code) { setRefStatus({ valid: false, msg: '' }); return; }
     try {
       const snap = await getDoc(doc(db, 'referralCodes', code.toUpperCase()));
       if (snap.exists()) {
         const d = snap.data();
-        setRefStatus({ valid: true, msg: `✓ ${d.discountPercent}% discount unlocked!` });
+        setRefStatus({ valid: true, msg: `✓ Success! ${d.discountPercent}% discount has been applied to your account.` });
       } else {
-        setRefStatus({ valid: false, msg: '✗ Invalid referral code' });
+        setRefStatus({ valid: false, msg: '✗ This referral code doesn\'t exist. Please check for typos.' });
       }
-    } catch { setRefStatus({ valid: false, msg: 'Could not validate' }); }
+    } catch { setRefStatus({ valid: false, msg: 'Unable to verify code. Please check your connection.' }); }
+  };
+
+  const validateInvite = async (key) => {
+    if (!key) { setInviteStatus({ valid: false, msg: '' }); return; }
+    try {
+      const snap = await getDoc(doc(db, 'inviteKeys', key.toUpperCase()));
+      if (snap.exists()) {
+        const d = snap.data();
+        if (d.status !== 'active') return setInviteStatus({ valid: false, msg: '✗ This key has already been used or is no longer active.' });
+        setInviteStatus({ valid: true, msg: `✓ Verified! This key grants access to the ${d.role} dashboard.` });
+      } else {
+        setInviteStatus({ valid: false, msg: '✗ Key not found. Please contact an Administrator for a valid key.' });
+      }
+    } catch { setInviteStatus({ valid: false, msg: 'Validation failed. Please verify your internet connection.' }); }
   };
 
   /* --- handlers --- */
@@ -105,7 +183,7 @@ const JoinHub = () => {
   const handleRegister = async (e) => {
     e.preventDefault(); reset();
     if (regData.password !== regData.confirmPassword) return setError('Passwords do not match.');
-    if (regData.password.length < 8) return setError('Password must be at least 8 characters.');
+    if (getStrength(regData.password).score < 2) return setError('Your password is too weak. Add numbers or special characters.');
     setLoading(true);
     try {
       await signup(regData.email, regData.password, {
@@ -122,7 +200,7 @@ const JoinHub = () => {
   const handleStaffSignup = async (e) => {
     e.preventDefault(); reset();
     if (staffData.password !== staffData.confirmPassword) return setError('Passwords do not match.');
-    if (staffData.password.length < 8) return setError('Password must be at least 8 characters.');
+    if (getStrength(staffData.password).score < 2) return setError('Your password is too weak. Add numbers or special characters.');
     if (!staffData.inviteKey) return setError('Invite key is required.');
     setLoading(true);
     try {
@@ -145,8 +223,35 @@ const JoinHub = () => {
     { id: 'staff',    label: 'Join as Staff',  icon: Users },
   ];
 
+  const DEMO_ACCOUNTS = [
+    { label: 'Admin', email: 'admin@tnwebrats.com', pass: 'Staff@123' },
+    { label: 'Worker', email: 'worker@tnwebrats.com', pass: 'Staff@123' },
+  ];
+
+  const fillDemo = (acc) => {
+    setTab('login');
+    setLoginData({ email: acc.email, password: acc.pass });
+  };
+
   return (
     <div className="min-h-screen py-20 flex flex-col items-center justify-center px-4">
+      {/* Session Expired Banner */}
+      <AnimatePresence>
+        {sessionExpired && (
+          <motion.div
+            initial={{ opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            className="mb-6 w-full max-w-lg rounded-2xl border border-amber-500/20 bg-amber-500/10 px-5 py-4 text-center"
+          >
+            <div className="text-sm font-bold text-amber-300">Session Expired</div>
+            <div className="mt-1 text-xs text-amber-300/70">
+              Your session timed out after being inactive. Please sign in again.
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Hero */}
       <div className="text-center mb-10">
         <div className="inline-block px-4 py-1 rounded-full border border-cyan-primary/20 bg-cyan-primary/5 text-cyan-primary text-[10px] font-mono uppercase tracking-widest mb-4">
@@ -233,6 +338,7 @@ const JoinHub = () => {
                   <Field label="Password" icon={Lock}>
                     <input required type={showPass ? 'text' : 'password'} className={inputCls()} placeholder="Min 8 chars"
                       value={regData.password} onChange={e => setRegData({ ...regData, password: e.target.value })} />
+                    <StrengthBar pass={regData.password} />
                   </Field>
                   <Field label="Confirm" icon={Lock}>
                     <input required type={showPass ? 'text' : 'password'} className={inputCls()} placeholder="Repeat"
@@ -264,7 +370,7 @@ const JoinHub = () => {
                   </span>
                 </label>
 
-                <Button className="w-full py-3" disabled={loading}>
+                <Button className="w-full py-3" disabled={loading} type="submit">
                   {loading ? 'Creating Account...' : 'Create Account'} <ArrowRight size={16} className="ml-1" />
                 </Button>
               </motion.form>
@@ -291,12 +397,28 @@ const JoinHub = () => {
                   </button>
                 </Field>
 
-                <Button className="w-full py-3" disabled={loading}>
+                <Button className="w-full py-3" disabled={loading} type="submit">
                   {loading ? 'Signing In...' : 'Sign In'} <LogIn size={16} className="ml-1" />
                 </Button>
 
+                <div className="pt-4 border-t border-white/5">
+                  <p className="text-[10px] font-mono text-white/20 uppercase tracking-widest mb-3 text-center">Quick Access (Testing Only)</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {DEMO_ACCOUNTS.map(acc => (
+                      <button
+                        key={acc.label}
+                        type="button"
+                        onClick={() => fillDemo(acc)}
+                        className="py-2 px-3 rounded-lg border border-white/5 bg-white/5 hover:bg-cyan-primary/10 hover:border-cyan-primary/30 text-[10px] font-bold text-white/40 hover:text-cyan-primary transition-all flex items-center justify-center gap-2"
+                      >
+                        <Bolt size={10} /> {acc.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 <p className="text-center text-[10px] font-mono text-white/20">
-                  <Link to="/forgot-password" className="hover:text-cyan-primary transition-colors">
+                  <Link to="/forgot-password" size={16} className="hover:text-cyan-primary transition-colors">
                     Forgot your password?
                   </Link>
                 </p>
@@ -320,7 +442,16 @@ const JoinHub = () => {
                   <input required className={`${inputCls()} uppercase tracking-widest`}
                     placeholder="TNWR-XXXX-XXXX"
                     value={staffData.inviteKey}
-                    onChange={e => setStaffData({ ...staffData, inviteKey: e.target.value.toUpperCase() })} />
+                    onChange={e => {
+                      const v = e.target.value.toUpperCase();
+                      setStaffData({ ...staffData, inviteKey: v });
+                      validateInvite(v);
+                    }} />
+                  {inviteStatus.msg && (
+                    <p className={`text-[10px] font-mono mt-1 ${inviteStatus.valid ? 'text-cyan-primary' : 'text-red-400'}`}>
+                      {inviteStatus.msg}
+                    </p>
+                  )}
                 </Field>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -348,6 +479,7 @@ const JoinHub = () => {
                   <Field label="Password" icon={Lock}>
                     <input required type={showPass ? 'text' : 'password'} className={inputCls()} placeholder="Min 8 chars"
                       value={staffData.password} onChange={e => setStaffData({ ...staffData, password: e.target.value })} />
+                    <StrengthBar pass={staffData.password} />
                   </Field>
                   <Field label="Confirm" icon={Lock}>
                     <input required type={showPass ? 'text' : 'password'} className={inputCls()} placeholder="Repeat"
@@ -364,7 +496,7 @@ const JoinHub = () => {
                   <span className="text-[10px] text-light-gray/40">Show passwords</span>
                 </label>
 
-                <Button className="w-full py-3" disabled={loading}>
+                <Button className="w-full py-3" disabled={loading} type="submit">
                   {loading ? 'Creating Account...' : 'Create Staff Account'} <ArrowRight size={16} className="ml-1" />
                 </Button>
               </motion.form>

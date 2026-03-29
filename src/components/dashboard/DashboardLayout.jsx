@@ -3,21 +3,22 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { 
   Menu, X, Home, List, Users, Ticket, Star, Wallet, 
   Bug, Box, CheckSquare, DollarSign, Briefcase, Key, AlertCircle,
-  LogOut, ExternalLink, Bell, Clock, Search, TrendingUp, Package
+  LogOut, ExternalLink, Bell, Clock, Search, TrendingUp, Package,
+  ArrowRightLeft, User
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useDashboard } from '../../context/DashboardContext';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import NeuralBackground from '../layout/NeuralBackground';
 import {
   canAccessDashboardView,
   getAllowedDashboardViews,
   normalizeRole,
 } from '../../utils/systemRules';
 import { formatDateTime } from '../../utils/orderHelpers';
+import ChatWidget from '../chat/ChatWidget';
 
 const DashboardLayout = ({ children }) => {
-  const { user, userProfile, logout } = useAuth();
+  const { user, userProfile, logout, fetchError, refreshProfile } = useAuth();
   const { 
     searchQuery, setSearchQuery, notifications, unreadCount, 
     markAsRead, markAllAsRead 
@@ -77,10 +78,7 @@ const DashboardLayout = ({ children }) => {
   };
 
   return (
-    <div className="min-h-screen text-light-gray flex overflow-hidden font-rajdhani relative">
-      {/* Neural Background */}
-      <NeuralBackground />
-      
+    <div className="min-h-screen text-light-gray flex bg-[#121417] overflow-hidden font-rajdhani relative">
       {/* Sidebar Overlay */}
       <AnimatePresence>
         {isSidebarOpen && window.innerWidth < 1024 && (
@@ -151,6 +149,12 @@ const DashboardLayout = ({ children }) => {
               <div className="text-[10px] text-white/30 truncate">{user?.email}</div>
             </div>
           </div>
+          <button
+            onClick={() => navigate('/profile')}
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg border border-cyan-primary/20 text-cyan-primary text-xs font-bold hover:bg-cyan-primary/10 transition-colors mb-2"
+          >
+            <ArrowRightLeft size={14} /> Switch to Client View
+          </button>
           <button 
             onClick={handleLogout}
             className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg border border-red-500/20 text-red-500 text-xs font-bold hover:bg-red-500/10 transition-colors"
@@ -259,6 +263,7 @@ const DashboardLayout = ({ children }) => {
           {children({ currentView })}
         </main>
       </div>
+      <ChatWidget />
     </div>
   );
 };
