@@ -8,11 +8,13 @@ import {
   UserPlus,
   X,
 } from 'lucide-react';
+import { Button } from '../../../components/ui/Primitives';
 import {
   addDoc,
   collection,
   doc,
   getDocs,
+  onSnapshot,
   orderBy,
   query,
   serverTimestamp,
@@ -20,6 +22,7 @@ import {
   where,
 } from 'firebase/firestore';
 import { db } from '../../../config/firebase';
+import OrderDetailsModal from '../../../components/dashboard/OrderDetailsModal';
 import { useAuth } from '../../../context/AuthContext';
 import { useDashboard } from '../../../context/DashboardContext';
 import { logAuditEvent } from '../../../services/auditService';
@@ -48,35 +51,34 @@ const OrdersView = () => {
   const [statusFilter, setStatusFilter] = useState('');
   const [assignModal, setAssignModal] = useState({ open: false, orderId: null });
   const [selectedWorkers, setSelectedWorkers] = useState([]);
+  const [selectedOrder, setSelectedOrder] = useState(null);
   const statusOptions = getOrderStatusOptions(userProfile?.role);
 
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
+    if (!user?.uid) return;
 
+    const fetchWorkers = async () => {
       try {
-        const [orderSnapshot, workerSnapshot] = await Promise.all([
-          getDocs(query(collection(db, 'orders'), orderBy('createdAt', 'desc'))),
-          getDocs(query(collection(db, 'users'), where('role', '==', 'worker'))),
-        ]);
-
-        setOrders(orderSnapshot.docs.map((orderDoc) => ({
-          id: orderDoc.id,
-          ...orderDoc.data(),
-        })));
-        setWorkers(workerSnapshot.docs.map((workerDoc) => ({
-          id: workerDoc.id,
-          ...workerDoc.data(),
-        })));
+        const workerSnapshot = await getDocs(query(collection(db, 'users'), where('role', '==', 'worker')));
+        setWorkers(workerSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
       } catch (error) {
-        console.error('Error fetching orders:', error);
-      } finally {
-        setLoading(false);
+        console.error('Error fetching workers:', error);
       }
     };
 
-    fetchData();
-  }, []);
+    fetchWorkers();
+
+    const q = query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setOrders(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+      setLoading(false);
+    }, (error) => {
+      console.error('Orders snapshot error:', error);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [user?.uid]);
 
   const filteredOrders = orders.filter((order) => {
     const queryText = searchQuery.toLowerCase();
@@ -171,7 +173,7 @@ const OrdersView = () => {
         await addDoc(collection(db, 'assignmentRequests'), {
           orderId: assignModal.orderId,
           requestedWorkers: selectedWorkers,
-          requestedBy: user.uid,
+          requestedBy: user?.uid || 'anonymous',
           requestedByName: userProfile?.name || 'Manager',
           status: 'pending',
           createdAt: serverTimestamp(),
@@ -331,12 +333,16 @@ const OrdersView = () => {
                 </tr>
               ) : (
                 filteredOrders.map((order) => (
-                  <tr key={order.id} className="align-top hover:bg-white/[0.02]">
+                  <tr 
+                    key={order.id} 
+                    className="align-top hover:bg-white/2 cursor-pointer group"
+                    onClick={() => setSelectedOrder(order)}
+                  >
                     <td className="px-5 py-5">
-                      <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary/70">
+                      <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary/70 group-hover:text-cyan-primary transition-colors">
                         {getOrderDisplayId(order)}
                       </div>
-                      <div className="mt-2 text-base font-bold text-white">
+                      <div className="mt-2 text-base font-bold text-white group-hover:text-cyan-primary transition-colors">
                         {order.service}
                       </div>
                       <div className="mt-1 text-sm text-white/45">
@@ -439,6 +445,16 @@ const OrdersView = () => {
       </div>
 
       <AnimatePresence>
+        {selectedOrder && (
+          <OrderDetailsModal 
+            order={selectedOrder}
+            userRole={userProfile?.role}
+            onClose={() => setSelectedOrder(null)}
+            onContact={() => {/* handle contact logic */}}
+            onUpdateStatus={(o, s) => handleUpdateStatus(o, s)}
+          />
+        )}
+
         {assignModal.open && (
           <div className="fixed inset-0 z-[110] flex items-center justify-center p-6">
             <motion.div

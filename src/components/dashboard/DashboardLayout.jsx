@@ -16,6 +16,7 @@ import {
 } from '../../utils/systemRules';
 import { formatDateTime } from '../../utils/orderHelpers';
 import ChatWidget from '../chat/ChatWidget';
+import ErrorBoundary from '../ui/ErrorBoundary';
 
 const DashboardLayout = ({ children }) => {
   const { user, userProfile, logout, fetchError, refreshProfile } = useAuth();
@@ -208,46 +209,48 @@ const DashboardLayout = ({ children }) => {
 
                <AnimatePresence>
                  {isNotifOpen && (
-                   <motion.div
-                     initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                     animate={{ opacity: 1, y: 0, scale: 1 }}
-                     exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                     className="absolute right-0 mt-4 w-80 bg-[#121417] border border-white/5 rounded-2xl shadow-2xl z-50 overflow-hidden"
-                   >
-                     <div className="p-4 border-b border-white/5 flex justify-between items-center bg-black/20">
-                       <span className="text-xs font-bold uppercase tracking-widest text-white/60">Notifications</span>
-                       {unreadCount > 0 && (
-                         <button onClick={markAllAsRead} className="text-[9px] text-cyan-primary hover:underline">Mark all as read</button>
-                       )}
-                     </div>
-                     <div className="max-h-96 overflow-y-auto no-scrollbar">
-                       {notifications.length === 0 ? (
-                         <div className="p-8 text-center text-white/20 text-xs">No notifications yet</div>
-                       ) : (
-                         notifications.map((notif) => (
-                           <div
-                             key={notif.id}
-                             onClick={() => markAsRead(notif.id)}
-                             className={`p-4 border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer ${!notif.read ? 'bg-cyan-primary/5' : ''}`}
-                           >
-                             <div className="flex gap-3">
-                               <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${notif.type === 'order' ? 'bg-blue-500/10 text-blue-500' : 'bg-cyan-primary/10 text-cyan-primary'}`}>
-                                 {notif.type === 'order' ? <Box size={14} /> : <Star size={14} />}
-                               </div>
-                               <div>
-                                 <div className="text-xs font-bold text-white/90 mb-1">{notif.title}</div>
-                                 <div className="text-[10px] text-white/40 leading-snug">{notif.message}</div>
-                                 <div className="text-[8px] font-mono text-white/20 mt-2 uppercase">
-                                   {formatDateTime(notif.createdAt)}
-                                 </div>
-                               </div>
-                               {!notif.read && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-cyan-primary" />}
-                             </div>
-                           </div>
-                         ))
-                       )}
-                     </div>
-                   </motion.div>
+                   <ErrorBoundary variant="module">
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      className="absolute right-0 mt-4 w-80 bg-[#121417] border border-white/5 rounded-2xl shadow-2xl z-50 overflow-hidden"
+                    >
+                      <div className="p-4 border-b border-white/5 flex justify-between items-center bg-black/20">
+                        <span className="text-xs font-bold uppercase tracking-widest text-white/60">Notifications</span>
+                        {unreadCount > 0 && (
+                          <button onClick={markAllAsRead} className="text-[9px] text-cyan-primary hover:underline">Mark all as read</button>
+                        )}
+                      </div>
+                      <div className="max-h-96 overflow-y-auto no-scrollbar">
+                        {notifications.length === 0 ? (
+                          <div className="p-8 text-center text-white/20 text-xs">No notifications yet</div>
+                        ) : (
+                          notifications.map((notif) => (
+                            <div
+                              key={notif.id}
+                              onClick={() => markAsRead(notif.id)}
+                              className={`p-4 border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer ${!notif.read ? 'bg-cyan-primary/5' : ''}`}
+                            >
+                              <div className="flex gap-3">
+                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${notif.type === 'order' ? 'bg-blue-500/10 text-blue-500' : 'bg-cyan-primary/10 text-cyan-primary'}`}>
+                                  {notif.type === 'order' ? <Box size={14} /> : <Star size={14} />}
+                                </div>
+                                <div>
+                                  <div className="text-xs font-bold text-white/90 mb-1">{notif.title}</div>
+                                  <div className="text-[10px] text-white/40 leading-snug">{notif.message}</div>
+                                  <div className="text-[8px] font-mono text-white/20 mt-2 uppercase">
+                                    {formatDateTime(notif.createdAt)}
+                                  </div>
+                                </div>
+                                {!notif.read && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-cyan-primary" />}
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </motion.div>
+                   </ErrorBoundary>
                  )}
                </AnimatePresence>
              </div>
@@ -259,8 +262,10 @@ const DashboardLayout = ({ children }) => {
         </header>
 
         {/* View Port */}
-        <main className="flex-grow overflow-y-auto px-6 py-8 lg:px-10 bg-[#262B25] no-scrollbar relative z-10">
-          {children({ currentView })}
+        <main className="flex-grow overflow-y-auto px-6 py-8 lg:px-10 bg-[#0D0F0D] no-scrollbar relative z-10">
+          <ErrorBoundary variant="module" key={currentView}>
+            {children({ currentView })}
+          </ErrorBoundary>
         </main>
       </div>
       <ChatWidget />

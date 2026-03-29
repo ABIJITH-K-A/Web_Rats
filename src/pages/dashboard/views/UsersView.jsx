@@ -37,6 +37,7 @@ const UsersView = () => {
   };
 
   const handlePromote = async (uid, newRole) => {
+    if (!currentUser?.uid) return;
     if (uid === currentUser.uid) return alert("Cannot change your own role");
     
     // Original business logic for referral generation on staff promotion

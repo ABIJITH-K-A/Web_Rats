@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   createUserWithEmailAndPassword,
   onAuthStateChanged,
@@ -9,6 +9,7 @@ import {
 import {
   doc,
   getDoc,
+  getDocFromCache,
   serverTimestamp,
   setDoc,
   updateDoc,
@@ -24,9 +25,7 @@ import {
   normalizeRole,
 } from "../utils/systemRules";
 import useIdleTimeout from "../hooks/useIdleTimeout";
-
-const AuthContext = createContext();
-export const useAuth = () => useContext(AuthContext);
+import { AuthContext } from "./AuthContext";
 
 const userFriendlyError = (code) => {
   const map = {
@@ -51,8 +50,31 @@ const userFriendlyError = (code) => {
 const sanitizeString = (value) => String(value || "").trim();
 
 const fetchUserProfile = async (uid) => {
-  const snap = await getDoc(doc(db, "users", uid));
-  return snap.exists() ? snap.data() : null;
+  const ref = doc(db, "users", uid);
+  try {
+    // Attempt server fetch
+    const snap = await getDoc(ref);
+    return snap.exists() ? snap.data() : null;
+  } catch (error) {
+    const isOfflineError = 
+      error?.message?.toLowerCase()?.includes("offline") ||
+      error?.message?.toLowerCase()?.includes("unavailable") ||
+      error?.code === "unavailable" ||
+      !navigator.onLine;
+
+    if (isOfflineError) {
+      try {
+        // Fallback to cache immediately if network is down/unreliable
+        const cachedSnap = await getDocFromCache(ref);
+        return cachedSnap.exists() ? cachedSnap.data() : null;
+      } catch (cacheError) {
+        // Cache miss and offline — nothing we can do but wait for reconnect
+        console.warn("Profile fetch failed: Offline and cache miss.");
+        return null;
+      }
+    }
+    throw error;
+  }
 };
 
 export const AuthProvider = ({ children }) => {
@@ -102,15 +124,16 @@ export const AuthProvider = ({ children }) => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
-        setLoading(true);
-        await refreshProfile(currentUser.uid);
+        // Don't block initial render — fetch profile in the background
+        // so the site loads even when Firestore is unreachable (offline)
+        refreshProfile(currentUser.uid).finally(() => setLoading(false));
       } else {
         setUser(null);
         setUserProfile(null);
         setRole(null);
         setFetchError(null);
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return unsubscribe;
@@ -127,6 +150,9 @@ export const AuthProvider = ({ children }) => {
       const profile = await fetchUserProfile(cred.user.uid);
 
       if (!profile) {
+        if (!navigator.onLine) {
+          throw new Error("Cannot load your profile while offline. Please check your connection.");
+        }
         throw new Error("Profile not found for this account.");
       }
 

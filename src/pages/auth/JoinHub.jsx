@@ -65,9 +65,9 @@ const PasswordChecklist = ({ pass }) => {
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-x-5 gap-y-1 mt-3 mx-auto w-fit">
+    <div className="flex flex-wrap justify-center gap-x-5 gap-y-1.5 mt-3 px-2">
       {checks.map((c, i) => (
-        <div key={i} className="flex items-center gap-1.5">
+        <div key={i} className="flex items-center gap-1.5 shrink-0">
           <div className={`w-3 h-3 rounded-full flex items-center justify-center transition-colors ${c.valid ? 'bg-emerald-500/20' : 'bg-white/5'}`}>
             <Check size={8} className={c.valid ? 'text-emerald-500' : 'text-white/10'} />
           </div>
@@ -82,21 +82,22 @@ const PasswordChecklist = ({ pass }) => {
 
 const StrengthBar = ({ pass }) => {
   const { score, label, color } = getStrength(pass);
-  if (!pass) return null;
+  
   return (
-    <div className="mt-2 space-y-1.5 animate-in fade-in slide-in-from-top-1 duration-300">
+    <div className={`mt-2 space-y-1.5 transition-all duration-500 ${pass ? 'opacity-100' : 'opacity-0 h-0 overflow-hidden mt-0'}`}>
       <div className="flex justify-between items-center text-[10px] font-mono uppercase tracking-wider">
         <span className="text-light-gray/40">Strength:</span>
         <span className={score === 1 ? 'text-red-500' : score === 2 ? 'text-amber-500' : 'text-emerald-400'}>{label}</span>
       </div>
       <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
         <motion.div 
+          layout
           animate={{ width: `${(score / 4) * 100}%` }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          className={`h-full ${color} shadow-[0_0_10px_rgba(0,0,0,0.3)]`}
+          className={`h-full ${color} shadow-[0_0_10px_rgba(0,0,0,0.3)] transition-colors duration-500`}
         />
       </div>
-      <PasswordChecklist pass={pass} />
+      <PasswordChecklist pass={pass || ''} />
     </div>
   );
 };

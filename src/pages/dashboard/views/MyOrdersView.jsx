@@ -13,9 +13,14 @@ import {
   collection,
   doc,
   updateDoc,
+  onSnapshot,
+  query,
+  where,
+  orderBy
 } from 'firebase/firestore';
 import { db } from '../../../config/firebase';
 import { useAuth } from '../../../context/AuthContext';
+import OrderDetailsModal from '../../../components/dashboard/OrderDetailsModal';
 import { logAuditEvent } from '../../../services/auditService';
 import { notifyOrderStatusChanged } from '../../../services/notificationService';
 import { fetchOrdersAssignedToUser } from '../../../services/orderService';
@@ -36,27 +41,30 @@ import {
 const FILTERS = getWorkerVisibleStatuses();
 
 const MyOrdersView = () => {
-  const { user } = useAuth();
+  const { user, userProfile } = useAuth();
   const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState([]);
   const [statusFilter, setStatusFilter] = useState('assigned');
+  const [selectedOrder, setSelectedOrder] = useState(null);
 
   useEffect(() => {
     if (!user?.uid) return;
 
-    const fetchMyOrders = async () => {
-      setLoading(true);
+    const q = query(
+      collection(db, 'orders'), 
+      where('assignedWorkers', 'array-contains', user.uid),
+      orderBy('createdAt', 'desc')
+    );
 
-      try {
-        setOrders(await fetchOrdersAssignedToUser(user.uid));
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setOrders(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      setLoading(false);
+    }, (err) => {
+      console.error("MyOrders snapshot error:", err);
+      setLoading(false);
+    });
 
-    fetchMyOrders();
+    return () => unsubscribe();
   }, [user]);
 
   const filteredOrders = orders.filter(
@@ -162,14 +170,15 @@ const MyOrdersView = () => {
             return (
               <div
                 key={order.id}
-                className="rounded-[30px] border border-white/8 bg-[#121417] p-7 shadow-2xl"
+                onClick={() => setSelectedOrder(order)}
+                className="rounded-[30px] border border-white/8 bg-[#121417] p-7 shadow-2xl cursor-pointer group hover:border-cyan-primary/20 transition-all"
               >
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
-                    <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-cyan-primary/70">
+                    <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-cyan-primary/70 group-hover:text-cyan-primary transition-colors">
                       {getOrderDisplayId(order)}
                     </div>
-                    <h3 className="mt-3 text-2xl font-black text-white">
+                    <h3 className="mt-3 text-2xl font-black text-white group-hover:text-cyan-primary transition-colors">
                       {order.service}
                     </h3>
                     <div className="mt-2 text-sm text-white/45">
@@ -275,6 +284,18 @@ const MyOrdersView = () => {
           notifications stay accurate.
         </p>
       </div>
+
+      <AnimatePresence>
+        {selectedOrder && (
+          <OrderDetailsModal 
+            order={selectedOrder}
+            userRole={userProfile?.role}
+            onClose={() => setSelectedOrder(null)}
+            onContact={() => {/* handle contact logic */}}
+            onUpdateStatus={(o, s) => handleUpdateStatus(o, s)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };

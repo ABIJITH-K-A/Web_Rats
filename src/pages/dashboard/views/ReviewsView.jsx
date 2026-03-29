@@ -15,10 +15,11 @@ const ReviewsView = () => {
   }, []);
 
   const fetchReviews = async () => {
+    if (!user?.uid) return;
     setLoading(true);
     try {
       let q;
-      if (userData.role === 'worker') {
+      if (userData?.role === 'worker') {
         q = query(collection(db, "reviews"), where("workerAssigned", "==", user.uid), orderBy("createdAt", "desc"));
       } else {
         q = query(collection(db, "reviews"), orderBy("createdAt", "desc"));

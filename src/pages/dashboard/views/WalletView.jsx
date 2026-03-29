@@ -60,6 +60,7 @@ const WalletView = () => {
 
   const handleSubmitPayout = async (event) => {
     event.preventDefault();
+    if (!user?.uid) return;
     setError('');
 
     const amount = Number(payoutForm.amount);

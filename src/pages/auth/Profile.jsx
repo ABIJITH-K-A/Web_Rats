@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
+  AlertCircle,
   ArrowRight,
   ArrowRightLeft,
   Bell,
@@ -24,14 +25,17 @@ import {
   User,
   Wallet,
   X,
+  Paperclip,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import ChatWidget from "../../components/chat/ChatWidget";
+import OrderDetailsModal from "../../components/dashboard/OrderDetailsModal";
 import {
   addDoc,
   collection,
   doc,
   getDocs,
+  onSnapshot,
   orderBy,
   query,
   serverTimestamp,
@@ -41,6 +45,7 @@ import {
 } from "firebase/firestore";
 import { Button, Card } from "../../components/ui/Primitives";
 import { db } from "../../config/firebase";
+import { apiRequest } from "../../services/apiClient";
 import { useAuth } from "../../context/AuthContext";
 import { useDashboard } from "../../context/DashboardContext";
 import { CONTACT_INFO } from "../../data/siteData";
@@ -89,6 +94,7 @@ const Profile = () => {
   } = useDashboard();
   const navigate = useNavigate();
 
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("dashboard");
   const [orderTab, setOrderTab] = useState("active");
   const [loading, setLoading] = useState(true);
@@ -150,51 +156,13 @@ const Profile = () => {
       setLoading(true);
 
       try {
-        const orderQueries = [
+        const paymentResult = await getDocs(
           query(
-            collection(db, "orders"),
+            collection(db, "payments"),
             where("userId", "==", user.uid),
-            orderBy("createdAt", "desc")
-          ),
-          query(
-            collection(db, "orders"),
-            where("customerId", "==", user.uid),
-            orderBy("createdAt", "desc")
-          ),
-        ];
-
-        const [orderResults, paymentResult] = await Promise.all([
-          Promise.all(
-            orderQueries.map((orderQuery) =>
-              getDocs(orderQuery).catch(() => null)
-            )
-          ),
-          getDocs(
-            query(
-              collection(db, "payments"),
-              where("userId", "==", user.uid),
-              orderBy("timestamp", "desc")
-            )
-          ).catch(() => null),
-        ]);
-
-        const mergedOrders = new Map();
-        orderResults.forEach((snapshot) => {
-          snapshot?.docs.forEach((orderDoc) => {
-            mergedOrders.set(orderDoc.id, {
-              id: orderDoc.id,
-              ...orderDoc.data(),
-            });
-          });
-        });
-
-        const nextOrders = Array.from(mergedOrders.values()).sort(
-          (left, right) => {
-            const leftTime = left.createdAt?.toDate?.()?.getTime?.() || 0;
-            const rightTime = right.createdAt?.toDate?.()?.getTime?.() || 0;
-            return rightTime - leftTime;
-          }
-        );
+            orderBy("timestamp", "desc")
+          )
+        ).catch(() => null);
 
         const nextPayments =
           paymentResult?.docs.map((paymentDoc) => ({
@@ -204,23 +172,15 @@ const Profile = () => {
 
         // Fetch Notification Preferences
         try {
-          const token = await user.getIdToken();
-          const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
-          const res = await fetch(`${apiUrl}/notification-settings`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          if (res.ok) {
-            const data = await res.json();
-            if (data.preferences) setNotificationPrefs(data.preferences);
-          }
+          const data = await apiRequest("/notification-settings", { authMode: "required" });
+          if (data?.preferences) setNotificationPrefs(data.preferences);
         } catch (err) {
           console.error("Failed to fetch notification preferences", err);
         }
 
-        if (!isMounted) return;
-
-        setOrders(nextOrders);
-        setPayments(nextPayments);
+        if (isMounted) {
+          setPayments(nextPayments);
+        }
       } catch (error) {
         console.error("Profile dashboard error:", error);
       } finally {
@@ -230,10 +190,29 @@ const Profile = () => {
       }
     };
 
+    // Real-time Orders Listener
+    const orderQueries = [
+      query(collection(db, "orders"), where("userId", "==", user.uid)),
+      query(collection(db, "orders"), where("customerId", "==", user.uid)),
+    ];
+
+    const unsubscribes = orderQueries.map((q) => 
+      onSnapshot(q, (snapshot) => {
+        setOrders(prev => {
+          const merged = new Map(prev.map(o => [o.id, o]));
+          snapshot.docs.forEach(doc => merged.set(doc.id, { id: doc.id, ...doc.data() }));
+          return Array.from(merged.values()).sort((a,b) => 
+            (b.createdAt?.toDate?.()?.getTime() || 0) - (a.createdAt?.toDate?.()?.getTime() || 0)
+          );
+        });
+      })
+    );
+
     fetchDashboardData();
 
     return () => {
       isMounted = false;
+      unsubscribes.forEach(unsub => unsub());
     };
   }, [navigate, user]);
 
@@ -369,18 +348,12 @@ const Profile = () => {
     setNotificationPrefs(newPrefs);
     setNotifState({ saving: true, error: "", feedback: "" });
     try {
-      const token = await user.getIdToken();
-      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
-      const res = await fetch(`${apiUrl}/notification-settings`, {
+      await apiRequest("/notification-settings", {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(newPrefs),
+        authMode: "required",
+        body: newPrefs,
       });
 
-      if (!res.ok) throw new Error("Failed to update");
       setNotifState({ saving: false, error: "", feedback: "Preferences saved." });
       setTimeout(() => setNotifState((s) => ({ ...s, feedback: "" })), 3000);
     } catch (err) {
@@ -413,9 +386,9 @@ const Profile = () => {
 
     try {
       const supportRef = await addDoc(collection(db, "supportMessages"), {
-        userId: user.uid,
+        userId: user?.uid || 'anonymous',
         name: displayName,
-        email: user.email || "",
+        email: user?.email || "anonymous@tnwebrats.com",
         subject: supportForm.subject.trim(),
         message: supportForm.message.trim(),
         status: "new",
@@ -424,7 +397,7 @@ const Profile = () => {
 
       await notifySupportRequest({
         supportId: supportRef.id,
-        senderId: user.uid,
+        senderId: user?.uid || 'anonymous',
         senderName: displayName,
         subject: supportForm.subject.trim(),
       });
@@ -476,6 +449,7 @@ const Profile = () => {
 
     setQrPaymentModal(prev => ({ ...prev, submitting: true }));
     try {
+      if (!qrPaymentModal.order?.id) return;
       await updateDoc(doc(db, "orders", qrPaymentModal.order.id), {
         utrNumber: qrPaymentModal.utr.trim(),
         paymentStatus: "Pending Verification",
@@ -545,7 +519,7 @@ const Profile = () => {
         orderId: reviewState.order.id,
         rating: reviewState.rating,
         comment: reviewState.comment.trim(),
-        customerId: user.uid,
+        customerId: user?.uid || 'anonymous',
         customerName: displayName,
         service: reviewState.order.service || "Project",
         workerAssigned: reviewState.order.workerAssigned || null,
@@ -583,9 +557,21 @@ const Profile = () => {
 
 
   return (
-    <div className="min-h-screen bg-[#121417] text-light-gray">
-      <div className="mx-auto flex min-h-screen max-w-[1560px]">
-        <aside className="hidden w-72 shrink-0 border-r border-white/6 bg-[#0f1217] lg:flex lg:flex-col">
+    <div className="min-h-screen bg-[#121417] text-light-gray font-sans flex overflow-hidden relative">
+      {/* Sidebar Overlay (mobile) */}
+      <AnimatePresence>
+        {isSidebarOpen && window.innerWidth < 1024 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsSidebarOpen(false)}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
+          />
+        )}
+      </AnimatePresence>
+
+      <aside className={`fixed inset-y-0 left-0 z-50 w-72 bg-[#0f1217] border-r border-white/6 transform transition-transform duration-300 ease-in-out flex flex-col ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:relative lg:translate-x-0`}>
           <div className="border-b border-white/6 px-6 py-6">
             <div className="text-[10px] font-mono uppercase tracking-[0.28em] text-cyan-primary/72">
               Client Dashboard
@@ -1614,7 +1600,6 @@ const Profile = () => {
             )}
           </main>
         </div>
-      </div>
 
       <AnimatePresence>
         {selectedOrder && (
@@ -1827,190 +1812,7 @@ const OrderCard = ({
   );
 };
 
-const OrderDetailsModal = ({
-  order,
-  onClose,
-  onContact,
-  onDownload,
-  onReorder,
-  onReview,
-}) => {
-  const requirements = getRequirementFields(order);
-  const payment = getOrderPaymentSummary(order);
-  const timeline = getOrderTimeline(order);
-  const assetLink = getPrimaryAssetLink(order);
-  const isCompleted = isCompletedOrder(order);
-  const reviewDone = order.reviewDone || order.review?.rating;
-
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-120 flex items-center justify-center bg-black/70 p-5 backdrop-blur"
-    >
-      <motion.div
-        initial={{ opacity: 0, y: 20, scale: 0.97 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 20, scale: 0.97 }}
-        className="max-h-[90vh] w-full max-w-5xl overflow-hidden rounded-[32px] border border-white/10 bg-[#10141a] shadow-2xl"
-      >
-        <div className="flex items-start justify-between gap-4 border-b border-white/8 px-6 py-5">
-          <div>
-            <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary/72">
-              {getOrderDisplayId(order)}
-            </div>
-            <h3 className="mt-2 text-3xl font-black text-white">
-              {order.service}
-            </h3>
-            <div className="mt-3 flex flex-wrap gap-3">
-              <StatusBadge value={order.status} />
-              <PaymentBadge value={order.paymentStatus} />
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/8 bg-white/5 text-light-gray/62 transition-colors hover:text-white"
-          >
-            <X size={18} />
-          </button>
-        </div>
-
-        <div className="grid max-h-[calc(90vh-6rem)] gap-6 overflow-y-auto px-6 py-6 xl:grid-cols-[0.92fr_1.08fr]">
-          <div className="space-y-6">
-            <Card hoverEffect={false} className="border-white/8 bg-black/30">
-              <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary/72">
-                Service Info
-              </div>
-              <div className="mt-6 space-y-4">
-                <SnapshotRow label="Plan" value={getOrderPlanLabel(order)} />
-                <SnapshotRow
-                  label="Priority"
-                  value={getOrderPriorityLabel(order)}
-                />
-                <SnapshotRow
-                  label="Customer Type"
-                  value={getCustomerTypeLabel(order)}
-                />
-                <SnapshotRow
-                  label="Deadline"
-                  value={order.deadline || "Flexible"}
-                />
-              </div>
-            </Card>
-
-            <Card hoverEffect={false} className="border-white/8 bg-black/30">
-              <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary/72">
-                Payment Status
-              </div>
-              <div className="mt-6 space-y-4">
-                <SnapshotRow
-                  label="Total"
-                  value={formatCurrency(payment.total)}
-                />
-                <SnapshotRow
-                  label="Paid"
-                  value={formatCurrency(payment.paid)}
-                />
-                <SnapshotRow
-                  label="Pending"
-                  value={formatCurrency(payment.pending)}
-                />
-              </div>
-            </Card>
-
-            <Card hoverEffect={false} className="border-white/8 bg-black/30">
-              <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary/72">
-                Timeline
-              </div>
-              <div className="mt-6 space-y-4">
-                {timeline.map((step) => (
-                  <div key={step.key} className="flex items-start gap-4">
-                    <div
-                      className={`mt-0.5 flex h-8 w-8 items-center justify-center rounded-full border ${
-                        step.done
-                          ? "border-cyan-primary bg-cyan-primary text-primary-dark"
-                          : "border-white/10 bg-white/5 text-light-gray/42"
-                      }`}
-                    >
-                      {step.done ? <Check size={14} /> : <Clock3 size={14} />}
-                    </div>
-                    <div>
-                      <div className="font-semibold text-white">{step.label}</div>
-                      <div className="text-sm text-light-gray/50">
-                        {step.date ? formatDateTime(step.date) : "Waiting"}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          </div>
-          <div className="space-y-6">
-            <Card hoverEffect={false} className="border-white/8 bg-black/30">
-              <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary/72">
-                Requirements Submitted
-              </div>
-              <div className="mt-6 space-y-5 text-sm leading-7 text-light-gray/62">
-                <DetailBlock label="Name" value={requirements.name} />
-                <DetailBlock label="Email" value={requirements.email} />
-                <DetailBlock label="Phone" value={requirements.phone} />
-                <DetailBlock
-                  label="Project Description"
-                  value={requirements.projectDescription}
-                />
-                <DetailBlock label="Features" value={requirements.features} />
-                <DetailBlock label="References" value={requirements.references} />
-              </div>
-            </Card>
-
-            <Card hoverEffect={false} className="border-white/8 bg-black/30">
-              <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary/72">
-                Actions
-              </div>
-              <div className="mt-6 flex flex-wrap gap-3">
-                <Button variant="outline" onClick={onContact}>
-                  Contact Worker
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={onDownload}
-                  disabled={!assetLink}
-                  className={!assetLink ? "opacity-50" : ""}
-                >
-                  Download Files
-                </Button>
-                {isCompleted ? (
-                  <>
-                    <Button variant="outline" onClick={onReorder}>
-                      Reorder This Service
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={onReview}
-                      disabled={Boolean(reviewDone)}
-                      className={reviewDone ? "opacity-50" : ""}
-                    >
-                      {reviewDone ? "Review Saved" : "Leave Review"}
-                    </Button>
-                  </>
-                ) : null}
-                {assetLink ? (
-                  <a href={assetLink} target="_blank" rel="noreferrer">
-                    <Button variant="outline">
-                      <ExternalLink size={16} /> Open Files
-                    </Button>
-                  </a>
-                ) : null}
-              </div>
-            </Card>
-          </div>
-        </div>
-      </motion.div>
-    </motion.div>
-  );
-};
+// Shared OrderDetailsModal is imported from components/dashboard/OrderDetailsModal
 
 const ReviewModal = ({ state, setState, onClose, onSubmit }) => (
   <motion.div

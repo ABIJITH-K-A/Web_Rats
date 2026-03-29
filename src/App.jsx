@@ -1,5 +1,5 @@
-import { AuthProvider } from './context/AuthContext';
-import { DashboardProvider } from './context/DashboardContext';
+import { AuthProvider } from './context/AuthProvider';
+import { DashboardProvider } from './context/DashboardProvider';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import RootLayout from './components/layout/RootLayout';
 import Home from './pages/public/Home';
@@ -20,13 +20,15 @@ import RoleBasedDashboard from './components/dashboard/RoleBasedDashboard';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import ScrollToTop from './components/utils/ScrollToTop';
 import ErrorBoundary from './components/ui/ErrorBoundary';
+import ResilienceLayer from './components/utils/ResilienceLayer';
 
 function App() {
   return (
-    <ErrorBoundary>
-      <AuthProvider>
-        <DashboardProvider>
-        <BrowserRouter>
+    <ResilienceLayer>
+      <ErrorBoundary variant="page">
+        <AuthProvider>
+          <DashboardProvider>
+          <BrowserRouter>
           <ScrollToTop />
           <RootLayout>
             <Routes>
@@ -58,6 +60,7 @@ function App() {
       </DashboardProvider>
     </AuthProvider>
     </ErrorBoundary>
+    </ResilienceLayer>
   );
 }
 

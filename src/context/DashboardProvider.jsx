@@ -1,12 +1,12 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useAuth } from "./AuthContext";
 import { normalizeRole } from "../utils/systemRules";
 import {
   fetchNotificationsForUser,
   markNotificationRead,
 } from "../services/backendNotificationService";
+import { DashboardContext } from "./DashboardContext";
 
-const DashboardContext = createContext();
 const NOTIFICATION_REFRESH_MS = 30000;
 
 export const DashboardProvider = ({ children }) => {
@@ -90,12 +90,4 @@ export const DashboardProvider = ({ children }) => {
       {children}
     </DashboardContext.Provider>
   );
-};
-
-export const useDashboard = () => {
-  const context = useContext(DashboardContext);
-  if (!context) {
-    throw new Error("useDashboard must be used within a DashboardProvider");
-  }
-  return context;
 };

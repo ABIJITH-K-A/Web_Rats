@@ -37,6 +37,16 @@ const COLLECTION_META = [
 
 const DEMO_ACTORS = [
   {
+    name: 'Siddharth Varma',
+    role: 'Owner',
+    note: 'The system founder with full dashboard coverage and top-tier referral stats.',
+  },
+  {
+    name: 'Priya Sharma',
+    role: 'Admin',
+    note: 'Oversees orders, approvals, and user management with assigned administrative tokens.',
+  },
+  {
     name: 'Ava Nair',
     role: 'Client',
     note: 'New customer with a pending presentation order in the queue.',
@@ -50,11 +60,6 @@ const DEMO_ACTORS = [
     name: 'Maya Joseph',
     role: 'Worker',
     note: 'Covers active assignments, referrals, wallet balance, and payouts.',
-  },
-  {
-    name: 'Rohan Das',
-    role: 'Worker',
-    note: 'Represents a completed delivery flow with rating history.',
   },
   {
     name: 'Kiran Mehta',

@@ -266,6 +266,28 @@ export const seedDemoDataset = async ({ actorId = null, actorName = 'Admin' } = 
   const seededAt = Timestamp.fromDate(now);
   const batch = writeBatch(db);
 
+  const ownerA = {
+    id: 'demo-owner-a',
+    name: 'Siddharth Varma',
+    email: 'sid.demo@tnwebrats.test',
+    phone: '+91 98765 40001',
+    role: 'owner',
+    customerType: 'returning',
+    referralCode: 'TNWR-OWR-BOSS',
+    discountPercent: 25,
+    status: 'active',
+  };
+  const adminA = {
+    id: 'demo-admin-a',
+    name: 'Priya Sharma',
+    email: 'priya.demo@tnwebrats.test',
+    phone: '+91 98765 40002',
+    role: 'admin',
+    customerType: 'returning',
+    referralCode: 'TNWR-ADM-PRIA',
+    discountPercent: 15,
+    status: 'active',
+  };
   const clientA = {
     id: 'demo-client-a',
     name: 'Ava Nair',
@@ -288,6 +310,16 @@ export const seedDemoDataset = async ({ actorId = null, actorName = 'Admin' } = 
     referralCode: 'TNWR-CLI-DEMB',
     usedReferralCode: 'TNWR-WRK-DEM1',
     referredBy: 'demo-worker-a',
+    status: 'active',
+  };
+  const clientC = {
+    id: 'demo-client-c',
+    name: 'Ishaan Gupta',
+    email: 'ishaan.demo@tnwebrats.test',
+    phone: '+91 98765 41003',
+    role: 'client',
+    customerType: 'new',
+    referralCode: 'TNWR-CLI-DEMC',
     status: 'active',
   };
   const workerA = {
@@ -324,14 +356,14 @@ export const seedDemoDataset = async ({ actorId = null, actorName = 'Admin' } = 
     status: 'active',
   };
 
-  const users = [clientA, clientB, workerA, workerB, managerA];
+  const users = [ownerA, adminA, clientA, clientB, clientC, workerA, workerB, managerA];
   users.forEach((user, index) => {
     batch.set(
       doc(db, 'users', user.id),
       withDemoMeta(
         {
           ...user,
-          createdAt: makeStamp(now, -14 + index),
+          createdAt: makeStamp(now, -30 + index),
           updatedAt: makeStamp(now, -1),
         },
         seededAt,
@@ -341,6 +373,8 @@ export const seedDemoDataset = async ({ actorId = null, actorName = 'Admin' } = 
   });
 
   const referralCodes = [
+    { code: ownerA.referralCode, ownerUid: ownerA.id, role: ownerA.role, discountPercent: 25, timesUsed: 12 },
+    { code: adminA.referralCode, ownerUid: adminA.id, role: adminA.role, discountPercent: 15, timesUsed: 8 },
     { code: clientA.referralCode, ownerUid: clientA.id, role: clientA.role, discountPercent: 0, timesUsed: 0 },
     { code: clientB.referralCode, ownerUid: clientB.id, role: clientB.role, discountPercent: 0, timesUsed: 0 },
     { code: workerA.referralCode, ownerUid: workerA.id, role: workerA.role, discountPercent: 5, timesUsed: 3 },
@@ -353,7 +387,7 @@ export const seedDemoDataset = async ({ actorId = null, actorName = 'Admin' } = 
       withDemoMeta(
         {
           ...item,
-          createdAt: makeStamp(now, -18 + index),
+          createdAt: makeStamp(now, -40 + index),
         },
         seededAt,
         actorId
@@ -362,8 +396,11 @@ export const seedDemoDataset = async ({ actorId = null, actorName = 'Admin' } = 
   });
 
   const wallets = [
+    createWalletRecord({ userId: ownerA.id, createdAt: makeStamp(now, -25), withdrawableAmount: 45000, lifetimeWithdrawn: 120000 }),
+    createWalletRecord({ userId: adminA.id, createdAt: makeStamp(now, -24), withdrawableAmount: 28000, lifetimeWithdrawn: 65000 }),
     createWalletRecord({ userId: clientA.id, createdAt: makeStamp(now, -10), withdrawableAmount: 1200 }),
     createWalletRecord({ userId: clientB.id, createdAt: makeStamp(now, -9), withdrawableAmount: 800 }),
+    createWalletRecord({ userId: clientC.id, createdAt: makeStamp(now, -5), withdrawableAmount: 0 }),
     createWalletRecord({
       userId: workerA.id,
       createdAt: makeStamp(now, -8),
@@ -489,6 +526,24 @@ export const seedDemoDataset = async ({ actorId = null, actorName = 'Admin' } = 
         summary: 'Event poster system with hero artwork, socials, and print exports.',
         deliveryLink: 'https://example.com/demo-complete-assets',
         reviewDone: true,
+      }),
+    },
+    {
+      id: 'demo-order-ishaan-1',
+      record: createOrderRecord({
+        orderId: 'demo-order-ishaan-1',
+        baseDate: now,
+        dayOffset: -2,
+        categoryIndex: 1,
+        serviceIndex: 1,
+        planIndex: 0,
+        customer: clientC,
+        customerType: 'new',
+        statusKey: 'pending_assignment',
+        paymentState: 'pending',
+        isPriority: false,
+        deadlineLabel: 'Apr 10',
+        summary: 'Full-stack blog platform with content management features.',
       }),
     },
   ];

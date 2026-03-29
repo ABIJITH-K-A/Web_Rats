@@ -26,20 +26,21 @@ const ReportsView = () => {
   }, []);
 
   const fetchData = async () => {
+    if (!user?.uid) return;
     setLoading(true);
     try {
       const q1 = query(collection(db, "reports"), where("fromUid", "==", user.uid), orderBy("createdAt", "desc"));
       const snap1 = await getDocs(q1);
       setMyReports(snap1.docs.map(d => ({ id: d.id, ...d.data() })));
       
-      const isApprover = ['owner', 'superadmin', 'admin', 'manager'].includes(userData.role);
+      const isApprover = ['owner', 'superadmin', 'admin', 'manager'].includes(userData?.role);
       if (isApprover) {
          const q2 = query(collection(db, "reports"), where("toRole", "==", userData.role), orderBy("createdAt", "desc"));
          const snap2 = await getDocs(q2);
          setInbox(snap2.docs.map(d => ({ id: d.id, ...d.data() })));
       }
     } catch (e) {
-      console.error(e);
+      console.error("Fetch reports error:", e);
     } finally {
       setLoading(false);
     }
@@ -51,9 +52,9 @@ const ReportsView = () => {
     setIsSubmitting(true);
     try {
       await addDoc(collection(db, "reports"), {
-        fromUid: user.uid,
-        fromName: userData.name,
-        fromRole: userData.role,
+        fromUid: user?.uid || 'anonymous',
+        fromName: userData?.name || 'Anonymous',
+        fromRole: userData?.role || 'client',
         toRole: reportForm.toRole,
         subject: reportForm.subject,
         details: reportForm.details,

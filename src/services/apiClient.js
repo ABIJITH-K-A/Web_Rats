@@ -1,6 +1,6 @@
 import { auth } from '../config/firebase';
 
-const API_BASE_URL = String(import.meta.env.VITE_API_BASE_URL || '')
+const API_BASE_URL = String(import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8787')
   .trim()
   .replace(/\/$/, '');
 
@@ -55,30 +55,39 @@ export const apiRequest = async (
     });
   }
 
-  const authHeaders = await getAuthorizationHeader(authMode);
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    method,
-    headers: {
-      ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
-      ...authHeaders,
-      ...headers,
-    },
-    ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
-  });
-
-  if (!response.ok) {
-    const message =
-      (await readErrorPayload(response)) || 'The request could not be completed.';
-    throw createApiError(message, {
-      statusCode: response.status,
+  try {
+    const authHeaders = await getAuthorizationHeader(authMode);
+    const response = await fetch(`${API_BASE_URL}${path}`, {
+      method,
+      headers: {
+        ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
+        ...authHeaders,
+        ...headers,
+      },
+      ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
     });
-  }
 
-  if (response.status === 204) {
-    return null;
-  }
+    if (!response.ok) {
+      const message =
+        (await readErrorPayload(response)) || 'The request could not be completed.';
+      throw createApiError(message, {
+        statusCode: response.status,
+      });
+    }
 
-  return response.json();
+    if (response.status === 204) {
+      return null;
+    }
+
+    return response.json();
+  } catch (error) {
+    if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+      throw createApiError('Could not connect to the backend server. Please ensure it is running.', {
+        code: 'connection_refused',
+      });
+    }
+    throw error;
+  }
 };
 
 export default {
