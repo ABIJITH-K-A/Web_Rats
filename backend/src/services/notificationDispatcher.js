@@ -1,8 +1,8 @@
-import { getFirestore } from "firebase-admin/firestore";
+import { adminDb } from "../config/firebaseAdmin.js";
 import { sendOrderEmail } from "./emailService.js";
 import { sendWhatsAppMessage } from "./whatsappService.js";
 
-const db = getFirestore();
+const getDb = () => adminDb();
 
 /**
  * Central notification dispatcher.
@@ -14,6 +14,7 @@ const db = getFirestore();
  */
 export const dispatchNotification = async (userId, eventType, data) => {
   try {
+    const db = getDb();
     const userSnap = await db.collection("users").doc(userId).get();
     const user = userSnap.exists ? userSnap.data() : null;
 
@@ -47,7 +48,7 @@ export const dispatchNotification = async (userId, eventType, data) => {
 
       // In-App (write to Firestore notifications collection)
       prefs.inApp
-        ? db.collection("notifications").add({
+        ? getDb().collection("notifications").add({
             userId,
             type: "order",
             title: `Order ${eventType.replace(/([A-Z])/g, " $1").trim()}`,
