@@ -9,6 +9,8 @@ import {
   verifyPaymentSignature,
   verifyWebhookSignature,
 } from '../services/razorpayGateway.js';
+import { distributeOrderRevenue } from '../services/financialDistribution.js';
+import { creditWorkerForOrder } from '../services/financialService.js';
 
 const router = Router();
 
@@ -75,7 +77,7 @@ export const handlePaymentWebhook = asyncHandler(async (req, res) => {
     throw new HttpError(400, 'Missing webhook signature.');
   }
 
-  const rawBody = Buffer.isBuffer(req.body) ? req.body : Buffer.from(JSON.stringify(req.body || {}));
+  const rawBody = Buffer.isBuffer(req.body) ? req.body : Buffer.from(JSON.stringify(req.body || {})); // eslint-disable-line no-undef
   const isValid = verifyWebhookSignature({
     rawBody,
     signature,
@@ -89,8 +91,20 @@ export const handlePaymentWebhook = asyncHandler(async (req, res) => {
 
   try {
     payload = JSON.parse(rawBody.toString('utf8'));
-  } catch (error) {
+  } catch {
     throw new HttpError(400, 'Invalid webhook payload.');
+  }
+
+  // Process payment captured event
+  if (payload?.event === 'payment.captured') {
+    const payment = payload?.payload?.payment?.entity;
+    const orderId = payment?.notes?.orderId;
+    
+    if (orderId) {
+      // Credit worker and distribute revenue
+      await creditWorkerForOrder(orderId);
+      await distributeOrderRevenue(orderId);
+    }
   }
 
   res.json({

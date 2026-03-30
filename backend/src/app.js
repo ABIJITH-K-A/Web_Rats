@@ -21,6 +21,10 @@ import walletRoutes from './routes/walletRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
 import cronRoutes from './routes/cronRoutes.js';
 import templateRoutes from './routes/templateRoutes.js';
+import uploadRoutes from './routes/uploadRoutes.js';
+import ticketRoutes from './routes/ticketRoutes.js';
+import workerProfileRoutes from './routes/workerProfileRoutes.js';
+import financeRoutes from './routes/financeRoutes.js';
 import qpayRoutes from './routes/temp/qpayRoutes.js';
 
 const app = express();
@@ -76,6 +80,10 @@ app.use('/dispute', disputeRoutes);
 app.use('/admin', adminRoutes);
 app.use('/chat', chatRoutes);
 app.use('/templates', templateRoutes);
+app.use('/upload', uploadRoutes);
+app.use('/tickets', ticketRoutes);
+app.use('/worker-profile', workerProfileRoutes);
+app.use('/finance', financeRoutes);
 app.use('/cron', cronRoutes);
 app.use('/temp/qpay', qpayRoutes);
 

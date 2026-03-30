@@ -16,7 +16,11 @@ service cloud.firestore {
     }
     
     function isAdmin() {
-      return hasRole('admin') || hasRole('owner');
+      return hasRole('admin') || hasRole('owner') || hasRole('super_admin');
+    }
+
+    function isAdminLikeRole() {
+      return hasRole('admin') || hasRole('owner') || hasRole('manager') || hasRole('super_admin');
     }
 
     function isStaff() {
@@ -55,16 +59,30 @@ service cloud.firestore {
       allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
     }
 
-    // Chats
+    // Chats - Updated for escalation system
     match /chats/{chatId} {
-      allow read, create: if isAuthenticated() && (
-        request.auth.uid in resource.data.participants || 
-        isStaff()
+      allow read: if isAuthenticated() && (
+        resource.data.clientId == request.auth.uid ||
+        resource.data.workerId == request.auth.uid ||
+        (resource.data.escalated == true && isAdminLikeRole())
       );
-      allow update: if isAuthenticated() && request.auth.uid in resource.data.participants;
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && (
+        resource.data.clientId == request.auth.uid ||
+        resource.data.workerId == request.auth.uid ||
+        isAdminLikeRole()
+      );
       
+      // Messages subcollection with E2E encryption support
       match /messages/{messageId} {
-        allow read, create: if isAuthenticated();
+        allow read: if isAuthenticated() && (
+          get(/databases/$(database)/documents/chats/$(chatId)).data.clientId == request.auth.uid ||
+          get(/databases/$(database)/documents/chats/$(chatId)).data.workerId == request.auth.uid ||
+          (get(/databases/$(database)/documents/chats/$(chatId)).data.escalated == true &&
+           isAdminLikeRole())
+        );
+        allow create: if isAuthenticated();
+        allow update, delete: if false;
       }
     }
 
@@ -91,6 +109,51 @@ service cloud.firestore {
     match /wallet/{walletId} {
       allow read: if isAuthenticated() && (isOwner(walletId) || isAdmin());
       allow write: if false; // Managed by backend only
+    }
+
+    // Worker Profiles
+    match /workerProfiles/{userId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isOwner(userId);
+    }
+
+    // Tickets
+    match /tickets/{ticketId} {
+      allow read: if isAuthenticated() && (
+        resource.data.raisedBy == request.auth.uid || isAdminLikeRole()
+      );
+      allow create: if isAuthenticated();
+      allow update: if isAdminLikeRole();
+    }
+
+    // Finance Settings (Owner only)
+    match /financeSettings/{document} {
+      allow read: if isAdminLikeRole();
+      allow write: if hasRole('owner');
+    }
+
+    // Funds (Owner only)
+    match /funds/{fundId} {
+      allow read: if isAdminLikeRole();
+      allow write: if hasRole('owner');
+    }
+
+    // Owner Earnings
+    match /ownerEarnings/{userId} {
+      allow read: if isOwner(userId) || isAdminLikeRole();
+      allow write: if isAdminLikeRole();
+    }
+
+    // Transactions
+    match /transactions/{transactionId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdminLikeRole();
+    }
+
+    // Pending Releases
+    match /pendingReleases/{docId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow write: if false; // Backend only
     }
 
     // Default deny
