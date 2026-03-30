@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { useState, useMemo, useRef, useCallback } from "react";
+import { AnimatePresence } from "framer-motion";
 import {
   Crown,
   Download,
@@ -10,6 +10,10 @@ import {
   Sparkles,
   Tag,
   X,
+  ZoomIn,
+  ZoomOut,
+  Move,
+  Lock,
 } from "lucide-react";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { Button, Card } from "../../components/ui/Primitives";
@@ -233,7 +237,7 @@ const Templates = () => {
       {/* Preview Modal */}
       <AnimatePresence>
         {previewTemplate && (
-          <PreviewModal
+          <InteractivePreviewModal
             template={previewTemplate}
             onClose={() => setPreviewTemplate(null)}
             onGet={() => {
@@ -338,25 +342,111 @@ const TemplateCard = ({ template, onPreview, onGet }) => (
   </Card>
 );
 
-/* ─── Preview Modal ─────────────────────────────────────── */
-const PreviewModal = ({ template, onClose, onGet }) => (
-  <motion.div
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    exit={{ opacity: 0 }}
-    className="fixed inset-0 z-[120] flex items-center justify-center bg-black/75 p-4 backdrop-blur"
-  >
+/* ─── Interactive Preview Modal ─────────────────────────── */
+const InteractivePreviewModal = ({ template, onClose, onGet }) => {
+  const [scale, setScale] = useState(1);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const containerRef = useRef(null);
+
+  const MIN_SCALE = 0.5;
+  const MAX_SCALE = 3;
+
+  // Anti-download handlers
+  const preventDownload = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    return false;
+  }, []);
+
+  const handleContextMenu = useCallback((e) => {
+    e.preventDefault();
+    return false;
+  }, []);
+
+  // Zoom handlers
+  const handleZoomIn = () => {
+    setScale((prev) => Math.min(prev * 1.2, MAX_SCALE));
+  };
+
+  const handleZoomOut = () => {
+    setScale((prev) => Math.max(prev / 1.2, MIN_SCALE));
+  };
+
+  const handleWheel = (e) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    setScale((prev) => Math.min(Math.max(prev * delta, MIN_SCALE), MAX_SCALE));
+  };
+
+  // Pan handlers
+  const handleMouseDown = (e) => {
+    if (e.button !== 0) return; // Only left click
+    setIsDragging(true);
+    setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDragging) return;
+    e.preventDefault();
+    setPosition({
+      x: e.clientX - dragStart.x,
+      y: e.clientY - dragStart.y,
+    });
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleTouchStart = (e) => {
+    if (e.touches.length === 1) {
+      const touch = e.touches[0];
+      setIsDragging(true);
+      setDragStart({ x: touch.clientX - position.x, y: touch.clientY - position.y });
+    }
+  };
+
+  const handleTouchMove = (e) => {
+    if (!isDragging || e.touches.length !== 1) return;
+    e.preventDefault();
+    const touch = e.touches[0];
+    setPosition({
+      x: touch.clientX - dragStart.x,
+      y: touch.clientY - dragStart.y,
+    });
+  };
+
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+  };
+
+  const resetView = () => {
+    setScale(1);
+    setPosition({ x: 0, y: 0 });
+  };
+
+  return (
     <motion.div
-      initial={{ opacity: 0, y: 20, scale: 0.97 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: 20, scale: 0.97 }}
-      className="max-h-[90vh] w-full max-w-4xl overflow-hidden rounded-[32px] border border-white/10 bg-[#10141a] shadow-2xl"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[120] flex items-center justify-center bg-black/85 backdrop-blur"
+      onClick={onClose}
     >
-      <div className="flex items-start justify-between gap-4 border-b border-white/8 px-6 py-5">
-        <div>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        className="relative h-[90vh] w-[95vw] max-w-6xl overflow-hidden rounded-3xl border border-white/10 bg-[#10141a] shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="absolute left-0 right-0 top-0 z-30 flex items-center justify-between border-b border-white/8 bg-[#10141a]/95 px-6 py-4 backdrop-blur">
           <div className="flex items-center gap-3">
             <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary/72">
-              Template Preview
+              Interactive Preview
             </div>
             {template.isFree && (
               <span className="flex items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[9px] font-mono text-emerald-400">
@@ -369,68 +459,125 @@ const PreviewModal = ({ template, onClose, onGet }) => (
               </span>
             )}
           </div>
-          <h3 className="mt-2 text-2xl font-black text-white">
-            {template.title}
-          </h3>
+          <button
+            onClick={onClose}
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/8 bg-white/5 text-light-gray/62 transition-colors hover:text-white"
+          >
+            <X size={18} />
+          </button>
         </div>
-        <button
-          onClick={onClose}
-          className="flex h-10 w-10 items-center justify-center rounded-full border border-white/8 bg-white/5 text-light-gray/62 transition-colors hover:text-white"
+
+        {/* Controls */}
+        <div className="absolute bottom-6 left-1/2 z-30 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/10 bg-[#10141a]/95 px-4 py-2 backdrop-blur">
+          <button
+            onClick={handleZoomOut}
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/5 text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+            title="Zoom Out"
+          >
+            <ZoomOut size={18} />
+          </button>
+          <span className="min-w-[60px] text-center text-xs font-mono text-white/50">
+            {Math.round(scale * 100)}%
+          </span>
+          <button
+            onClick={handleZoomIn}
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/5 text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+            title="Zoom In"
+          >
+            <ZoomIn size={18} />
+          </button>
+          <div className="mx-2 h-5 w-px bg-white/10" />
+          <button
+            onClick={resetView}
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/5 text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+            title="Reset View"
+          >
+            <Move size={18} />
+          </button>
+        </div>
+
+        {/* Anti-download overlay message */}
+        <div className="absolute bottom-20 left-1/2 z-30 -translate-x-1/2 rounded-full border border-amber-500/20 bg-amber-500/10 px-4 py-2 backdrop-blur">
+          <div className="flex items-center gap-2 text-xs text-amber-300">
+            <Lock size={12} />
+            <span>Purchase or sign in to download</span>
+          </div>
+        </div>
+
+        {/* Preview Container */}
+        <div
+          ref={containerRef}
+          className="relative mt-[72px] h-[calc(100%-72px)] w-full cursor-move overflow-hidden"
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          onWheel={handleWheel}
+          onContextMenu={handleContextMenu}
+          onDragStart={preventDownload}
         >
-          <X size={18} />
-        </button>
-      </div>
+          {/* Watermark overlay */}
+          <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center overflow-hidden">
+            <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDgpIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0cmFuc2Zvcm09InJvdGF0ZSgtNDUpIj5UTldlYlJhdHMgUHJldmlldzwvdGV4dD48L3N2Zz4=')] opacity-50" />
+          </div>
 
-      <div className="overflow-y-auto p-6">
-        <div className="overflow-hidden rounded-2xl border border-white/6">
-          <img
-            src={template.image}
-            alt={template.title}
-            className="w-full object-cover"
-          />
+          {/* Image with transform */}
+          <div
+            className="flex h-full w-full items-center justify-center"
+            style={{
+              transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
+              transition: isDragging ? 'none' : 'transform 0.1s ease-out',
+            }}
+          >
+            <img
+              src={template.image}
+              alt={template.title}
+              className="max-h-full max-w-full select-none"
+              style={{
+                userSelect: 'none',
+                WebkitUserSelect: 'none',
+                pointerEvents: 'none',
+                filter: 'brightness(0.95)',
+              }}
+              draggable={false}
+              onContextMenu={handleContextMenu}
+            />
+          </div>
+
+          {/* Dark gradient overlay at edges */}
+          <div className="pointer-events-none absolute inset-0 z-10 shadow-[inset_0_0_100px_rgba(0,0,0,0.5)]" />
         </div>
 
-        <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_auto]">
-          <div>
-            <p className="text-sm leading-7 text-light-gray/60">
-              {template.description}
-            </p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {template.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="flex items-center gap-1 rounded-full border border-white/8 bg-white/5 px-3 py-1 text-[10px] font-mono text-light-gray/40"
-                >
-                  <Tag size={10} /> {tag}
-                </span>
-              ))}
+        {/* CTA Button */}
+        <div className="absolute right-6 top-1/2 z-30 -translate-y-1/2">
+          <Button onClick={onGet} className="shadow-lg shadow-cyan-primary/20">
+            <ShoppingCart size={16} />
+            <span className="ml-2 hidden sm:inline">
+              {template.isFree ? 'Get Free' : 'Purchase'}
+            </span>
+          </Button>
+        </div>
+
+        {/* Instructions */}
+        <div className="absolute left-6 top-1/2 z-30 -translate-y-1/2 text-xs text-white/40">
+          <div className="flex flex-col gap-2 rounded-xl border border-white/5 bg-black/20 p-3 backdrop-blur">
+            <div className="flex items-center gap-2">
+              <Move size={12} />
+              <span>Drag to pan</span>
             </div>
-          </div>
-          <div className="flex flex-col items-end gap-3">
-            <div
-              className={`text-3xl font-black ${
-                template.isFree ? "text-emerald-400" : "text-cyan-primary"
-              }`}
-            >
-              {formatTemplatePrice(template.price)}
+            <div className="flex items-center gap-2">
+              <ZoomIn size={12} />
+              <span>Scroll to zoom</span>
             </div>
-            <Button onClick={onGet}>
-              {template.isFree ? (
-                <>
-                  <Download size={16} /> Get Free Template
-                </>
-              ) : (
-                <>
-                  <ShoppingCart size={16} /> Purchase Template
-                </>
-              )}
-            </Button>
           </div>
         </div>
-      </div>
+      </motion.div>
     </motion.div>
-  </motion.div>
-);
+  );
+};
 
 /* ─── Purchase Modal ─────────────────────────────────────── */
 const PurchaseModal = ({
