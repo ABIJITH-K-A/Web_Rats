@@ -26,7 +26,7 @@ export const TEMPLATE_ITEMS = [
     price: 499,
     isFree: false,
     isPro: true,
-    image: "/Images/Project_Preview/Project_Preview_6.png",
+    image: "/Images/for_templates/saas.png",
     tags: ["react", "saas", "dark-mode"],
   },
   {
