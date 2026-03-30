@@ -21,7 +21,7 @@ import ProtectedRoute from './components/auth/ProtectedRoute';
 import ScrollToTop from './components/utils/ScrollToTop';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import ResilienceLayer from './components/utils/ResilienceLayer';
-import { Analytics } from "@vercel/analytics/next"
+import { Analytics } from "@vercel/analytics/react"
 
 function App() {
   return (
@@ -53,11 +53,11 @@ function App() {
                     }
 
                   />
-                  <Analytics />
                   <Route path="/terms" element={<Terms />} />
                   <Route path="/privacy" element={<Privacy />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
+                <Analytics />
               </RootLayout>
             </BrowserRouter>
           </DashboardProvider>
