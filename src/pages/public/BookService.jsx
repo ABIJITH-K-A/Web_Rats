@@ -241,15 +241,6 @@ const BookService = () => {
     }
   };
 
-  const detailsValid =
-    formData.name.trim() &&
-    formData.email.trim() &&
-    formData.phone.trim() &&
-    formData.projectDescription.trim().length >= 50 &&
-    formData.features.trim().length >= 30 &&
-    (formData.references.trim().length === 0 || formData.references.trim().length >= 20) &&
-    formData.deadline;
-
   const createWhatsAppMessage = (newOrderId) => {
     if (!selectedCategory || !selectedService || !selectedPlan) {
       return "";
@@ -1062,7 +1053,20 @@ const BookService = () => {
                 onClick={() =>
                   handleNextWithValidation(
                     5,
-                    () => detailsValid,
+                    () => {
+                      const descLen = formData.projectDescription.trim().length;
+                      const featLen = formData.features.trim().length;
+                      const refLen = formData.references.trim().length;
+                      return (
+                        formData.name.trim() &&
+                        formData.email.trim() &&
+                        formData.phone.trim() &&
+                        descLen >= 50 &&
+                        featLen >= 30 &&
+                        (refLen === 0 || refLen >= 20) &&
+                        formData.deadline
+                      );
+                    },
                     "step4",
                     "Please provide more detail: Description (50+), Features (30+), and References (20+ if used)."
                   )
@@ -1145,6 +1149,18 @@ const BookService = () => {
                 
                 <Button variant="outline" onClick={() => handleBack(4)} className="w-full">
                   <ArrowLeft size={16} /> Back to requirements
+                </Button>
+                
+                {/* Demo: Skip Payment Button */}
+                <Button 
+                  variant="outline"
+                  onClick={() => {
+                    setUtrNumber("DEMO_BYPASS");
+                    goToStep(6);
+                  }}
+                  className="w-full border-cyan-primary/30 text-cyan-primary hover:bg-cyan-primary/10"
+                >
+                  Skip Payment (Demo)
                 </Button>
               </div>
             </div>
