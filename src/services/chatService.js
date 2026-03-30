@@ -161,6 +161,24 @@ export const subscribeToThread = (orderId, callback) => {
 };
 
 /**
+ * Get a conversation by ID
+ */
+export const getConversationById = async (conversationId) => {
+  try {
+    const threadRef = doc(db, "chatThreads", conversationId);
+    const threadSnap = await getDoc(threadRef);
+    
+    if (threadSnap.exists()) {
+      return { id: threadSnap.id, ...threadSnap.data() };
+    }
+    return null;
+  } catch (error) {
+    console.error("Error getting conversation:", error);
+    return null;
+  }
+};
+
+/**
  * Get active threads for a specific user based on their role
  */
 export const getThreads = (userId, role, callback) => {
