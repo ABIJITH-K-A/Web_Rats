@@ -117,9 +117,9 @@ const BookService = () => {
   const [selectedServiceId, setSelectedServiceId] = useState(initialServiceId);
   const [selectedPlanId, setSelectedPlanId] = useState(initialPlanId);
   const [isPriority, setIsPriority] = useState(Boolean(reorderDraft?.isPriority));
-  const [paymentMethod, setPaymentMethod] = useState("qpay"); // Temporary: default to qpay
+  const [paymentMethod] = useState("qpay"); // Temporary: default to qpay
   const [utrNumber, setUtrNumber] = useState("");
-  const [customerType, setCustomerType] = useState(
+  const [customerType] = useState(
     reorderDraft ? "returning" : userProfile?.customerType || "new"
   );
   const [reusePreviousData, setReusePreviousData] = useState(Boolean(reorderDraft));
