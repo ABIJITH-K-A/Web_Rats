@@ -319,13 +319,13 @@ const BookService = () => {
           references: formData.references.trim(),
           deadline: formData.deadline,
         },
-        paymentStatus: "Pending",
+        paymentStatus: utrNumber === "DEMO_BYPASS" ? "Demo Bypass" : "Pending",
         assignmentStatus: "unassigned",
         paymentMethod,
         utrNumber,
-        status: (paymentMethod === "qpay" && utrNumber !== "TEST_BYPASS") ? "Awaiting Payment Verification" : "Pending Assignment",
-        statusKey: (paymentMethod === "qpay" && utrNumber !== "TEST_BYPASS") ? "pending_payment_verification" : "pending_assignment",
-        isTestOrder: utrNumber === "TEST_BYPASS",
+        status: (paymentMethod === "qpay" && utrNumber && utrNumber !== "DEMO_BYPASS") ? "Awaiting Payment Verification" : "Pending Assignment",
+        statusKey: (paymentMethod === "qpay" && utrNumber && utrNumber !== "DEMO_BYPASS") ? "pending_payment_verification" : "pending_assignment",
+        isTestOrder: utrNumber === "TEST_BYPASS" || utrNumber === "DEMO_BYPASS",
       };
 
       const createdOrder = await createOrder(orderPayload);
@@ -1156,6 +1156,7 @@ const BookService = () => {
                   variant="outline"
                   onClick={() => {
                     setUtrNumber("DEMO_BYPASS");
+                    // Pre-set payment as "paid" for demo so it shows correctly
                     goToStep(6);
                   }}
                   className="w-full border-cyan-primary/30 text-cyan-primary hover:bg-cyan-primary/10"
