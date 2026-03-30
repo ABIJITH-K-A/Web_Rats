@@ -45,7 +45,7 @@ const Home = () => {
             transition={{ duration: 0.7 }}
           >
             <div className="mb-6 inline-flex items-center rounded-full border border-cyan-primary/20 bg-cyan-primary/8 px-4 py-2 text-[10px] font-mono uppercase tracking-[0.24em] text-cyan-primary">
-              TNWebRats Creative Studio
+              TNWebRats We Build
             </div>
             <h1 className="max-w-4xl text-5xl font-black leading-[1.05] text-white md:text-7xl">
               We Build. We Design. We{" "}

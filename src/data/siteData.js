@@ -1,10 +1,10 @@
 export const CONTACT_INFO = {
-  email: "unofficials113@gmail.com",
+  email: "tnwebrats@gmail.com",
   whatsappNumber: "918300920680",
   whatsappDisplay: "+91 8300920680",
   instagramHandle: "@tn_web_rats",
   instagramUrl: "https://www.instagram.com/tn_web_rats",
-  upiId: "tnwebrats@okaxis", // Placeholder: please update with real VPA
+  upiId: "abijithka2007@oksbi", // Placeholder: please update with real VPA
 };
 
 export const VALUE_POINTS = [
@@ -777,7 +777,7 @@ export const FEATURED_PROJECTS = [
     description:
       "A co-built product by WaveWalker and Mr_Ratty. The public case study is still being written, but the build is active and moving.",
     builtBy: "WaveWalker & Mr_Ratty",
-    image: "/Images/Project_Preview/Project_Preview_5.jpg",
+    image: "/Images/gears/gear_1.webp",
   },
   {
     id: "studio-slot",
@@ -787,7 +787,7 @@ export const FEATURED_PROJECTS = [
     description:
       "A second ongoing client slot is currently under wraps. Details will be published once the project is ready to go public.",
     builtBy: "WaveWalker & Mr_Ratty",
-    image: "/Images/Project_Preview/Project_Preview_2.jpg",
+    image: "/Images/gears/gear_2.webp",
   },
   {
     id: "design-vault",
@@ -797,7 +797,7 @@ export const FEATURED_PROJECTS = [
     description:
       "A growing collection of presentation, poster, and web work that shows the range of what TNWebRats ships.",
     builtBy: "TNWebRats",
-    image: "/Images/Project_Preview/Project_Preview_7.png",
+    image: "/Images/gears/gear_3.webp",
   },
 ];
 
@@ -805,25 +805,25 @@ export const PORTFOLIO_GALLERY = [
   {
     id: "gallery-1",
     title: "Presentation Work",
-    image: "/Images/Project_Preview/Project_Preview_1.png",
+    image: "/Images/Project_Preview/ppt_2.jpg",
     link: "https://drive.google.com/drive/folders/1aO3Z-mfWXL7PXlot4fbmJ2K49iyyp8tQ?usp=sharing",
   },
   {
     id: "gallery-2",
     title: "Brand And Web Visuals",
-    image: "/Images/Project_Preview/Project_Preview_3.png",
+    image: "/Images/Project_Preview/website_1.png",
     link: "https://drive.google.com/drive/folders/1aO3Z-mfWXL7PXlot4fbmJ2K49iyyp8tQ?usp=sharing",
   },
   {
     id: "gallery-3",
     title: "Creative Posters",
-    image: "/Images/Project_Preview/Project_Preview_4.jpg",
+    image: "/Images/Project_Preview/poster_1.png",
     link: "https://drive.google.com/drive/folders/1aO3Z-mfWXL7PXlot4fbmJ2K49iyyp8tQ?usp=sharing",
   },
   {
     id: "gallery-4",
     title: "Website Snapshots",
-    image: "/Images/Project_Preview/Project_Preview_6.png",
+    image: "/Images/Project_Preview/website_2.png",
     link: "https://drive.google.com/drive/folders/1aO3Z-mfWXL7PXlot4fbmJ2K49iyyp8tQ?usp=sharing",
   },
 ];

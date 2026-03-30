@@ -59,7 +59,7 @@ const Navbar = () => {
               TN WEB RATS
             </div>
             <div className="text-[9px] font-mono uppercase tracking-[0.18em] text-light-gray/38">
-              Creative Studio
+              We Build Your Ideas
             </div>
           </div>
         </Link>
