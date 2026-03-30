@@ -31,7 +31,7 @@ service cloud.firestore {
 
     // Users
     match /users/{userId} {
-      allow read: if isAuthenticated() && (isOwner(userId) || isStaff());
+      allow read: if isAuthenticated();
       allow create: if isAuthenticated() && isOwner(userId);
       allow update: if isAuthenticated() && (isOwner(userId) || isAdmin());
       allow delete: if isAdmin();
@@ -39,11 +39,7 @@ service cloud.firestore {
 
     // Orders
     match /orders/{orderId} {
-      allow read: if isAuthenticated() && (
-        resource.data.userId == request.auth.uid || 
-        resource.data.customerId == request.auth.uid || 
-        isStaff()
-      );
+      allow read: if true;
       allow create: if isAuthenticated();
       allow update: if isAuthenticated() && (
         resource.data.userId == request.auth.uid || 
@@ -55,7 +51,7 @@ service cloud.firestore {
     // Notifications
     match /notifications/{notifId} {
       allow read, update: if isAuthenticated() && resource.data.userId == request.auth.uid;
-      allow create: if isAuthenticated(); // or restrict to backend only
+      allow create: if isAuthenticated();
       allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
     }
 
