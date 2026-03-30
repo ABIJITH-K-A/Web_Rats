@@ -826,6 +826,12 @@ export const PORTFOLIO_GALLERY = [
     image: "/Images/Project_Preview/website_2.png",
     link: "https://drive.google.com/drive/folders/1aO3Z-mfWXL7PXlot4fbmJ2K49iyyp8tQ?usp=sharing",
   },
+  {
+    id: "gallery-5",
+    title: "Academic & Pitch Decks",
+    image: "/Images/Project_Preview/ppt_1.jpg",
+    link: "https://drive.google.com/drive/folders/1aO3Z-mfWXL7PXlot4fbmJ2K49iyyp8tQ?usp=sharing",
+  },
 ];
 
 export const ABOUT_POINTS = [
