@@ -1,14 +1,15 @@
 import { Router } from "express";
-import { getFirestore, FieldValue } from "firebase-admin/firestore";
+import { FieldValue } from "firebase-admin/firestore";
+import { adminDb } from "../config/firebaseAdmin.js";
 import { authGuard } from "../middleware/authGuard.js";
 
 const router = Router();
-const db = getFirestore();
+const getDb = () => adminDb();
 
 // GET /api/notification-settings
 router.get("/", authGuard, async (req, res) => {
   try {
-    const userSnap = await db.collection("users").doc(req.currentUser.uid).get();
+    const userSnap = await getDb().collection("users").doc(req.currentUser.uid).get();
     const data = userSnap.exists ? userSnap.data() : {};
 
     const prefs = data.notificationPreferences || {
@@ -40,7 +41,7 @@ router.patch("/", authGuard, async (req, res) => {
 
     update["updatedAt"] = FieldValue.serverTimestamp();
 
-    await db.collection("users").doc(req.currentUser.uid).update(update);
+    await getDb().collection("users").doc(req.currentUser.uid).update(update);
 
     res.json({ message: "Notification preferences updated." });
   } catch (error) {
