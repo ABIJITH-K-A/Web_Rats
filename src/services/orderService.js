@@ -42,13 +42,18 @@ export const fetchLatestOrders = async (maxRecords = 120) => {
 
 export const createOrder = async (payload = {}) => {
   if (isBackendConfigured()) {
-    const response = await apiRequest('/orders/create', {
-      method: 'POST',
-      authMode: 'optional',
-      body: payload,
-    });
+    try {
+      const response = await apiRequest('/orders/create', {
+        method: 'POST',
+        authMode: 'optional',
+        body: payload,
+      });
 
-    return response?.order || null;
+      return response?.order || null;
+    } catch (error) {
+      // Backend unavailable - fall back to Firebase
+      console.warn('Backend order creation failed, falling back to Firebase:', error.message);
+    }
   }
 
   const orderRef = await addDoc(collection(db, 'orders'), {
