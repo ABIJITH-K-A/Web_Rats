@@ -16,6 +16,7 @@ import NotFound from './pages/public/NotFound';
 import Terms from './pages/public/Terms';
 import Privacy from './pages/public/Privacy';
 import Profile from './pages/auth/Profile';
+import ChatPage from './pages/chat/ChatPage';
 import RoleBasedDashboard from './components/dashboard/RoleBasedDashboard';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import ScrollToTop from './components/utils/ScrollToTop';
@@ -45,6 +46,22 @@ function App() {
                   <Route path="/signup" element={<JoinHub />} />
                   <Route path="/forgot-password" element={<ForgotPassword />} />
                   <Route path="/profile" element={<Profile />} />
+                  <Route 
+                    path="/chat" 
+                    element={
+                      <ProtectedRoute allowedRoles={['owner', 'superadmin', 'admin', 'manager', 'worker', 'client']}>
+                        <ChatPage />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/chat/:conversationId" 
+                    element={
+                      <ProtectedRoute allowedRoles={['owner', 'superadmin', 'admin', 'manager', 'worker', 'client']}>
+                        <ChatPage />
+                      </ProtectedRoute>
+                    } 
+                  />
                   <Route
                     path="/dashboard"
                     element={

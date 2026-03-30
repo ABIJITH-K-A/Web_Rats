@@ -10,7 +10,10 @@ import {
   updateDoc,
   doc,
   getDocs,
-  limit
+  getDoc,
+  setDoc,
+  limit,
+  writeBatch
 } from "firebase/firestore";
 import { sanitizeData } from "../utils/sanitize";
 
@@ -23,47 +26,118 @@ export const sendMessage = async (orderId, messageData) => {
 
     // 1. Add message
     const messagesRef = collection(db, "chatMessages");
-    await addDoc(messagesRef, {
+    const messageRef = await addDoc(messagesRef, {
       ...safeMessageData,
       orderId,
+      readBy: [safeMessageData.userId],
       createdAt: serverTimestamp(),
     });
 
     // 2. Update thread metadata (lastMessage, unreadCount)
-    // We treat 'chatThreads' as a parallel collection to 'orders' or just use 'orders' directly.
-    // Let's create a dedicated 'chatThreads' collection to track thread-level 
-    // metadata like unread counts without bloating 'orders'.
-    
     const threadRef = doc(db, "chatThreads", orderId);
     
-    // Typically, you'd increment unread counts here via a cloud function.
-    // On the frontend, we'll just set the last message for now.
     await updateDoc(threadRef, {
       lastMessage: {
         text: safeMessageData.text,
         createdAt: serverTimestamp(),
         userId: safeMessageData.userId,
+        userName: safeMessageData.userName,
       },
       updatedAt: serverTimestamp()
-    }).catch(async (err) => {
-       // If thread doc doesn't exist, this fails. We could set it instead.
-       import("firebase/firestore").then(({ setDoc }) => {
-         setDoc(threadRef, {
-            orderId,
-            lastMessage: {
-              text: safeMessageData.text,
-              createdAt: serverTimestamp(),
-              userId: safeMessageData.userId,
-            },
-            updatedAt: serverTimestamp()
-         }, { merge: true });
+    }).catch(async () => {
+       // If thread doc doesn't exist, create it
+       await setDoc(threadRef, {
+          orderId,
+          participants: safeMessageData.participants || [],
+          lastMessage: {
+            text: safeMessageData.text,
+            createdAt: serverTimestamp(),
+            userId: safeMessageData.userId,
+            userName: safeMessageData.userName,
+          },
+          updatedAt: serverTimestamp(),
+          createdAt: serverTimestamp()
        });
+    });
+
+    return messageRef.id;
+  } catch (error) {
+    console.error("Error sending message:", error);
+    throw error;
+  }
+};
+
+/**
+ * Mark messages as read for a user
+ */
+export const markMessagesAsRead = async (orderId, userId) => {
+  try {
+    const messagesQuery = query(
+      collection(db, "chatMessages"),
+      where("orderId", "==", orderId),
+      where("readBy", "not-in", [[userId]])
+    );
+
+    const snapshot = await getDocs(messagesQuery);
+    const batch = writeBatch(db);
+
+    snapshot.docs.forEach((docSnap) => {
+      const data = docSnap.data();
+      if (!data.readBy?.includes(userId)) {
+        batch.update(docSnap.ref, {
+          readBy: [...(data.readBy || []), userId]
+        });
+      }
+    });
+
+    await batch.commit();
+    
+    // Update unread count in thread
+    const threadRef = doc(db, "chatThreads", orderId);
+    await updateDoc(threadRef, {
+      [`unreadCount.${userId}`]: 0
     });
 
     return true;
   } catch (error) {
-    console.error("Error sending message:", error);
-    throw error;
+    console.error("Error marking messages as read:", error);
+    return false;
+  }
+};
+
+/**
+ * Get unread message count for a user
+ */
+export const getUnreadMessageCount = async (userId, role) => {
+  try {
+    // Get all orders this user is involved in
+    let ordersQuery;
+    if (role === "client") {
+      ordersQuery = query(collection(db, "orders"), where("userId", "==", userId));
+    } else if (["worker", "manager"].includes(role)) {
+      ordersQuery = query(collection(db, "orders"), where("workers", "array-contains", userId));
+    } else {
+      ordersQuery = query(collection(db, "orders"), limit(20));
+    }
+
+    const ordersSnap = await getDocs(ordersQuery);
+    const orderIds = ordersSnap.docs.map(doc => doc.id);
+
+    // Get unread counts from chatThreads
+    let totalUnread = 0;
+    
+    for (const orderId of orderIds) {
+      const threadSnap = await getDoc(doc(db, "chatThreads", orderId));
+      if (threadSnap.exists()) {
+        const unreadCount = threadSnap.data()?.unreadCount?.[userId] || 0;
+        totalUnread += unreadCount;
+      }
+    }
+
+    return totalUnread;
+  } catch (error) {
+    console.error("Error getting unread count:", error);
+    return 0;
   }
 };
 
@@ -90,42 +164,74 @@ export const subscribeToThread = (orderId, callback) => {
  * Get active threads for a specific user based on their role
  */
 export const getThreads = (userId, role, callback) => {
-  // To keep this lightweight, we query the 'orders' collection to find 
-  // which orders this user is involved in, then watch the corresponding 'chatThreads'.
-  
   let ordersQuery;
 
   if (role === "client") {
     ordersQuery = query(collection(db, "orders"), where("userId", "==", userId));
   } else if (["worker", "manager"].includes(role)) {
-    // Workers see orders assigned to them
     ordersQuery = query(collection(db, "orders"), where("workers", "array-contains", userId)); 
-    // Note: If you don't use a 'workers' array, you might query by assignedTeam or similar.
   } else {
-    // Admin/Owner sees recent active orders (limit for perf) 
     ordersQuery = query(collection(db, "orders"), orderBy("updatedAt", "desc"), limit(20));
   }
 
-  // To do a real-time join on client-side is complex. 
-  // Let's watch the orders they are involved in, and format them as threads.
   return onSnapshot(ordersQuery, async (snapshot) => {
     const orders = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
     
-    // Fetch thread metadata for these orders
     const threads = await Promise.all(orders.map(async (order) => {
-      // In a real production app, we would use a single query with 'in' 
-      // array, or denormalize. We will just use 'getDocs' for thread metadata here.
-      // But for real-time unread counts, we might just assume unreadCount=0 for now.
+      const threadSnap = await getDoc(doc(db, "chatThreads", order.id));
+      const threadData = threadSnap.exists() ? threadSnap.data() : null;
       
       return {
         id: order.id,
+        orderId: order.id,
         serviceTitle: order.serviceTitle?.label || order.serviceTitle || `Order #${order.displayId}`,
-        lastMessage: { text: "Open to view messages" }, // placeholder
-        unreadCount: {} 
+        lastMessage: threadData?.lastMessage || { text: "No messages yet" },
+        unreadCount: threadData?.unreadCount?.[userId] || 0,
+        updatedAt: threadData?.updatedAt || order.updatedAt,
+        status: order.status,
+        displayId: order.displayId
       };
     }));
     
-    // Then fetch actual thread data if needed, but returning structured ones first
+    // Sort by last message time
+    threads.sort((a, b) => {
+      const timeA = a.updatedAt?.toMillis?.() || 0;
+      const timeB = b.updatedAt?.toMillis?.() || 0;
+      return timeB - timeA;
+    });
+    
     callback(threads);
   });
+};
+
+/**
+ * Initialize chat thread for an order
+ */
+export const initializeChatThread = async (orderId, participants) => {
+  try {
+    const threadRef = doc(db, "chatThreads", orderId);
+    const threadSnap = await getDoc(threadRef);
+    
+    if (!threadSnap.exists()) {
+      await setDoc(threadRef, {
+        orderId,
+        participants,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        lastMessage: null,
+        unreadCount: {}
+      });
+    }
+  } catch (error) {
+    console.error("Error initializing chat thread:", error);
+  }
+};
+
+export default {
+  sendMessage,
+  subscribeToThread,
+  getThreads,
+  markMessagesAsRead,
+  getUnreadMessageCount,
+  initializeChatThread
 };
