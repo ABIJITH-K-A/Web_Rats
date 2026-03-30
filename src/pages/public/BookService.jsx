@@ -1339,8 +1339,14 @@ const BookService = () => {
                   </Button>
                 )}
                 <Button
-                  onClick={handleSubmit}
-                  disabled={!termsAccepted || isSubmitting}
+                  onClick={() => {
+                    if (!termsAccepted) {
+                      setSubmitError("Please accept the Terms & Conditions to confirm your order.");
+                      return;
+                    }
+                    handleSubmit();
+                  }}
+                  disabled={isSubmitting}
                 >
                   {isSubmitting ? "Confirming..." : "Confirm Order"}
                 </Button>
