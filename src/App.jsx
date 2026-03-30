@@ -21,7 +21,7 @@ import ProtectedRoute from './components/auth/ProtectedRoute';
 import ScrollToTop from './components/utils/ScrollToTop';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import ResilienceLayer from './components/utils/ResilienceLayer';
-import { Analytics } from "@vercel/analytics/next"
+import { Analytics } from "@vercel/analytics/react"
 
 function App() {
   return (
