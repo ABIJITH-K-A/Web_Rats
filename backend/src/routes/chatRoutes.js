@@ -3,7 +3,7 @@ import { adminDb } from '../config/firebaseAdmin.js';
 import { asyncHandler } from '../lib/asyncHandler.js';
 import { HttpError } from '../lib/httpError.js';
 import { authGuard } from '../middleware/authGuard.js';
-import { FieldValue, getFirestore } from 'firebase-admin/firestore';
+import { FieldValue } from 'firebase-admin/firestore';
 import { isAdminLikeRole } from '../lib/roles.js';
 import { getAuth } from 'firebase-admin/auth';
 
@@ -115,7 +115,7 @@ router.post("/send", legacyRequireAuth, async (req, res) => {
       return res.status(400).json({ message: "orderId and text are required" });
     }
 
-    const db = getFirestore();
+    const db = adminDb();
 
     // 1. Verify access
     const orderDoc = await db.collection("orders").doc(orderId).get();
