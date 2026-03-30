@@ -35,6 +35,7 @@ function App() {
                 <Routes>
                   <Route path="/" element={<Home />} />
                   <Route path="/services" element={<Services />} />
+                  <Route path="/service/:serviceId" element={<ServiceDetail />} />
                   <Route path="/about" element={<About />} />
                   <Route path="/projects" element={<Projects />} />
                   <Route path="/help" element={<Help />} />
@@ -51,7 +52,6 @@ function App() {
                         <RoleBasedDashboard />
                       </ProtectedRoute>
                     }
-
                   />
                   <Route path="/terms" element={<Terms />} />
                   <Route path="/privacy" element={<Privacy />} />

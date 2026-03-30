@@ -125,7 +125,7 @@ const Help = () => {
                 transition={{ duration: 0.45, delay: index * 0.08 }}
               >
                 {item.external ? (
-                  <a href={item.href} target="_blank" rel="noreferrer">
+                  <a href={item.href} rel="noreferrer">
                     {content}
                   </a>
                 ) : (
