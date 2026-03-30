@@ -6,6 +6,7 @@ import {
   Circle,
   Clock3,
   FileText,
+  Info,
   ListChecks,
   Mail,
   Phone,
