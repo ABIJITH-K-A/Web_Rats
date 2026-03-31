@@ -1,0 +1,253 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helper functions ───────────────────────────────────────
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    // FIX BUG 4: Use 'superadmin' NOT 'super_admin'
+    // All role strings must match systemRules.js ROLE_HIERARCHY exactly
+    function getUserRole() {
+      return request.auth.token.role;
+    }
+
+    function hasRole(role) {
+      return getUserRole() == role;
+    }
+
+    function getRoleRank() {
+      // Returns numeric rank matching ROLE_HIERARCHY index
+      return getUserRole() == 'owner'      ? 5 :
+             getUserRole() == 'superadmin' ? 4 :  // FIX: was 'super_admin'
+             getUserRole() == 'admin'      ? 3 :
+             getUserRole() == 'manager'    ? 2 :
+             getUserRole() == 'worker'     ? 1 : 0;
+    }
+
+    function getTargetRoleRank(targetRole) {
+      return targetRole == 'owner'      ? 5 :
+             targetRole == 'superadmin' ? 4 :
+             targetRole == 'admin'      ? 3 :
+             targetRole == 'manager'    ? 2 :
+             targetRole == 'worker'     ? 1 : 0;
+    }
+
+    function isOwnerRole() {
+      return hasRole('owner');
+    }
+
+    // FIX BUG 4: was 'super_admin', now 'superadmin'
+    function isAdmin() {
+      return hasRole('admin') || hasRole('superadmin') || hasRole('owner');
+    }
+
+    function isAdminLikeRole() {
+      return hasRole('admin') || hasRole('superadmin') || hasRole('owner') || hasRole('manager');
+    }
+
+    function isStaff() {
+      return hasRole('admin') || hasRole('superadmin') || hasRole('owner') ||
+             hasRole('manager') || hasRole('worker');
+    }
+
+    // FIX BUG 3: Actor rank must be strictly greater than target's role rank
+    function canManageUserRole(targetRole) {
+      return getRoleRank() > getTargetRoleRank(targetRole);
+    }
+
+    // ── Users collection ───────────────────────────────────────
+
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isOwner(userId);
+
+      // FIX BUG 1 + BUG 3: Only allow role field update if actor outranks target
+      allow update: if isAuthenticated() && (
+        // User updating their OWN non-role fields
+        (isOwner(userId) && !('role' in request.resource.data.diff(resource.data).affectedKeys())) ||
+        // Admin updating another user — must outrank target's current role
+        (!isOwner(userId) && isAdmin() && canManageUserRole(resource.data.role))
+      );
+      allow delete: if isAdmin() && canManageUserRole(resource.data.role);
+    }
+
+    // ── Orders ────────────────────────────────────────────────
+
+    match /orders/{orderId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid ||
+        isStaff()
+      );
+      allow delete: if isAdmin();
+    }
+
+    // ── Payments (written by backend Admin SDK only) ──────────
+
+    match /payments/{paymentId} {
+      allow read: if isAuthenticated() && (
+        // Client reads their own payment
+        get(/databases/$(database)/documents/orders/$(paymentId)).data.userId
+          == request.auth.uid ||
+        isAdmin()
+      );
+      allow write: if false; // Admin SDK only
+    }
+
+    // ── Tickets ───────────────────────────────────────────────
+
+    match /tickets/{ticketId} {
+      allow read: if isAuthenticated() && (
+        resource.data.raisedBy == request.auth.uid ||
+        isAdminLikeRole()
+      );
+      allow create: if isAuthenticated();
+      allow update: if isAdminLikeRole(); // Only staff can update tickets
+      allow delete: if isOwnerRole();
+    }
+
+    // ── Worker Profiles ───────────────────────────────────────
+
+    match /workerProfiles/{userId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isOwner(userId) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ── Wallets (backend Admin SDK writes) ────────────────────
+
+    match /wallets/{walletId} {
+      allow read: if isAuthenticated() && (
+        isOwner(walletId) || isAdmin()
+      );
+      allow write: if false; // Admin SDK only
+    }
+
+    // ── Transactions ──────────────────────────────────────────
+
+    match /transactions/{transactionId} {
+      allow read: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid || isAdmin()
+      );
+      allow write: if false; // Admin SDK only
+    }
+
+    // ── Withdrawals ───────────────────────────────────────────
+
+    match /withdrawals/{withdrawalId} {
+      allow read: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid || isAdmin()
+      );
+      allow create: if isAuthenticated();
+      allow update: if isAdminLikeRole();
+    }
+
+    // ── Notifications ─────────────────────────────────────────
+
+    match /notifications/{notifId} {
+      allow read, update: if isAuthenticated() &&
+        resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated();
+      allow delete: if isAuthenticated() &&
+        resource.data.userId == request.auth.uid;
+    }
+
+    // ── Audit Logs (Admin SDK only) ───────────────────────────
+
+    match /auditLogs/{logId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    // ── Support / Tickets ─────────────────────────────────────
+
+    match /supportMessages/{msgId} {
+      allow create: if isAuthenticated();
+      allow read, update: if isAdmin() ||
+        (isAuthenticated() && resource.data.userId == request.auth.uid);
+    }
+
+    // ── Reviews ───────────────────────────────────────────────
+
+    match /reviews/{revId} {
+      allow read: if true;
+      allow create: if isAuthenticated();
+      allow update, delete: if isAdmin();
+    }
+
+    // ── Referral Codes ────────────────────────────────────────
+
+    match /referralCodes/{code} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Backend only
+    }
+
+    // ── Invite Keys ───────────────────────────────────────────
+
+    match /inviteKeys/{key} {
+      allow read: if isAuthenticated();
+      allow create: if isAdminLikeRole();
+      allow update: if isAuthenticated(); // Used during signup flow
+      allow delete: if isAdmin();
+    }
+
+    // ── Finance Settings (owner only) ─────────────────────────
+
+    match /financeSettings/{document} {
+      allow read: if isAdminLikeRole();
+      allow write: if isOwnerRole();
+    }
+
+    // ── Funds (owner only) ────────────────────────────────────
+
+    match /funds/{fundId} {
+      allow read: if isAdminLikeRole();
+      allow write: if false; // Admin SDK only
+    }
+
+    // ── Owner Earnings ────────────────────────────────────────
+
+    match /ownerEarnings/{userId} {
+      allow read: if isOwner(userId) || isOwnerRole();
+      allow write: if false; // Admin SDK only
+    }
+
+    // ── Pending Releases ──────────────────────────────────────
+
+    match /pendingReleases/{docId} {
+      allow read: if isAuthenticated() &&
+        resource.data.userId == request.auth.uid;
+      allow write: if false; // Admin SDK only
+    }
+
+    // ── Worker Profiles ───────────────────────────────────────
+
+    match /workerProfiles/{userId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isOwner(userId);
+      allow delete: if isAdmin();
+    }
+
+    // ── Assignment Requests ───────────────────────────────────
+
+    match /assignmentRequests/{requestId} {
+      allow read: if isAdminLikeRole();
+      allow create: if isStaff();
+      allow update: if isAdmin();
+    }
+
+    // ── Default deny all ──────────────────────────────────────
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,66 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function getOrder(orderId) {
+      return get(/databases/$(database)/documents/orders/$(orderId)).data;
+    }
+
+    function isOrderClient(orderId) {
+      return isAuthenticated() && getOrder(orderId).userId == request.auth.uid;
+    }
+
+    function isAssignedWorker(orderId) {
+      let order = getOrder(orderId);
+      return isAuthenticated() && (
+        order.assignedTo == request.auth.uid ||
+        order.workerAssigned == request.auth.uid ||
+        request.auth.uid in (order.assignedWorkers || [])
+      );
+    }
+
+    function isEscalated(orderId) {
+      let chat = get(/databases/$(database)/documents/chats/$(orderId)).data;
+      return chat.escalated == true;
+    }
+
+    function isAdminLikeRole() {
+      return request.auth.token.role in ['admin', 'manager', 'owner', 'super_admin'];
+    }
+
+    // References: client can upload, assigned worker can read
+    match /orders/{orderId}/references/{filename} {
+      allow read: if isAuthenticated() && (
+        isOrderClient(orderId) ||
+        isAssignedWorker(orderId) ||
+        (isEscalated(orderId) && isAdminLikeRole())
+      );
+      allow write: if isAuthenticated() && isOrderClient(orderId);
+    }
+
+    // Deliverables: worker can upload, client can download
+    match /orders/{orderId}/deliverables/{filename} {
+      allow read: if isAuthenticated() && (
+        isOrderClient(orderId) ||
+        isAssignedWorker(orderId)
+      );
+      allow write: if isAuthenticated() && isAssignedWorker(orderId);
+    }
+
+    // Revisions: both client and worker can upload
+    match /orders/{orderId}/revisions/{filename} {
+      allow read: if isAuthenticated() && (
+        isOrderClient(orderId) ||
+        isAssignedWorker(orderId)
+      );
+      allow write: if isAuthenticated() && (
+        isOrderClient(orderId) ||
+        isAssignedWorker(orderId)
+      );
+    }
+  }
+}

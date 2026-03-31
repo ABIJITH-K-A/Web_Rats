@@ -1,0 +1,135 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helper Functions ───────────────────────────────
+    function isAuth() { return request.auth != null; }
+    function uid()    { return request.auth.uid; }
+    
+    // Efficiently get role without redundant gets
+    function getRole() {
+      return get(/databases/$(database)/documents/users/$(uid())).data.role;
+    }
+    
+    // Role Tiers
+    function isOwner()      { return isAuth() && getRole() == "owner"; }
+    function isSuperAdmin() { return isAuth() && getRole() in ["owner", "superadmin"]; }
+    function isAdmin()      { return isAuth() && getRole() in ["owner", "superadmin", "admin"]; }
+    function isStaff()      { return isAuth() && getRole() in ["owner", "superadmin", "admin", "manager", "worker"]; }
+    function isManager()    { return isAuth() && getRole() in ["owner", "superadmin", "admin", "manager"]; }
+    function isWorker()     { return isAuth() && getRole() == "worker"; }
+
+    // ── Collections ──────────────────────────────────────
+
+    // Users: Owner full access, staff can read, users can update self
+    match /users/{userId} {
+      allow read:   if isAuth() && (uid() == userId || isStaff());
+      allow create: if isAuth() && uid() == userId;
+      allow update: if isAuth() && (uid() == userId || isAdmin());
+      allow delete: if isOwner();
+    }
+
+    // Orders: Multi-layered access
+    match /orders/{orderId} {
+      allow read:   if isAuth() && (resource.data.customerId == uid() || isStaff());
+      allow create: if isAuth(); 
+      allow update: if isAuth() && (resource.data.customerId == uid() || isStaff());
+      allow delete: if isSuperAdmin(); // Restrict deletion to superadmin+
+    }
+
+    // Wallets & Financials
+    match /wallets/{walletId} {
+      allow read:   if isAuth() && (uid() == walletId || isStaff());
+      allow create: if isAuth() && uid() == walletId;
+      allow update: if isAdmin(); // Admin SDK handles transfers
+    }
+
+    match /transactions/{id} {
+      allow read:   if isAuth() && (resource.data.userId == uid() || isStaff());
+      allow create: if isAuth(); // App creates records
+    }
+
+    match /withdrawals/{id} {
+      allow read:   if isAuth() && (resource.data.userId == uid() || isStaff());
+      allow create: if isAuth() && isStaff(); // Workers request withdrawals
+      allow update: if isAdmin(); // Approval flow
+    }
+
+    match /refunds/{id} {
+      allow read:   if isAuth() && (resource.data.customerId == uid() || isStaff());
+      allow create: if isAdmin();
+    }
+
+    // Communications
+    match /chats/{chatId} {
+      allow read:   if isAuth() && (uid() in resource.data.participants || isStaff());
+      allow create: if isAuth();
+      allow update: if isAuth() && (uid() in resource.data.participants || isStaff());
+      
+      match /messages/{msgId} {
+        allow read:   if isAuth() && (uid() in get(/databases/$(database)/documents/chats/$(chatId)).data.participants || isStaff());
+        allow create: if isAuth() && (uid() == request.resource.data.senderId);
+      }
+    }
+
+    // Notifications
+    match /notifications/{notifId} {
+      allow read, update: if isAuth() && (resource.data.recipientId == uid() || resource.data.recipientId == "all" || resource.data.recipientId == getRole());
+      allow create:       if isStaff();
+      allow delete:       if isAuth() && resource.data.recipientId == uid();
+    }
+
+    // Logs & Diagnostics
+    match /auditLogs/{logId} {
+      allow read:   if isAdmin();
+      allow create: if isAuth(); 
+    }
+
+    // System Content
+    match /templates/{id} {
+      allow read:   if true;
+      allow write:  if isAdmin();
+    }
+
+    match /samples/{id} {
+      allow read:   if true;
+      allow write:  if isStaff();
+    }
+
+    // Support & Disputes
+    match /reports/{id} {
+      allow read, update: if isStaff();
+      allow create:       if isAuth();
+    }
+    match /disputes/{id} {
+      allow read, update: if isStaff();
+      allow create:       if isAuth();
+    }
+
+    // Security & Logic
+    match /inviteKeys/{key} {
+      allow read:   if true;
+      allow create: if isAdmin();
+      allow update: if isAuth();
+      allow delete: if isAdmin();
+    }
+
+    match /referralCodes/{code} {
+      allow read:   if true;
+      allow create: if isAuth();
+      allow update: if isAuth() && (resource.data.ownerUid == uid() || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    // Management Flow
+    match /payroll/{id} {
+      allow read:           if isStaff();
+      allow create, update: if isAdmin();
+      allow delete:         if isOwner();
+    }
+    match /assignmentRequests/{id} {
+      allow read:           if isStaff();
+      allow write:          if isManager();
+    }
+  }
+}

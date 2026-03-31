@@ -1,0 +1,331 @@
+══════════════════════════════════════════════════════════════════════
+🧩 TN WEB RATS — COMPLETE SYSTEM FLOW (AI EXECUTION MINDMAP)
+══════════════════════════════════════════════════════════════════════
+
+[ USER ENTRY ]
+    ↓
+    ├── Visit Website (React App)
+    ├── Browse Services / Tools
+    └── Click → Book / Join / Login
+
+──────────────────────────────────────────────────────────────────────
+
+[ AUTH SYSTEM ]
+    ↓
+    ├── INPUT:
+    │     ├── Email
+    │     ├── Password
+    │     ├── Invite Key (optional)
+    │
+    ├── VALIDATION:
+    │     ├── Email format
+    │     ├── Password strength
+    │
+    ├── LOGIC:
+    │     ├── IF invite_key:
+    │     │      ├── Validate key
+    │     │      ├── Assign staff role
+    │     │
+    │     └── ELSE:
+    │            └── Assign client role
+    │
+    ├── CREATE:
+    │     ├── Firebase Auth user
+    │     ├── Firestore user doc
+    │     ├── Wallet doc
+    │     ├── Referral code
+    │
+    └── OUTPUT:
+          └── User Session + Role
+
+──────────────────────────────────────────────────────────────────────
+
+[ ROLE ENGINE ]
+    ↓
+    ├── Hierarchy:
+    │     Owner > SuperAdmin > Admin > Manager > Worker > Client
+    │
+    ├── RULES:
+    │     ├── No lower control higher
+    │     ├── RBAC enforced
+    │
+    └── OUTPUT:
+          └── Permissions + Access
+
+──────────────────────────────────────────────────────────────────────
+
+[ DASHBOARD ROUTER ]
+    ↓
+    ├── Owner / SuperAdmin → Full control
+    ├── Admin → Operations
+    ├── Manager → Assignment
+    ├── Worker → Work + Wallet
+    └── Client → Orders
+
+──────────────────────────────────────────────────────────────────────
+
+[ ORDER SYSTEM — 6 STEP ENGINE ]
+    ↓
+    ├── STEP 1: Category Selection
+    ├── STEP 2: Service Selection
+    ├── STEP 3: Plan Selection
+    ├── STEP 4: Project Details Input
+    ├── STEP 5: Payment Setup
+    └── STEP 6: Review + Confirm
+
+    ├── PRICING ENGINE:
+    │     ├── base_price = plan.price
+    │     ├── priority_fee = max(20%, ₹99)
+    │     ├── total_price = base + priority
+    │
+    │     ├── IF new_user → 70% advance
+    │     └── IF returning → 50% advance
+    │
+    └── OUTPUT:
+          └── Order Draft + Payment Required
+
+──────────────────────────────────────────────────────────────────────
+
+[ PAYMENT ENGINE ]
+    ↓
+    ├── Razorpay Checkout
+    │
+    ├── SUCCESS:
+    │     ├── Verify payment
+    │     ├── Create Order
+    │     ├── Status = pending_assignment
+    │     ├── Notify admin + client
+    │
+    └── FAIL:
+          └── Retry
+
+──────────────────────────────────────────────────────────────────────
+
+[ ORDER LIFECYCLE ]
+    ↓
+    pending_assignment
+        ↓
+    assigned (Admin assigns worker)
+        ↓
+    in_progress (Worker starts)
+        ↓
+    delivered_preview
+        ↓
+    ├── revision_requested → loop
+    └── awaiting_final_payment
+        ↓
+    completed
+        ↓
+    closed
+
+    RULES:
+    ├── No advance → No order
+    ├── No final payment → No download
+    └── Revision limited
+
+──────────────────────────────────────────────────────────────────────
+
+[ ADMIN SYSTEM ]
+    ↓
+    ├── View orders
+    ├── Assign workers
+    ├── Monitor progress
+    ├── Approve delivery
+    ├── Approve earnings
+    ├── Handle disputes
+    └── Process withdrawals
+
+──────────────────────────────────────────────────────────────────────
+
+[ WORKER SYSTEM ]
+    ↓
+    ├── Accept order
+    ├── Start work
+    ├── Upload preview
+    ├── Handle revisions
+    ├── Final delivery
+    └── Earnings triggered
+
+──────────────────────────────────────────────────────────────────────
+
+[ CLIENT SYSTEM ]
+    ↓
+    ├── Book service
+    ├── Pay advance
+    ├── Track order
+    ├── View preview
+    ├── Request revision
+    ├── Pay remaining
+    ├── Download
+    └── Review
+
+──────────────────────────────────────────────────────────────────────
+
+[ FINANCE SYSTEM ]
+    ↓
+    ├── SPLIT:
+    │     ├── Worker → 80%
+    │     ├── Company → 20%
+    │
+    │     ├── Referral:
+    │     │     ├── Worker → 82%
+    │     │     └── Company → 18%
+    │
+    ├── FLOW:
+    │     ├── Earnings → pendingAmount
+    │     ├── (2–3 days hold)
+    │     └── → withdrawableAmount
+    │
+    └── Wallet Updated
+
+──────────────────────────────────────────────────────────────────────
+
+[ WALLET SYSTEM ]
+    ↓
+    ├── Fields:
+    │     ├── totalBalance
+    │     ├── pendingAmount
+    │     ├── withdrawableAmount
+    │
+    └── Controlled updates only (no direct edits)
+
+──────────────────────────────────────────────────────────────────────
+
+[ WITHDRAWAL SYSTEM ]
+    ↓
+    ├── Request withdrawal
+    │
+    ├── RULES:
+    │     ├── Minimum ₹100
+    │     ├── Admin approval required
+    │
+    ├── STATUS:
+    │     pending → approved → completed/rejected
+    │
+    └── Output → Bank/UPI payout
+
+──────────────────────────────────────────────────────────────────────
+
+[ REFUND SYSTEM ]
+    ↓
+    ├── Regular:
+    │     ├── Client 60%
+    │     ├── Worker 20%
+    │     └── Company 20%
+    │
+    ├── Returning:
+    │     ├── Client 70%
+    │     ├── Worker 20%
+    │     └── Company 10%
+    │
+    └── Order → cancelled
+
+──────────────────────────────────────────────────────────────────────
+
+[ DISPUTE SYSTEM ]
+    ↓
+    ├── Create dispute
+    ├── Status:
+    │     open → under_review → resolved
+    │
+    ├── Actions:
+    │     ├── Refund
+    │     ├── Penalty (5–20%)
+    │     └── Bonus (+5%)
+    │
+    └── Escalation:
+          Worker → Manager → Admin → SuperAdmin → Owner
+
+──────────────────────────────────────────────────────────────────────
+
+[ NOTIFICATION SYSTEM ]
+    ↓
+    ├── Triggers:
+    │     ├── Order
+    │     ├── Assignment
+    │     ├── Payment
+    │     ├── Earnings
+    │     ├── Dispute
+    │
+    ├── Delivery:
+    │     ├── Real-time (Firestore)
+    │     ├── Email (optional)
+    │     └── WhatsApp (optional)
+    │
+    └── Stored in notifications collection
+
+──────────────────────────────────────────────────────────────────────
+
+[ CONNECT SYSTEM ]
+    ↓
+    ├── Order-based chat
+    ├── Client ↔ Worker ↔ Admin
+    ├── Text + File
+    └── Sanitized inputs
+
+──────────────────────────────────────────────────────────────────────
+
+[ SECURITY SYSTEM ]
+    ↓
+    ├── RBAC enforced
+    ├── All actions logged
+    ├── No wallet manipulation
+    │
+    ├── Anti-download:
+    │     ├── Watermark
+    │     ├── Disable right-click
+    │     ├── Token links
+    │     └── DevTools block
+    │
+    └── Rate limiting (to implement deeper)
+
+──────────────────────────────────────────────────────────────────────
+
+[ REAL-TIME ENGINE ]
+    ↓
+    ├── Firestore listeners:
+    │     ├── Orders
+    │     ├── Notifications
+    │     └── Dashboard
+    │
+    └── Instant UI updates
+
+──────────────────────────────────────────────────────────────────────
+
+[ MODULE SYSTEM ]
+    ↓
+    AUTH
+    ROLE
+    ORDER
+    PAYMENT
+    DELIVERY
+    CONNECT
+    NOTIFICATION
+    FINANCE
+    SECURITY
+    TEMPLATE SYSTEM
+
+──────────────────────────────────────────────────────────────────────
+
+[ FUTURE EXPANSION (AI + GROWTH ENGINE) ]
+    ↓
+    ├── AI SYSTEM:
+    │     ├── Frontend AI
+    │     ├── Backend AI
+    │     └── Code generator AI
+    │
+    ├── FREE TOOLS:
+    │     ├── PPT generator
+    │     ├── Resume builder
+    │     └── Website analyzer
+    │
+    └── MONETIZATION:
+          ├── Subscriptions
+          └── Ads
+
+══════════════════════════════════════════════════════════════════════
+
+FINAL FLOW:
+USER → AUTH → ROLE → ORDER → PAYMENT → WORK → DELIVERY → FINANCE → WITHDRAW
+
+══════════════════════════════════════════════════════════════════════
