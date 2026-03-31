@@ -23,8 +23,9 @@ import {
 } from "firebase/firestore";
 import { db } from "../../../config/firebase";
 import { useAuth } from "../../../context/AuthContext";
+import OrderDetailsModal from "../../../components/dashboard/OrderDetailsModal";
 import { logAuditEvent } from "../../../services/auditService";
-import { notifyAdmin } from "../../../services/notificationService";
+import { notifyAdmin, notifyOrderStatusChanged } from "../../../services/notificationService";
 import {
   buildOrderStatusPatch,
   formatCurrency,
@@ -46,6 +47,8 @@ const OrderPoolView = () => {
   const [filter, setFilter] = useState("all");
   const [claimError, setClaimError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [showAssignModal, setShowAssignModal] = useState(false);
 
   useEffect(() => {
     if (!user?.uid) return undefined;
@@ -129,6 +132,15 @@ const OrderPoolView = () => {
         category: "assignment",
         orderId,
       });
+
+      // Notify client that a worker has been assigned
+      if (orderData.userId) {
+        await notifyOrderStatusChanged({
+          recipientId: orderData.userId,
+          order: { ...orderData, id: orderId },
+          statusLabel: `assigned to ${workerName}`,
+        });
+      }
 
       await logAuditEvent({
         actorId: user.uid,
@@ -229,7 +241,8 @@ const OrderPoolView = () => {
             return (
               <div
                 key={order.id}
-                className="rounded-[30px] border border-white/8 bg-[#121417] p-7 shadow-2xl"
+                className="rounded-[30px] border border-white/8 bg-[#121417] p-7 shadow-2xl cursor-pointer hover:border-white/20 transition-colors"
+                onClick={() => setSelectedOrder(order)}
               >
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
@@ -292,7 +305,11 @@ const OrderPoolView = () => {
 
                   <button
                     type="button"
-                    onClick={() => handleClaimOrder(order.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedOrder(null);
+                      handleClaimOrder(order.id);
+                    }}
                     disabled={isClaiming}
                     className="inline-flex items-center gap-2 rounded-2xl bg-cyan-primary px-5 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-primary-dark transition-transform hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-60"
                   >
@@ -311,6 +328,12 @@ const OrderPoolView = () => {
             );
           })}
         </div>
+      )}
+      {selectedOrder && (
+        <OrderDetailsModal
+          order={selectedOrder}
+          onClose={() => setSelectedOrder(null)}
+        />
       )}
     </div>
   );

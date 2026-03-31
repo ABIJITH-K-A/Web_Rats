@@ -6,11 +6,13 @@ import { paymentLimiter } from '../middleware/rateLimits.js';
 import { validateBody } from '../middleware/validate.js';
 import {
   createGatewayOrder,
-  verifyPaymentSignature,
   verifyWebhookSignature,
-} from '../services/razorpayGateway.js';
+} from '../services/cashfreeGateway.js';
 import { distributeOrderRevenue } from '../services/financialDistribution.js';
 import { creditWorkerForOrder } from '../services/financialService.js';
+import { adminDb } from '../config/firebaseAdmin.js';
+import { FieldValue } from 'firebase-admin/firestore';
+import { buildOrderStatusPatch } from '../lib/orderStatus.js';
 
 const router = Router();
 
@@ -37,12 +39,6 @@ const createOrderSchema = z.object({
     .default({}),
 });
 
-const verifySchema = z.object({
-  paymentId: z.string().trim().min(4).max(120),
-  orderId: z.string().trim().min(4).max(120),
-  signature: z.string().trim().min(8).max(256),
-});
-
 router.post(
   '/create-order',
   paymentLimiter,
@@ -53,64 +49,106 @@ router.post(
   })
 );
 
-router.post(
-  '/verify',
-  paymentLimiter,
-  validateBody(verifySchema),
-  asyncHandler(async (req, res) => {
-    const verified = verifyPaymentSignature(req.validatedBody);
-
-    if (!verified) {
-      throw new HttpError(400, 'Invalid payment signature.');
-    }
-
-    res.json({
-      verified: true,
-    });
-  })
-);
-
 export const handlePaymentWebhook = asyncHandler(async (req, res) => {
-  const signature = String(req.headers['x-razorpay-signature'] || '').trim();
+  // Get signature headers
+  const signature = String(req.headers['x-webhook-signature'] || '').trim();
+  const timestamp = String(req.headers['x-webhook-timestamp'] || '').trim();
 
-  if (!signature) {
-    throw new HttpError(400, 'Missing webhook signature.');
+  if (!signature || !timestamp) {
+    throw new HttpError(400, 'Missing webhook signature or timestamp.');
   }
 
-  const rawBody = Buffer.isBuffer(req.body) ? req.body : Buffer.from(JSON.stringify(req.body || {})); // eslint-disable-line no-undef
+  // Verify signature
+  const rawBody = Buffer.isBuffer(req.body)
+    ? req.body.toString('utf8')
+    : JSON.stringify(req.body || {});
+
   const isValid = verifyWebhookSignature({
     rawBody,
     signature,
+    timestamp,
   });
 
   if (!isValid) {
     throw new HttpError(400, 'Invalid webhook signature.');
   }
 
+  // Parse payload
   let payload = null;
-
   try {
-    payload = JSON.parse(rawBody.toString('utf8'));
+    payload = typeof rawBody === 'string' ? JSON.parse(rawBody) : req.body;
   } catch {
     throw new HttpError(400, 'Invalid webhook payload.');
   }
 
-  // Process payment captured event
-  if (payload?.event === 'payment.captured') {
-    const payment = payload?.payload?.payment?.entity;
-    const orderId = payment?.notes?.orderId;
-    
-    if (orderId) {
-      // Credit worker and distribute revenue
-      await creditWorkerForOrder(orderId);
-      await distributeOrderRevenue(orderId);
-    }
+  // Always respond to Cashfree FIRST
+  const eventType = payload?.type || 'unknown';
+  res.json({ received: true, event: eventType });
+
+  // Extract order data
+  const orderData = payload?.data?.order;
+  const paymentData = payload?.data?.payment;
+
+  const orderId = orderData?.order_tags?.orderId;
+  const cashfreeOrderId = orderData?.order_id;
+  const cashfreePaymentId = paymentData?.cf_payment_id;
+  const amount = Number(paymentData?.payment_amount || 0);
+
+  if (!orderId) return;
+
+  const db = adminDb();
+  const paymentRef = db.collection('payments').doc(orderId);
+  const orderRef = db.collection('orders').doc(orderId);
+
+  // PAYMENT_SUCCESS_WEBHOOK
+  if (eventType === 'PAYMENT_SUCCESS_WEBHOOK') {
+    const batch = db.batch();
+
+    batch.set(paymentRef, {
+      orderId,
+      cashfreeOrderId,
+      cashfreePaymentId: String(cashfreePaymentId || ''),
+      amount,
+      paymentStatus: 'success',
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
+    }, { merge: true });
+
+    batch.update(orderRef, {
+      ...buildOrderStatusPatch('created'),
+      paymentStatus: 'paid',
+      paymentVerifiedAt: FieldValue.serverTimestamp(),
+      paymentVerifiedBy: 'cashfree-webhook',
+    });
+
+    await batch.commit();
+
+    await creditWorkerForOrder(orderId);
+    await distributeOrderRevenue(orderId);
   }
 
-  res.json({
-    received: true,
-    event: payload?.event || 'unknown',
-  });
+  // PAYMENT_FAILED_WEBHOOK
+  if (eventType === 'PAYMENT_FAILED_WEBHOOK') {
+    const batch = db.batch();
+
+    batch.set(paymentRef, {
+      orderId,
+      cashfreeOrderId,
+      cashfreePaymentId: String(cashfreePaymentId || ''),
+      amount,
+      paymentStatus: 'failed',
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
+    }, { merge: true });
+
+    batch.update(orderRef, {
+      paymentStatus: 'rejected',
+      rejectionReason: 'Payment failed via Cashfree',
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+
+    await batch.commit();
+  }
 });
 
 export default router;

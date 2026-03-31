@@ -729,6 +729,10 @@ const Profile = () => {
                   </AnimatePresence>
                 </div>
 
+                <Button variant="outline" onClick={() => navigate("/")}>
+                  Leave Profile
+                </Button>
+
                 <Button variant="outline" onClick={() => navigate("/book")}>
                   New Order
                 </Button>

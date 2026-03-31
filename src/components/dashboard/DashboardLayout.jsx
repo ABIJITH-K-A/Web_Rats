@@ -43,6 +43,7 @@ const DashboardLayout = ({ children }) => {
   
   const navItems = [
     { id: 'overview', label: 'Overview', icon: <Home size={18} />, roles: ['owner', 'superadmin', 'admin', 'manager', 'worker'] },
+    { id: 'myorders', label: 'My Orders', icon: <Briefcase size={18} />, roles: ['worker', 'manager'] },
     { id: 'analytics', label: 'Analytics', icon: <TrendingUp size={18} />, roles: ['owner', 'superadmin', 'admin'] },
     { id: 'orders', label: 'Orders', icon: <List size={18} />, roles: ['owner', 'superadmin', 'admin', 'manager'] },
     { id: 'orderpool', label: 'Order Pool', icon: <Package size={18} />, roles: ['worker', 'manager'] },
@@ -56,7 +57,6 @@ const DashboardLayout = ({ children }) => {
     { id: 'payroll', label: 'Payroll', icon: <DollarSign size={18} />, roles: ['owner', 'superadmin', 'admin'] },
     { id: 'teampay', label: 'Team Payments', icon: <DollarSign size={18} />, roles: ['manager'] },
     { id: 'approvals', label: 'Approvals', icon: <CheckSquare size={18} />, roles: ['owner', 'superadmin', 'admin'] },
-    { id: 'myorders', label: 'My Orders', icon: <Briefcase size={18} />, roles: ['worker', 'manager'] },
     { id: 'invitekeys', label: 'Invite Keys', icon: <Key size={18} />, roles: ['owner', 'superadmin', 'admin', 'manager'] },
     { id: 'disputes', label: 'Disputes', icon: <AlertCircle size={18} />, roles: ['owner', 'superadmin', 'admin', 'manager', 'worker'] },
   ];

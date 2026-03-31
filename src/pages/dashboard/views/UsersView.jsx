@@ -6,12 +6,13 @@ import {
 } from 'lucide-react';
 import { db } from '../../../config/firebase';
 import { 
-  collection, query, getDocs, updateDoc, 
-  doc, orderBy, setDoc, serverTimestamp 
+  collection, query, getDocs, orderBy
 } from 'firebase/firestore';
 import { useAuth } from '../../../context/AuthContext';
 import { useDashboard } from '../../../context/DashboardContext';
 import { notifyRoleUpdated } from '../../../services/notificationService';
+import { canManageRole, getRoleRank, normalizeRole } from '../../../utils/systemRules';
+import { apiRequest } from '../../../services/apiClient';
 
 const UsersView = () => {
   const { user: currentUser, userData: currentUserData } = useAuth();
@@ -38,49 +39,65 @@ const UsersView = () => {
 
   const handlePromote = async (uid, newRole) => {
     if (!currentUser?.uid) return;
-    if (uid === currentUser.uid) return alert("Cannot change your own role");
-    
-    // Original business logic for referral generation on staff promotion
-    const isStaff = ["worker", "manager", "admin", "superadmin", "owner"].includes(newRole);
-    const targetUser = users.find(u => u.id === uid);
+
+    // Rule 1: Cannot change own role
+    if (uid === currentUser.uid) {
+      alert('You cannot change your own role.');
+      return;
+    }
+
+    const targetUser = users.find((u) => u.id === uid);
+    if (!targetUser) return;
+
+    const actorRole = normalizeRole(currentUserData?.role);
+    const targetCurrentRole = normalizeRole(targetUser.role);
+
+    // Rule 2: Frontend rank check (backend also validates — this is UX protection)
+    if (!canManageRole(actorRole, targetCurrentRole)) {
+      alert(`You do not have permission to manage a ${targetCurrentRole}.`);
+      return;
+    }
+
+    // Rule 3: Cannot assign a role equal to or above your own rank
+    if (getRoleRank(newRole) >= getRoleRank(actorRole)) {
+      alert(`You cannot assign the ${newRole} role.`);
+      return;
+    }
+
+    // Rule 4: Cannot assign owner role
+    if (newRole === 'owner') {
+      alert('The owner role cannot be assigned via this interface.');
+      return;
+    }
+
+    // Confirm before changing
+    const confirmed = window.confirm(
+      `Change ${targetUser.name || targetUser.email}'s role from ${targetCurrentRole} to ${newRole}?`
+    );
+    if (!confirmed) return;
 
     try {
-      const updates = { role: newRole };
-      
-      if (isStaff && !targetUser.referralCode) {
-        const TIERS = {
-          worker: { code: "WRK", pct: 5 },
-          manager: { code: "MGR", pct: 10 },
-          admin: { code: "ADM", pct: 15 },
-          superadmin: { code: "SAD", pct: 20 }
-        };
-        const t = TIERS[newRole] || TIERS.worker;
-        const code = `TNWR-${t.code}-${Math.random().toString(36).toUpperCase().slice(-4)}`;
-        
-        updates.referralCode = code;
-        updates.discountPercent = t.pct;
-        
-        // Create referral document
-        await setDoc(doc(db, "referralCodes", code), {
-          ownerUid: uid,
-          role: newRole,
-          discountPercent: t.pct,
-          timesUsed: 0,
-          createdAt: serverTimestamp()
-        });
-      }
+      // Send to BACKEND — not directly to Firestore
+      await apiRequest('/users/set-role', {
+        method: 'POST',
+        authMode: 'required',
+        body: { targetUid: uid, newRole },
+      });
 
-      await updateDoc(doc(db, "users", uid), updates);
-      
+      // Update local state only after backend confirms
+      setUsers((prev) =>
+        prev.map((u) => (u.id === uid ? { ...u, role: newRole } : u))
+      );
+
+      // Notify user (keep existing notifyRoleUpdated call)
       await notifyRoleUpdated({
         recipientId: uid,
         nextRole: newRole,
         actorName: currentUserData?.name || currentUser?.email || 'Admin',
       });
-
-      setUsers(prev => prev.map(u => u.id === uid ? { ...u, ...updates } : u));
-    } catch (e) {
-      console.error(e);
+    } catch (err) {
+      console.error('Role update failed:', err);
+      alert(err.message || 'Failed to update role. Please try again.');
     }
   };
 
@@ -104,11 +121,21 @@ const UsersView = () => {
     }
   };
 
-  const canPromoteTo = (myRole) => {
-    if (myRole === 'owner') return ["superadmin", "admin", "manager", "worker", "client"];
-    if (myRole === 'superadmin') return ["admin", "manager", "worker", "client"];
-    if (myRole === 'admin') return ["manager", "worker", "client"];
-    return [];
+  // Returns assignable roles given actor role AND target's current role
+  const getAssignableRoles = (actorRole, targetCurrentRole) => {
+    // Actor must outrank target's current role
+    if (!canManageRole(actorRole, targetCurrentRole)) {
+      return []; // Actor cannot manage this user at all
+    }
+
+    const ROLE_HIERARCHY_LIST = ['client', 'worker', 'manager', 'admin', 'superadmin'];
+    // owner is excluded — cannot be assigned via UI
+    const actorRank = getRoleRank(actorRole);
+
+    // Actor can only assign roles strictly below their own rank
+    return ROLE_HIERARCHY_LIST.filter(
+      (role) => getRoleRank(role) < actorRank
+    );
   };
 
   return (
@@ -197,17 +224,28 @@ const UsersView = () => {
                        {u.discountPercent || 0}%
                     </td>
                     <td className="px-6 py-4">
-                       <select 
-                         disabled={u.id === currentUser.uid}
-                         className="bg-[#262B25] border border-white/10 rounded-lg px-3 py-1.5 text-[9px] font-mono uppercase tracking-widest outline-none focus:border-cyan-primary cursor-pointer disabled:opacity-20 disabled:cursor-not-allowed"
-                         value={u.role}
-                         onChange={(e) => handlePromote(u.id, e.target.value)}
-                       >
-                         <option value={u.role}>{u.role}</option>
-                         {canPromoteTo(currentUserData?.role).filter(r => r !== u.role).map(r => (
-                           <option key={r} value={r}>{r}</option>
-                         ))}
-                       </select>
+                       {(() => {
+                         const actorRole = normalizeRole(currentUserData?.role);
+                         const targetRole = normalizeRole(u.role);
+                         const assignable = getAssignableRoles(actorRole, targetRole);
+                         const canManage = canManageRole(actorRole, targetRole) && u.id !== currentUser.uid;
+
+                         return (
+                           <select
+                             disabled={!canManage}
+                             className="bg-[#262B25] border border-white/10 rounded-lg px-3 py-1.5 text-[9px] font-mono uppercase tracking-widest outline-none focus:border-cyan-primary cursor-pointer disabled:opacity-20 disabled:cursor-not-allowed"
+                             value={u.role}
+                             onChange={(e) => handlePromote(u.id, e.target.value)}
+                           >
+                             <option value={u.role}>{u.role}</option>
+                             {assignable
+                               .filter((r) => r !== u.role)
+                               .map((r) => (
+                                 <option key={r} value={r}>{r}</option>
+                               ))}
+                           </select>
+                         );
+                       })()}
                     </td>
                   </tr>
                 ))

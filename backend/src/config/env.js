@@ -21,7 +21,12 @@ export const env = {
   firebasePrivateKey: String(process.env.FIREBASE_PRIVATE_KEY || '')
     .replace(/\\n/g, '\n')
     .trim(),
-  razorpayKeyId: String(process.env.RAZORPAY_KEY_ID || '').trim(),
+  // Cashfree
+  cashfreeAppId: String(process.env.CASHFREE_APP_ID || '').trim(),
+  cashfreeSecretKey: String(process.env.CASHFREE_SECRET_KEY || '').trim(),
+  cashfreeWebhookSecret: String(process.env.CASHFREE_WEBHOOK_SECRET || '').trim(),
+  backendUrl: String(process.env.BACKEND_URL || 'http://localhost:5000').trim(),
+  nodeEnv: String(process.env.NODE_ENV || 'development').trim(),
   razorpayKeySecret: String(process.env.RAZORPAY_KEY_SECRET || '').trim(),
   razorpayWebhookSecret: String(process.env.RAZORPAY_WEBHOOK_SECRET || '').trim(),
   // Email (Gmail SMTP)

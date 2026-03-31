@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, User, X, MessageSquare } from "lucide-react";
+import { Menu, X, User } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
 const navLinks = [
@@ -79,16 +79,6 @@ const Navbar = () => {
               </Link>
             );
           })}
-
-          {user && (
-            <Link
-              to="/chat"
-              className="p-2 text-light-gray/78 hover:text-cyan-primary transition-colors relative"
-              aria-label="Messages"
-            >
-              <MessageSquare size={20} />
-            </Link>
-          )}
 
           <Link
             to={user ? getDashboardPath() : "/join"}
