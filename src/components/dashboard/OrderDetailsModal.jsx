@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, Check, Clock3, ExternalLink, Download, Star, 
   Paperclip, Info, CreditCard, Calendar, User,
-  LayoutDashboard, MessageSquare, MessageCircle
+  LayoutDashboard, MessageSquare
 } from 'lucide-react';
 import { Button, Card } from '../ui/Primitives';
 import FileUploader from '../ui/FileUploader';
@@ -216,16 +216,6 @@ const OrderDetailsModal = ({
                               </div>
                            </div>
                            <div className="flex gap-3">
-                              {order.customerPhone && (
-                                <a
-                                  href={`https://wa.me/${order.customerPhone.replace(/\D/g, '')}?text=${encodeURIComponent(`Hi, regarding Order #${getOrderDisplayId(order)}`)}`}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="flex items-center gap-2 px-4 py-2 bg-green-500/10 border border-green-500/20 text-green-400 rounded-xl text-xs hover:bg-green-500/20 transition-colors"
-                                >
-                                  <MessageCircle size={14} /> Contact Client
-                                </a>
-                              )}
                               <Button variant="outline" onClick={onContact}>Contact Client</Button>
                               {onUpdateStatus && (
                                 <select 
@@ -244,16 +234,6 @@ const OrderDetailsModal = ({
                         </div>
                       ) : (
                         <div className="flex flex-wrap gap-3">
-                          {order.workerPhone && (
-                            <a
-                              href={`https://wa.me/${order.workerPhone.replace(/\D/g, '')}?text=${encodeURIComponent(`Hi, regarding Order #${getOrderDisplayId(order)}`)}`}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="flex items-center gap-2 px-4 py-2 bg-green-500/10 border border-green-500/20 text-green-400 rounded-xl text-xs hover:bg-green-500/20 transition-colors"
-                            >
-                              <MessageCircle size={14} /> Contact Worker on WhatsApp
-                            </a>
-                          )}
                           <Button variant="outline" onClick={onContact}>Contact Support</Button>
                           {isCompleted && <Button onClick={onReorder}>Reorder Service</Button>}
                           {isCompleted && (

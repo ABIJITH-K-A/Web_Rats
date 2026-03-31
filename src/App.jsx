@@ -10,6 +10,9 @@ import Projects from './pages/public/Projects';
 import Help from './pages/public/Help';
 import BookService from './pages/public/BookService';
 import Templates from './pages/public/Templates';
+import MarketplaceIndex from './pages/marketplace/Index';
+import TemplateDetail from './pages/marketplace/TemplateDetail';
+import Checkout from './pages/marketplace/Checkout';
 import JoinHub from './pages/auth/JoinHub';
 import ForgotPassword from './pages/auth/ForgotPassword';
 import NotFound from './pages/public/NotFound';
@@ -23,6 +26,7 @@ import ErrorBoundary from './components/ui/ErrorBoundary';
 import ResilienceLayer from './components/utils/ResilienceLayer';
 import { Analytics } from "@vercel/analytics/react"
 import QRPaymentPage from './pages/payment/QRPaymentPage';
+import PaymentSuccess from './pages/payment/PaymentSuccess';
 
 function App() {
   return (
@@ -42,6 +46,10 @@ function App() {
                   <Route path="/help" element={<Help />} />
                   <Route path="/book" element={<BookService />} />
                   <Route path="/templates" element={<Templates />} />
+                  <Route path="/marketplace" element={<MarketplaceIndex />} />
+                  <Route path="/template/:id" element={<TemplateDetail />} />
+                  <Route path="/checkout/:id" element={<Checkout />} />
+                  <Route path="/payment-success/:orderId?" element={<PaymentSuccess />} />
                   <Route path="/join" element={<JoinHub />} />
                   <Route path="/signup" element={<JoinHub />} />
                   <Route path="/forgot-password" element={<ForgotPassword />} />

@@ -49,6 +49,7 @@ const OrderPoolView = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showAssignModal, setShowAssignModal] = useState(false);
+  const [orderForAssignment, setOrderForAssignment] = useState(null);
 
   useEffect(() => {
     if (!user?.uid) return undefined;
@@ -308,7 +309,8 @@ const OrderPoolView = () => {
                     onClick={(e) => {
                       e.stopPropagation();
                       setSelectedOrder(null);
-                      handleClaimOrder(order.id);
+                      setOrderForAssignment(order);
+                      setShowAssignModal(true);
                     }}
                     disabled={isClaiming}
                     className="inline-flex items-center gap-2 rounded-2xl bg-cyan-primary px-5 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-primary-dark transition-transform hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-60"
@@ -334,6 +336,52 @@ const OrderPoolView = () => {
           order={selectedOrder}
           onClose={() => setSelectedOrder(null)}
         />
+      )}
+
+      {/* Assignment Confirmation Modal */}
+      {showAssignModal && orderForAssignment && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="w-full max-w-md rounded-[30px] border border-white/8 bg-[#121417] p-8 shadow-2xl">
+            <h2 className="text-xl font-black text-white mb-4">
+              Claim Order
+            </h2>
+            <p className="text-white/60 mb-6">
+              Are you sure you want to claim{' '}
+              <span className="text-cyan-primary font-semibold">
+                {orderForAssignment.service || 'this order'}
+              </span>
+              ? This will assign it to your queue immediately.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowAssignModal(false);
+                  setOrderForAssignment(null);
+                }}
+                className="flex-1 rounded-2xl border border-white/20 px-5 py-3 text-sm font-medium text-white hover:bg-white/5"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  handleClaimOrder(orderForAssignment.id);
+                  setShowAssignModal(false);
+                  setOrderForAssignment(null);
+                }}
+                disabled={claimingId === orderForAssignment.id}
+                className="flex-1 rounded-2xl bg-cyan-primary px-5 py-3 text-sm font-black uppercase tracking-wider text-primary-dark hover:opacity-90 disabled:opacity-50"
+              >
+                {claimingId === orderForAssignment.id ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <Loader2 size={16} className="animate-spin" /> Claiming...
+                  </span>
+                ) : (
+                  'Confirm Claim'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
