@@ -6,6 +6,7 @@ import { db } from '../../config/firebase';
 import axios from 'axios';
 
 export default function QRPaymentPage({ orderId, amount, userDetails = {} }) {
+  const [_paymentSessionId, setPaymentSessionId] = useState(null);
   const [upiLink, setUpiLink] = useState(null);
   const [status, setStatus] = useState('pending');
   const [error, setError] = useState(null);
@@ -16,13 +17,15 @@ export default function QRPaymentPage({ orderId, amount, userDetails = {} }) {
 
     const init = async () => {
       try {
-        // Create Cashfree order
-        await axios.post(
-          `${import.meta.env.VITE_API_URL}/api/payments/create-order`,
+        // Create Cashfree order and get payment session
+        const { data } = await axios.post(
+          `${import.meta.env.VITE_API_BASE_URL}/api/payments/create-order`,
           { amount, orderId, userDetails }
         );
+        
+        setPaymentSessionId(data.paymentSessionId);
 
-        // UPI deep link
+        // For UPI QR, still generate the link
         const upiId = import.meta.env.VITE_UPI_ID;
         const link = [
           `upi://pay?pa=${upiId}`,
@@ -54,7 +57,7 @@ export default function QRPaymentPage({ orderId, amount, userDetails = {} }) {
 
     init();
     return () => { if (unsubscribe) unsubscribe(); };
-  }, [orderId, amount, navigate]);
+  }, [orderId, amount, userDetails, navigate]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-6">
@@ -64,10 +67,11 @@ export default function QRPaymentPage({ orderId, amount, userDetails = {} }) {
 
         {error && <p className="text-red-500 text-sm text-center">{error}</p>}
 
-        {!error && upiLink
-          ? <QRCodeSVG value={upiLink} size={220} />
-          : !error && <div className="w-[220px] h-[220px] bg-gray-100 animate-pulse rounded-xl" />
-        }
+        {!error && upiLink ? (
+          <QRCodeSVG value={upiLink} size={220} />
+        ) : !error && (
+          <div className="w-[220px] h-[220px] bg-gray-100 animate-pulse rounded-xl" />
+        )}
 
         <div className="text-sm text-gray-500 flex items-center gap-2">
           {status === 'pending' && !error && (
