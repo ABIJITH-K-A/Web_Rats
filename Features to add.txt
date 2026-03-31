@@ -1,0 +1,768 @@
+Features to add 
+Email verification
+
+
+
+TNWEBRATS – FINANCE ENGINE v3 (ULTRA 20x)
+==================================================  PURPOSE
+Handle all money flow in system
+Track earnings (workers + company)
+Manage withdrawals
+Control profit distribution
+Prevent fraud & inconsistencies
+================================================== 🧠 SYSTEM OVERVIEW
+CLIENT PAYMENT → SYSTEM SPLIT → WORKER WALLET → COMPANY WALLET → WITHDRAWAL → TRANSACTION LOG
+================================================== 1️⃣ CORE MONEY FLOW
+Client pays → → System records payment → Split into: - Worker share - Company share → Add to wallets 
+================================================== 2️⃣ PAYMENT RULES (YOUR LOGIC)
+NORMAL ORDER:
+✔ Worker → 80%
+✔ Company → 20%
+REFERRAL ORDER:
+✔ Worker → 82%
+✔ Company → 18%
+CANCELLATION:
+CASE 1 (regular):
+Client refund → 60%
+Worker → 20%
+Company → 20%
+CASE 2 (premium customer):
+Client refund → 70%
+Worker → 20%
+Company → 10%
+================================================== 3️⃣ DATABASE STRUCTURE
+USERS (wallet fields)
+{ userId, role, walletBalance: 0, totalEarned: 0, totalWithdrawn: 0 } 
+TRANSACTIONS
+{ transactionId, orderId, type: "payment | split | withdrawal | refund", amount, from: "client/company/system", to: "worker/company/client", status: "pending | completed", createdAt } 
+WITHDRAWALS
+{ withdrawalId, userId, amount, status: "pending | approved | rejected", requestedAt, processedAt } 
+================================================== 4️⃣ PAYMENT PROCESSING FLOW
+On payment success → → create transaction → calculate split → update worker wallet → update company wallet → log everything 
+CALCULATION:
+workerShare = amount * 0.80 companyShare = amount * 0.20 
+================================================== 5️⃣ WALLET SYSTEM (WORKER)
+FIELDS:
+walletBalance
+pendingBalance (optional future)
+withdrawableBalance
+RULES:
+✔ Minimum withdrawal = ₹100
+✔ Withdrawal days = 4 days/week
+================================================== 6️⃣ WITHDRAWAL FLOW
+Worker requests withdrawal → → Check balance ≥ 100 → Create withdrawal request → Admin review → Approve → deduct balance → Transfer money 
+STATUS FLOW:
+pending → approved → completed 
+================================================== 7️⃣ OWNER CONTROL PANEL
+OWNER CAN:
+✔ Set worker percentage
+✔ Set company share
+✔ Set referral bonus
+✔ Set salaries
+CONFIG STRUCTURE:
+{ workerPercentage: 80, referralBonus: 2, minWithdrawal: 100 } 
+================================================== 8️⃣ SALARY SYSTEM (STAFF)
+ROLES:
+manager
+admin
+super_admin
+OPTIONS:
+✔ Fixed salary
+✔ Per-order bonus
+STORED IN:
+{ role, salary, bonusPerOrder } 
+================================================== 9️⃣ TRANSACTION LOGGING (CRITICAL)
+EVERY ACTION LOGGED:
+✔ Payment
+✔ Split
+✔ Withdrawal
+✔ Refund
+ACCESS:
+✔ Owner
+✔ Super Admin
+==================================================  FRAUD PREVENTION
+✔ No manual wallet edits
+✔ All changes via transactions
+✔ Verify payment before split
+================================================== 1️⃣1️⃣ EDGE CASES
+Payment failed → no split
+Worker removed → hold earnings
+Refund after work → partial payout
+================================================== 1️⃣2️⃣ AUTOMATION (FUTURE)
+✔ Auto withdrawal
+✔ Smart payouts
+✔ AI fraud detection
+================================================== 1️⃣3️⃣ INTEGRATION
+Connects with:
+Order system
+Payment system
+Dashboard
+Worker system
+==================================================  FINAL RESULT
+✔ Full financial control
+✔ Transparent system
+✔ Scalable payouts
+✔ Business-ready
+================================================== END OF SYSTEM
+
+
+TNWEBRATS – TICKET / ESCALATION SYSTEM v3 (ULTRA 20x)
+==================================================  PURPOSE
+Handle disputes, issues, bugs, and escalations
+Allow structured communication beyond normal chat
+Enable controlled admin intervention
+Maintain accountability and logs
+================================================== 🧠 SYSTEM OVERVIEW
+USER (Client/Worker) → CREATE TICKET → ASSIGN → INVESTIGATE → RESOLVE → CLOSE
+================================================== 1️⃣ TICKET TYPES
+✔ ORDER ISSUE
+✔ PAYMENT ISSUE
+✔ WORKER ISSUE
+✔ CLIENT ISSUE
+✔ TECHNICAL BUG
+✔ OTHER
+ENUM:
+["order", "payment", "worker", "client", "bug", "other"] 
+================================================== 2️⃣ ROLE ACCESS CONTROL
+WHO CAN CREATE:
+✔ Client
+✔ Worker
+✔ Manager
+✔ Admin
+WHO CAN VIEW:
+✔ Creator
+✔ Assigned admin
+✔ Higher roles
+WHO CAN RESOLVE:
+✔ Manager (limited)
+✔ Admin
+✔ Super Admin
+✔ Owner
+================================================== 3️⃣ TICKET PRIORITY SYSTEM
+LEVELS:
+low
+medium
+high
+critical
+AUTO RULE:
+if type == "payment": priority = high if type == "abuse": priority = critical 
+================================================== 4️⃣ TICKET CREATION FLOW
+User clicks "Report" → → Select type → Enter title → Enter description → Attach files (optional) → Submit → Create ticket → Assign priority → Notify admins 
+================================================== 5️⃣ DATABASE STRUCTURE
+tickets:
+{ ticketId, createdBy, role, type, title, description, orderId: null, priority, status: "open | in_progress | resolved | closed", assignedTo: null, createdAt, updatedAt } 
+ticketMessages:
+{ messageId, ticketId, senderId, message, attachments: [], createdAt } 
+================================================== 6️⃣ STATUS FLOW (IMPORTANT)
+open → in_progress → resolved → closed 
+RULES:
+✔ open → auto created
+✔ in_progress → when admin starts
+✔ resolved → fix provided
+✔ closed → final confirmation
+================================================== 7️⃣ ASSIGNMENT SYSTEM
+On ticket created → → assign to: manager OR admin 
+RULES:
+✔ Manager handles basic
+✔ Admin handles complex
+✔ Super Admin override
+================================================== 8️⃣ ESCALATION INTEGRATION
+CRITICAL FEATURE:
+When ticket created for order:
+order.escalation = true 
+EFFECT:
+✔ Admins can now access chat
+✔ Admin can intervene
+ON RESOLVE:
+order.escalation = false 
+================================================== 9️⃣ TICKET CHAT SYSTEM
+Separate from order chat
+FEATURES:
+✔ Messages
+✔ File attachments
+✔ Admin responses
+==================================================  ADMIN ACTIONS
+Admins can:
+✔ Reply
+✔ Assign
+✔ Change priority
+✔ Resolve ticket
+✔ Force actions
+OWNER / SUPER ADMIN:
+✔ Full override
+================================================== 1️⃣1️⃣ RESOLUTION SYSTEM
+Admin resolves → → Add resolution note → Change status = resolved → Notify user 
+CLIENT/WORKER:
+✔ Accept resolution → close
+✔ Reject → reopen
+================================================== 1️⃣2️⃣ AUTO ESCALATION RULES
+if no response in 24h: escalate priority if repeated complaints: flag worker 
+================================================== 1️⃣3️⃣ NOTIFICATION SYSTEM
+ON:
+✔ Ticket created
+✔ Assigned
+✔ Reply
+✔ Resolved
+SEND TO:
+✔ Relevant roles
+================================================== 1️⃣4️⃣ SECURITY RULES
+✔ Only involved users access
+✔ Admin access controlled
+✔ All actions logged
+================================================== 1️⃣5️⃣ LOGGING SYSTEM
+LOG:
+✔ Ticket created
+✔ Status change
+✔ Admin actions
+✔ Resolution
+ACCESS:
+✔ Owner
+✔ Super Admin
+================================================== 1️⃣6️⃣ EDGE CASES
+Duplicate tickets → merge
+Fake reports → warn user
+Abuse → escalate
+================================================== 1️⃣7️⃣ UI STRUCTURE
+CLIENT:
+Create ticket
+View tickets
+Chat
+ADMIN:
+Ticket dashboard
+Filters (priority, type)
+Assign panel
+================================================== 1️⃣8️⃣ PERFORMANCE
+✔ Index tickets
+✔ Filter by status
+✔ Lazy load messages
+================================================== 1️⃣9️⃣ INTEGRATION
+Works with:
+Order system
+Chat system
+Notification system
+Security system
+==================================================  FINAL RESULT
+✔ Full dispute system
+✔ Controlled escalation
+✔ Admin intervention
+✔ Professional support
+================================================== END OF SYSTEM
+
+TNWEBRATS – WORKER → CLIENT FILE DELIVERY SYSTEM v3 (ULTRA 20x)
+
+==================================================
+ PURPOSE
+
+- Allow workers to deliver files to clients
+- Control access until payment is completed
+- Support revisions and final delivery
+- Prevent unauthorized downloads
+- Track delivery lifecycle
+
+==================================================
+🧠 SYSTEM OVERVIEW
+
+WORKER →
+UPLOAD FILE →
+STORE SECURELY →
+LOCK ACCESS →
+CLIENT PREVIEW →
+REVISION (IF NEEDED) →
+FINAL PAYMENT →
+DOWNLOAD ENABLED →
+TRACK DOWNLOAD →
+AUTO CLEANUP
+
+==================================================
+1️⃣ FILE TYPES & DELIVERY MODES
+
+TYPES:
+
+✔ Preview Files (images / low-res / watermarked)
+✔ Revision Files
+✔ Final Deliverables (zip / high quality)
+
+---
+
+MODES:
+
+- preview (view only)
+- revision (editable cycle)
+- final (download locked until payment)
+
+==================================================
+2️⃣ STORAGE STRUCTURE
+
+orders/{orderId}/preview/{filename}
+orders/{orderId}/revisions/{filename}
+orders/{orderId}/final/{filename}
+
+==================================================
+3️⃣ DATABASE STRUCTURE
+
+orders:
+
+{
+  orderId,
+  status: "in_progress | preview | revision | awaiting_payment | completed",
+
+  previewFiles: [
+    {
+      filename,
+      storagePath,
+      uploadedAt,
+      uploadedBy,
+      version
+    }
+  ],
+
+  revisionFiles: [],
+
+  finalFiles: [
+    {
+      filename,
+      storagePath,
+      uploadedAt,
+      uploadedBy,
+      isLocked: true,
+      downloaded: false,
+      downloadedAt: null
+    }
+  ]
+}
+
+==================================================
+4️⃣ UPLOAD FLOW (WORKER)
+
+Worker uploads →
+
+→ Check role (must be assigned worker)
+→ Validate file
+→ Upload to storage
+→ Save metadata
+→ Update order status
+
+---
+
+RULE:
+
+✔ Only assigned worker can upload
+
+==================================================
+5️⃣ PREVIEW SYSTEM (ANTI-DOWNLOAD)
+
+CLIENT CAN:
+
+✔ View (zoom, scroll)
+✔ Request revision
+
+---
+
+CLIENT CANNOT:
+
+❌ Download
+❌ Copy original
+
+---
+
+IMPLEMENTATION:
+
+✔ Render in viewer (canvas / iframe)
+✔ No direct URL exposure
+
+==================================================
+6️⃣ FINAL DELIVERY LOCK SYSTEM
+
+RULE:
+
+if paymentStatus != "full":
+    block download
+
+---
+
+FINAL FILE:
+
+✔ Stored securely
+✔ No public URL
+
+==================================================
+7️⃣ DOWNLOAD FLOW (CLIENT)
+
+Client clicks download →
+
+→ Check payment status
+→ Generate signed URL (temporary)
+→ Allow download
+→ Mark as downloaded
+
+---
+
+SIGNED URL:
+
+✔ Valid for 5–10 minutes only
+
+==================================================
+8️⃣ DOWNLOAD TRACKING
+
+onDownload:
+
+→ mark downloaded = true
+→ set downloadedAt
+
+---
+
+IF ALL FILES DOWNLOADED:
+
+→ trigger chat deletion timer
+
+==================================================
+9️⃣ REVISION SYSTEM INTEGRATION
+
+FLOW:
+
+Client requests revision →
+
+→ revisionUsed++
+→ worker uploads new file
+→ update previewFiles
+
+---
+
+RULE:
+
+✔ Respect revision limits
+
+==================================================
+ CHAT INTEGRATION
+
+ON FILE UPLOAD:
+
+✔ Send message in chat
+
+---
+
+EXAMPLE:
+
+{
+  type: "file",
+  fileName: "preview.png",
+  category: "preview"
+}
+
+==================================================
+1️⃣1️⃣ SECURITY SYSTEM (CRITICAL)
+
+✔ No public storage URLs
+✔ Use signed URLs only
+✔ Validate role before access
+✔ Block unauthorized users
+
+---
+
+ANTI-CHEAT:
+
+✔ Disable right-click (frontend)
+✔ Canvas rendering
+✔ Blur watermark (optional)
+
+==================================================
+1️⃣2️⃣ EDGE CASES
+
+- Worker uploads wrong file → allow replace
+- Client never downloads → keep for X days
+- Expired signed URL → regenerate
+
+==================================================
+1️⃣3️⃣ AUTO CLEANUP SYSTEM
+
+after 24h of download →
+
+→ delete chat
+→ archive files (optional)
+
+==================================================
+1️⃣4️⃣ ADMIN CONTROL
+
+Admins can:
+
+✔ View files (only in escalation)
+✔ Replace files
+✔ Force unlock
+
+==================================================
+1️⃣5️⃣ STATUS TRANSITIONS
+
+in_progress →
+preview →
+revision →
+preview →
+awaiting_payment →
+completed
+
+==================================================
+1️⃣6️⃣ API DESIGN
+
+POST /upload/preview/:orderId
+POST /upload/revision/:orderId
+POST /upload/final/:orderId
+
+GET /download/:orderId/:filename
+
+==================================================
+1️⃣7️⃣ PERFORMANCE
+
+✔ Compress previews
+✔ Lazy load
+✔ Cache metadata
+
+==================================================
+1️⃣8️⃣ INTEGRATION
+
+Works with:
+
+- Order system
+- Chat system
+- Payment system
+- Security system
+TNWEBRATS – CORE BUSINESS SYSTEMS (ULTRA 20x)
+WALLET + MONTHLY BILLING + COMPANY MESSAGE
+==================================================  GLOBAL PURPOSE
+Control all financial flows
+Manage worker payouts safely
+Enable internal communication without chat
+Maintain audit logs for every action
+================================================== 🧠 SYSTEM OVERVIEW
+ORDER COMPLETED → EARNINGS CALCULATED → WALLET UPDATED → MONTHLY BILL GENERATED → OWNER PAYS → STATUS UPDATED
+ADMIN → SEND COMPANY MESSAGE → USERS RECEIVE
+==================================================
+1️⃣ WALLET SYSTEM (ULTRA)
+==================================================
+ PURPOSE
+Store worker earnings
+Track all financial activity
+Enable controlled withdrawals
+Prevent fraud
+️ DATABASE STRUCTURE
+users/{userId}
+{ "wallet": { "balance": 0, "totalEarned": 0, "totalWithdrawn": 0, "pending": 0 } } 
+transactions/{transactionId}
+{ "transactionId": "", "userId": "", "orderId": "", "type": "earning | withdrawal | adjustment", "amount": 0, "status": "pending | completed", "createdAt": "", "meta": {} } 
+withdrawals/{withdrawalId}
+{ "userId": "", "amount": 0, "status": "pending | approved | rejected | paid", "requestedAt": "", "processedAt": "", "note": "" } 
+ WALLET FLOW (EARNING)
+onOrderCompleted: → calculate workerShare → create transaction(type=earning) → update: wallet.balance += workerShare wallet.totalEarned += workerShare 
+ WITHDRAWAL FLOW
+workerRequestsWithdrawal(amount): if amount < 100: reject if wallet.balance < amount: reject → create withdrawal request → status = pending 
+ ADMIN PROCESS
+adminApproves: → deduct wallet.balance → wallet.totalWithdrawn += amount → status = paid 
+⚙️ RULES
+✔ Min withdrawal = ₹100
+✔ No direct wallet edits
+✔ All changes via transactions
+❗ EDGE CASES
+Duplicate request → block
+Negative balance → prevent
+Worker banned → freeze wallet
+==================================================
+2️⃣ MONTHLY BILLING SYSTEM (ULTRA)
+==================================================
+ PURPOSE
+Track total worker earnings monthly
+Generate payout reports
+Enable manual payment control
+️ DATABASE STRUCTURE
+monthlyEarnings/{recordId}
+{ "userId": "", "month": "2026-03", "totalEarned": 0, "totalWithdrawn": 0, "remaining": 0, "status": "pending | paid", "generatedAt": "", "paidAt": "" } 
+ FLOW
+onOrderCompleted: → add earning to monthly record 
+ MONTH END PROCESS
+cron (monthly): → group earnings by worker → calculate totals → create/update monthly record 
+ OWNER PAYMENT FLOW
+ownerPaysWorker: → mark status = paid → set paidAt 
+⚙️ RULES
+✔ Manual payment (safe MVP)
+✔ No auto payouts
+✔ Track every month separately
+❗ EDGE CASES
+Late payment → still record
+Worker leaves → still payable
+Partial payout → track remaining
+==================================================
+3️⃣ COMPANY MESSAGE SYSTEM (ULTRA)
+==================================================
+ PURPOSE
+Replace chat for announcements
+Enable admin → user communication
+Deliver important updates
+️ DATABASE STRUCTURE
+announcements/{messageId}
+{ "title": "", "content": "", "target": "all | workers | admins | clients", "priority": "normal | important | critical", "createdBy": "", "createdAt": "" } 
+userMessages/{userId}/{messageId}
+{ "messageId": "", "read": false, "readAt": null } 
+ FLOW
+adminCreatesMessage: → store in announcements → push to users (based on target) 
+ DELIVERY
+for each user: → create userMessages entry → trigger notification 
+ USER VIEW
+Inbox page
+Mark as read
+Filter by priority
+⚙️ RULES
+✔ Cannot be deleted by users
+✔ Only admin can create
+✔ Critical messages pinned
+❗ EDGE CASES
+User offline → show later
+Duplicate push → prevent
+==================================================
+ SECURITY (GLOBAL)
+==================================================
+✔ Role-based access
+✔ Transaction logging
+✔ No direct data manipulation
+✔ Admin actions logged
+==================================================
+ INTEGRATION
+==================================================
+Wallet ↔ Orders
+Wallet ↔ Monthly Billing
+Billing ↔ Owner Dashboard
+Messages ↔ Notification System
+==================================================
+ FINAL RESULT
+==================================================
+✔ Fully working financial system
+✔ Controlled payouts
+✔ Stable communication system
+✔ Business-ready backend
+================================================== END OF SYSTEM
+
+==================================================
+ FINAL RESULT
+
+✔ Secure delivery
+✔ Payment protection
+✔ Clean workflow
+✔ Professional system
+
+==================================================
+END OF SYSTEM
+
+
+
+
+TNWEBRATS – CORE BUSINESS SYSTEMS (ULTRA 20x)
+WALLET + MONTHLY BILLING + COMPANY MESSAGE
+==================================================  GLOBAL PURPOSE
+Control all financial flows
+Manage worker payouts safely
+Enable internal communication without chat
+Maintain audit logs for every action
+================================================== 🧠 SYSTEM OVERVIEW
+ORDER COMPLETED → EARNINGS CALCULATED → WALLET UPDATED → MONTHLY BILL GENERATED → OWNER PAYS → STATUS UPDATED
+ADMIN → SEND COMPANY MESSAGE → USERS RECEIVE
+==================================================
+1️⃣ WALLET SYSTEM (ULTRA)
+==================================================
+ PURPOSE
+Store worker earnings
+Track all financial activity
+Enable controlled withdrawals
+Prevent fraud
+️ DATABASE STRUCTURE
+users/{userId}
+{ "wallet": { "balance": 0, "totalEarned": 0, "totalWithdrawn": 0, "pending": 0 } } 
+transactions/{transactionId}
+{ "transactionId": "", "userId": "", "orderId": "", "type": "earning | withdrawal | adjustment", "amount": 0, "status": "pending | completed", "createdAt": "", "meta": {} } 
+withdrawals/{withdrawalId}
+{ "userId": "", "amount": 0, "status": "pending | approved | rejected | paid", "requestedAt": "", "processedAt": "", "note": "" } 
+ WALLET FLOW (EARNING)
+onOrderCompleted: → calculate workerShare → create transaction(type=earning) → update: wallet.balance += workerShare wallet.totalEarned += workerShare 
+ WITHDRAWAL FLOW
+workerRequestsWithdrawal(amount): if amount < 100: reject if wallet.balance < amount: reject → create withdrawal request → status = pending 
+ ADMIN PROCESS
+adminApproves: → deduct wallet.balance → wallet.totalWithdrawn += amount → status = paid 
+⚙️ RULES
+✔ Min withdrawal = ₹100
+✔ No direct wallet edits
+✔ All changes via transactions
+❗ EDGE CASES
+Duplicate request → block
+Negative balance → prevent
+Worker banned → freeze wallet
+==================================================
+2️⃣ MONTHLY BILLING SYSTEM (ULTRA)
+==================================================
+ PURPOSE
+Track total worker earnings monthly
+Generate payout reports
+Enable manual payment control
+️ DATABASE STRUCTURE
+monthlyEarnings/{recordId}
+{ "userId": "", "month": "2026-03", "totalEarned": 0, "totalWithdrawn": 0, "remaining": 0, "status": "pending | paid", "generatedAt": "", "paidAt": "" } 
+ FLOW
+onOrderCompleted: → add earning to monthly record 
+ MONTH END PROCESS
+cron (monthly): → group earnings by worker → calculate totals → create/update monthly record 
+ OWNER PAYMENT FLOW
+ownerPaysWorker: → mark status = paid → set paidAt 
+⚙️ RULES
+✔ Manual payment (safe MVP)
+✔ No auto payouts
+✔ Track every month separately
+❗ EDGE CASES
+Late payment → still record
+Worker leaves → still payable
+Partial payout → track remaining
+==================================================
+3️⃣ COMPANY MESSAGE SYSTEM (ULTRA)
+==================================================
+ PURPOSE
+Replace chat for announcements
+Enable admin → user communication
+Deliver important updates
+️ DATABASE STRUCTURE
+announcements/{messageId}
+{ "title": "", "content": "", "target": "all | workers | admins | clients", "priority": "normal | important | critical", "createdBy": "", "createdAt": "" } 
+userMessages/{userId}/{messageId}
+{ "messageId": "", "read": false, "readAt": null } 
+ FLOW
+adminCreatesMessage: → store in announcements → push to users (based on target) 
+ DELIVERY
+for each user: → create userMessages entry → trigger notification 
+ USER VIEW
+Inbox page
+Mark as read
+Filter by priority
+⚙️ RULES
+✔ Cannot be deleted by users
+✔ Only admin can create
+✔ Critical messages pinned
+❗ EDGE CASES
+User offline → show later
+Duplicate push → prevent
+==================================================
+ SECURITY (GLOBAL)
+==================================================
+✔ Role-based access
+✔ Transaction logging
+✔ No direct data manipulation
+✔ Admin actions logged
+==================================================
+ INTEGRATION
+==================================================
+Wallet ↔ Orders
+Wallet ↔ Monthly Billing
+Billing ↔ Owner Dashboard
+Messages ↔ Notification System
+==================================================
+ FINAL RESULT
+==================================================
+✔ Fully working financial system
+✔ Controlled payouts
+✔ Stable communication system
+✔ Business-ready backend
+================================================== END OF SYSTEM
+
+
+

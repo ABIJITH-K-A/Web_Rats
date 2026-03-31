@@ -88,6 +88,28 @@ const EMAIL_TEMPLATES = {
       </div>
     `,
   }),
+
+  emailVerification: (data) => ({
+    subject: `Verify Your Email — TN WEB RATS`,
+    html: `
+      <div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:24px;background:#0d0f11;color:#e0e0e0;border-radius:16px;">
+        <div style="text-align:center;margin-bottom:24px;">
+          <h1 style="color:#67F81D;margin:0;">TN WEB RATS</h1>
+          <p style="color:#888;font-size:12px;">Email Verification</p>
+        </div>
+        <div style="background:#1a1f1a;padding:20px;border-radius:12px;text-align:center;">
+          <p style="margin:0 0 16px;font-size:16px;">Welcome to TN WEB RATS!</p>
+          <p style="margin:0 0 24px;color:#888;font-size:14px;">Please verify your email address to access your dashboard and manage your orders.</p>
+          <a href="${data.verificationLink}" style="display:inline-block;background:#67F81D;color:#0d0f11;padding:12px 32px;border-radius:8px;font-weight:700;text-decoration:none;">
+            Verify Email Address
+          </a>
+          <p style="margin:24px 0 0;color:#555;font-size:12px;">
+            If you didn't create an account, you can safely ignore this email.
+          </p>
+        </div>
+      </div>
+    `,
+  }),
 };
 
 export const sendOrderEmail = async (to, templateName, data) => {
@@ -119,4 +141,8 @@ export const sendOrderEmail = async (to, templateName, data) => {
   }
 };
 
-export default { sendOrderEmail };
+export const sendVerificationEmail = async (to, verificationLink) => {
+  return sendOrderEmail(to, 'emailVerification', { verificationLink });
+};
+
+export default { sendOrderEmail, sendVerificationEmail };

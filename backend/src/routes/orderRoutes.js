@@ -14,7 +14,7 @@ import { isAdminLikeRole, isManagerLikeRole, normalizeValue } from '../lib/roles
 import { serializeDocument } from '../lib/serialize.js';
 import { authGuard, optionalAuthGuard } from '../middleware/authGuard.js';
 import { validateBody } from '../middleware/validate.js';
-import { creditWorkerForOrder } from '../services/financialService.js';
+import { creditWorkerForOrder, creditStaffBonuses } from '../services/financialService.js';
 import { dispatchNotification } from '../services/notificationDispatcher.js';
 
 const router = Router();
@@ -231,8 +231,9 @@ router.patch(
     if (nextStatus === 'completed') {
       try {
         await creditWorkerForOrder(orderId);
+        await creditStaffBonuses(orderId);
       } catch (err) {
-        console.error('Failed to credit workers for order:', err);
+        console.error('Failed to credit staff for order:', err);
       }
     }
 

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import {
   createUserWithEmailAndPassword,
   onAuthStateChanged,
+  sendEmailVerification,
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signOut,
@@ -193,6 +194,10 @@ export const AuthProvider = ({ children }) => {
         normalizedEmail,
         password
       );
+
+      // Send verification email
+      await sendEmailVerification(cred.user);
+
       const uid = cred.user.uid;
       const personalReferralCode = makeReferralCode(roleValue);
       const referralTier = getReferralTier(roleValue);
@@ -304,6 +309,10 @@ export const AuthProvider = ({ children }) => {
         normalizedEmail,
         password
       );
+
+      // Send verification email
+      await sendEmailVerification(cred.user);
+
       const uid = cred.user.uid;
       const name = `${firstName} ${lastName}`.trim();
       const referralTier = getReferralTier(staffRole);
@@ -385,6 +394,12 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => signOut(auth);
 
+  const resendVerificationEmail = async () => {
+    if (auth.currentUser) {
+      await sendEmailVerification(auth.currentUser);
+    }
+  };
+
   const value = {
     user,
     userProfile,
@@ -396,6 +411,8 @@ export const AuthProvider = ({ children }) => {
     staffSignup,
     logout,
     resetPassword,
+    resendVerificationEmail,
+    emailVerified: user?.emailVerified || false,
     isAdmin: ["admin", "superadmin", "owner"].includes(role),
     isManager: role === "manager",
     isWorker: role === "worker",

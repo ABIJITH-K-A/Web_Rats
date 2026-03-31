@@ -387,11 +387,11 @@ const OrderPoolView = () => {
   );
 };
 
-const MetaCard = ({ icon: Icon, label, value }) => (
+const MetaCard = ({ icon, label, value }) => (
   <div className="rounded-[22px] border border-white/8 bg-white/5 p-4">
     <div className="flex items-center gap-3">
       <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-black/35 text-cyan-primary">
-        <Icon size={16} />
+        {icon({ size: 16 })}
       </div>
       <div>
         <div className="text-[9px] font-mono uppercase tracking-[0.16em] text-white/30">

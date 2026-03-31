@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import { env } from '../config/env.js';
 import { HttpError } from '../lib/httpError.js';
+import {Buffer} from 'buffer';
 
 // ── Cashfree API base URLs ─────────────────────────────────────
 const BASE_URL = env.nodeEnv === 'production'
@@ -13,6 +14,20 @@ const sanitizeOrderId = (value) =>
     .trim()
     .replace(/[^a-zA-Z0-9_-]/g, '')
     .slice(0, 50);
+
+// ── Retry for network failures ──────────────────────────────────────
+export const fetchWithRetry = async (url, options, retries = 3) => {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const response = await fetch(url, options);
+      if (response.ok) return response;
+      if (i === retries - 1) throw new Error(`HTTP ${response.status}`);
+    } catch (err) {
+      if (i === retries - 1) throw err;
+      await new Promise(r => setTimeout(r, 1000 * (i + 1)));
+    }
+  }
+};
 
 // ── Create Cashfree Order ──────────────────────────────────────
 export const createGatewayOrder = async ({ amount, orderId, userDetails = {} }) => {

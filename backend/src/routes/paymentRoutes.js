@@ -4,11 +4,13 @@ import { asyncHandler } from '../lib/asyncHandler.js';
 import { HttpError } from '../lib/httpError.js';
 import { paymentLimiter } from '../middleware/rateLimits.js';
 import { validateBody } from '../middleware/validate.js';
+import { authGuard } from '../middleware/authGuard.js';
+import { Buffer } from 'buffer';
 import {
   createGatewayOrder,
   verifyWebhookSignature,
-} from '../services/cashfreeGateway.js';
-import { distributeOrderRevenue } from '../services/financialDistribution.js';
+}
+from '../services/cashfreeGateway.js';
 import { creditWorkerForOrder } from '../services/financialService.js';
 import { adminDb } from '../config/firebaseAdmin.js';
 import { FieldValue } from 'firebase-admin/firestore';
@@ -124,7 +126,6 @@ export const handlePaymentWebhook = asyncHandler(async (req, res) => {
     await batch.commit();
 
     await creditWorkerForOrder(orderId);
-    await distributeOrderRevenue(orderId);
   }
 
   // PAYMENT_FAILED_WEBHOOK
@@ -149,6 +150,18 @@ export const handlePaymentWebhook = asyncHandler(async (req, res) => {
 
     await batch.commit();
   }
+  
 });
+
+router.get('/status/:orderId', authGuard, asyncHandler(async (req, res) => {
+  const db = adminDb();
+  const paymentDoc = await db.collection('payments').doc(req.params.orderId).get();
+  if (!paymentDoc.exists) {
+    throw new HttpError(404, 'Payment not found');
+  }
+  res.json(paymentDoc.data());
+}));
+
+
 
 export default router;

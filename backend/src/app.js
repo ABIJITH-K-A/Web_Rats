@@ -26,6 +26,7 @@ import usersRouter from './routes/users.js';
 import ticketRoutes from './routes/ticketRoutes.js';
 import workerProfileRoutes from './routes/workerProfileRoutes.js';
 import financeRoutes from './routes/financeRoutes.js';
+import announcementRoutes from './routes/announcementRoutes.js';
 import qpayRoutes from './routes/temp/qpayRoutes.js';
 
 const app = express();
@@ -86,6 +87,7 @@ app.use('/users', usersRouter);
 app.use('/tickets', ticketRoutes);
 app.use('/worker-profile', workerProfileRoutes);
 app.use('/finance', financeRoutes);
+app.use('/announcements', announcementRoutes);
 app.use('/cron', cronRoutes);
 app.use('/temp/qpay', qpayRoutes);
 

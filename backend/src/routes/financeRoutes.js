@@ -7,6 +7,7 @@ import { authGuard } from '../middleware/authGuard.js';
 import roleGuard from '../middleware/roleGuard.js';
 import { validateBody } from '../middleware/validate.js';
 import { FieldValue } from 'firebase-admin/firestore';
+import { generateMonthlyBills, payMonthlyBill } from '../services/billingService.js';
 
 const router = Router();
 
@@ -64,17 +65,17 @@ router.put(
 router.get(
   '/overview',
   authGuard,
-  roleGuard(['owner']),
+  roleGuard(['owner', 'super_admin']),
   asyncHandler(async (req, res) => {
     const txSnap = await adminDb().collection('transactions').get();
     const transactions = txSnap.docs.map((d) => d.data());
 
     const revenue = transactions
-      .filter((t) => t.type === 'income')
+      .filter((t) => t.type === 'income' || t.type === 'earning')
       .reduce((sum, t) => sum + (t.amount || 0), 0);
     const expenses = transactions
-      .filter((t) => t.type === 'expense')
-      .reduce((sum, t) => sum + (t.amount || 0), 0);
+      .filter((t) => t.type === 'expense' || t.type === 'payout')
+      .reduce((sum, t) => sum + Math.abs(t.amount || 0), 0);
     const profit = revenue - expenses;
 
     res.json({ revenue, expenses, profit, transactionCount: transactions.length });
@@ -106,6 +107,34 @@ router.get(
     const { uid } = req.currentUser;
     const earningsSnap = await adminDb().collection('ownerEarnings').doc(uid).get();
     res.json({ earnings: earningsSnap.exists ? earningsSnap.data() : { totalEarnings: 0 } });
+  })
+);
+
+// POST /api/finance/generate-bills — generate monthly reports
+router.post(
+  '/generate-bills',
+  authGuard,
+  roleGuard(['owner', 'super_admin']),
+  asyncHandler(async (req, res) => {
+    const { month } = req.body; // format '2026-03'
+    if (!month) throw new HttpError(400, 'Month is required.');
+    
+    const count = await generateMonthlyBills(month);
+    res.json({ success: true, billsGenerated: count });
+  })
+);
+
+// POST /api/finance/pay-bill — mark a bill as paid
+router.post(
+  '/pay-bill',
+  authGuard,
+  roleGuard(['owner', 'super_admin']),
+  asyncHandler(async (req, res) => {
+    const { billId } = req.body;
+    if (!billId) throw new HttpError(400, 'Bill ID is required.');
+    
+    await payMonthlyBill(billId, req.currentUser.uid);
+    res.json({ success: true });
   })
 );
 
