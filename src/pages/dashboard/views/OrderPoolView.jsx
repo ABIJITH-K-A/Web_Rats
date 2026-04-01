@@ -10,24 +10,10 @@ import {
   Package,
   Zap,
 } from "lucide-react";
-import {
-  collection,
-  doc,
-  getDoc,
-  limit,
-  onSnapshot,
-  orderBy,
-  query,
-  serverTimestamp,
-  updateDoc,
-} from "firebase/firestore";
-import { db } from "../../../config/firebase";
 import { useAuth } from "../../../context/AuthContext";
 import OrderDetailsModal from "../../../components/dashboard/OrderDetailsModal";
-import { logAuditEvent } from "../../../services/auditService";
-import { notifyAdmin, notifyOrderStatusChanged } from "../../../services/notificationService";
+import { fetchOrderPool, claimOrderFromPool } from "../../../services/poolService";
 import {
-  buildOrderStatusPatch,
   formatCurrency,
   formatDate,
   getCustomerTypeLabel,
@@ -36,7 +22,6 @@ import {
   getOrderPriorityBadgeClass,
   getOrderPriorityLabel,
   getOrderStatusLabel,
-  isClaimablePoolOrder,
 } from "../../../utils/orderHelpers";
 
 const OrderPoolView = () => {
@@ -52,30 +37,25 @@ const OrderPoolView = () => {
   const [orderForAssignment, setOrderForAssignment] = useState(null);
 
   useEffect(() => {
-    if (!user?.uid) return undefined;
+    if (!user?.uid) return;
 
-    setLoading(true);
-
-    const unsubscribe = onSnapshot(
-      query(collection(db, "orders"), orderBy("createdAt", "desc"), limit(80)),
-      (snapshot) => {
-        const nextOrders = snapshot.docs
-          .map((docSnapshot) => ({
-            id: docSnapshot.id,
-            ...docSnapshot.data(),
-          }))
-          .filter(isClaimablePoolOrder);
-
-        setOrders(nextOrders);
-        setLoading(false);
-      },
-      (error) => {
+    const loadPool = async () => {
+      setLoading(true);
+      try {
+        const poolOrders = await fetchOrderPool();
+        setOrders(poolOrders);
+      } catch (error) {
         console.error("Order pool error:", error);
+        setClaimError("Failed to load order pool. Please try again.");
+      } finally {
         setLoading(false);
       }
-    );
+    };
 
-    return () => unsubscribe();
+    loadPool();
+    // Refresh every 30 seconds
+    const interval = setInterval(loadPool, 30000);
+    return () => clearInterval(interval);
   }, [user]);
 
   useEffect(() => {
@@ -102,61 +82,10 @@ const OrderPoolView = () => {
     setClaimError("");
 
     try {
-      const orderRef = doc(db, "orders", orderId);
-      const orderSnap = await getDoc(orderRef);
-
-      if (!orderSnap.exists()) {
-        throw new Error("Order no longer exists.");
-      }
-
-      const orderData = { id: orderSnap.id, ...orderSnap.data() };
-      if (!isClaimablePoolOrder(orderData)) {
-        throw new Error("This order has already been assigned.");
-      }
-
-      const workerName = userProfile?.name || user.email || "Worker";
-
-      await updateDoc(orderRef, {
-        ...buildOrderStatusPatch("assigned"),
-        assignedWorkers: [user.uid],
-        workerAssigned: user.uid,
-        workerAssignedName: workerName,
-        assignedTo: user.uid,
-        assignedToName: workerName,
-        assignmentStatus: "approved",
-        assignedAt: serverTimestamp(),
-      });
-
-      await notifyAdmin({
-        title: "Order Claimed From Pool",
-        message: `${workerName} claimed ${orderData.service || "an order"} from the pool.`,
-        category: "assignment",
-        orderId,
-      });
-
-      // Notify client that a worker has been assigned
-      if (orderData.userId) {
-        await notifyOrderStatusChanged({
-          recipientId: orderData.userId,
-          order: { ...orderData, id: orderId },
-          statusLabel: `assigned to ${workerName}`,
-        });
-      }
-
-      await logAuditEvent({
-        actorId: user.uid,
-        actorRole: userProfile?.role || "worker",
-        action: "order_claimed_from_pool",
-        targetType: "order",
-        targetId: orderId,
-        severity: "medium",
-        metadata: {
-          workerId: user.uid,
-          workerName,
-        },
-      });
-
-      setSuccessMessage(`${getOrderDisplayId(orderData)} claimed successfully.`);
+      await claimOrderFromPool(orderId);
+      setSuccessMessage(`Order claimed successfully.`);
+      // Remove claimed order from list
+      setOrders((prev) => prev.filter((o) => o.id !== orderId));
     } catch (error) {
       console.error("Claim error:", error);
       setClaimError(error.message || "Failed to claim order. Please try again.");

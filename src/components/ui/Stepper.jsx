@@ -54,7 +54,7 @@ export default function Stepper({
       <div
         className={`mx-auto w-full max-w-4xl rounded-3xl bg-secondary-dark/50 border border-white/5 shadow-2xl overflow-hidden ${stepCircleContainerClassName}`}
       >
-        <div className={`${stepContainerClassName} flex w-full items-center px-4 py-6 sm:p-8 bg-primary-dark/30 border-b border-white/5 overflow-x-auto scrollbar-hide`}>
+        <div className={`${stepContainerClassName} flex w-full items-center px-2 py-4 sm:px-4 sm:py-6 md:p-8 bg-primary-dark/30 border-b border-white/5 overflow-x-auto scrollbar-hide min-w-0`}>
           {stepsArray.map((_, index) => {
             const stepNumber = index + 1;
             const isNotLastStep = index < totalSteps - 1;
@@ -202,7 +202,7 @@ function StepIndicator({ step, currentStep, onClickStep, disableStepIndicators }
   return (
     <motion.div
       onClick={handleClick}
-      className="relative cursor-pointer outline-none focus:outline-none"
+      className="relative cursor-pointer outline-none focus:outline-none flex-shrink-0"
       animate={status}
       initial={false}
     >
@@ -213,10 +213,10 @@ function StepIndicator({ step, currentStep, onClickStep, disableStepIndicators }
           complete: { scale: 1, backgroundColor: '#66FCF1', color: '#0B0C10' }
         }}
         transition={{ duration: 0.3 }}
-        className="flex h-10 w-10 items-center justify-center rounded-full font-bold text-sm shadow-xl"
+        className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full font-bold text-xs sm:text-sm shadow-xl"
       >
         {status === 'complete' ? (
-          <CheckIcon className="h-5 w-5" />
+          <CheckIcon className="h-4 w-4 sm:h-5 sm:w-5" />
         ) : (
           <span>{step}</span>
         )}

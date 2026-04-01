@@ -12,13 +12,14 @@ import { generateCsrfToken } from './middleware/csrfProtection.js';
 import adminRoutes from './routes/adminRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import disputeRoutes from './routes/disputeRoutes.js';
+import downloadRoutes from './routes/downloadRoutes.js';
 import healthRoutes from './routes/healthRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import notificationSettingsRoutes from './routes/notificationSettingsRoutes.js';
 import orderRoutes from './routes/orderRoutes.js';
 import paymentRoutes, { handlePaymentWebhook } from './routes/paymentRoutes.js';
 import walletRoutes from './routes/walletRoutes.js';
-import chatRoutes from './routes/chatRoutes.js';
+// import chatRoutes from './routes/chatRoutes.js'; // Chat handled via Firestore directly
 import cronRoutes from './routes/cronRoutes.js';
 import templateRoutes from './routes/templateRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
@@ -27,7 +28,7 @@ import ticketRoutes from './routes/ticketRoutes.js';
 import workerProfileRoutes from './routes/workerProfileRoutes.js';
 import financeRoutes from './routes/financeRoutes.js';
 import announcementRoutes from './routes/announcementRoutes.js';
-import downloadRoutes from './routes/downloadRoutes.js';
+import poolRoutes from './routes/poolRoutes.js';
 import qpayRoutes from './routes/temp/qpayRoutes.js';
 
 const app = express();
@@ -81,7 +82,7 @@ app.use('/notifications', notificationRoutes);
 app.use('/notification-settings', notificationSettingsRoutes);
 app.use('/dispute', disputeRoutes);
 app.use('/admin', adminRoutes);
-app.use('/chat', chatRoutes);
+// app.use('/chat', chatRoutes); // Chat handled via Firestore directly
 app.use('/templates', templateRoutes);
 app.use('/upload', uploadRoutes);
 app.use('/users', usersRouter);
@@ -91,6 +92,7 @@ app.use('/finance', financeRoutes);
 app.use('/announcements', announcementRoutes);
 app.use('/cron', cronRoutes);
 app.use('/download', downloadRoutes);
+app.use('/pool', poolRoutes);
 app.use('/temp/qpay', qpayRoutes);
 
 app.use(notFoundHandler);

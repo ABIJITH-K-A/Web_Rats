@@ -179,14 +179,14 @@ const OrderDetailsModal = ({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
                       <div>
                         <div className="text-[8px] font-mono uppercase text-white/20 mb-2 tracking-widest">Project Summary</div>
-                        <p className="text-sm leading-relaxed text-white/70 italic">
+                        <p className="text-sm leading-relaxed text-white/70 italic break-words whitespace-pre-wrap max-w-full">
                           "{order.projectDescription || order.requirements?.projectDescription || 'No description provided.'}"
                         </p>
                       </div>
                       <div className="space-y-6">
                         <div>
                           <div className="text-[8px] font-mono uppercase text-white/20 mb-2 tracking-widest">Key Deliverables</div>
-                          <p className="text-xs text-white/60 font-medium">
+                          <p className="text-xs text-white/60 font-medium break-words whitespace-pre-wrap max-w-full">
                             {order.features || order.requirements?.features || 'Standard project features.'}
                           </p>
                         </div>
