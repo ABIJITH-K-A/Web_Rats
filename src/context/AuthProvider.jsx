@@ -140,7 +140,13 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
-        setUser(currentUser);
+        // Reload user to get fresh emailVerified status
+        try {
+          await currentUser.reload();
+        } catch (e) {
+          console.warn("Failed to reload user:", e);
+        }
+        setUser(auth.currentUser); // Use reloaded user
         // Don't block initial render — fetch profile in the background
         // so the site loads even when Firestore is unreachable (offline)
         refreshProfile(currentUser.uid).finally(() => setLoading(false));
