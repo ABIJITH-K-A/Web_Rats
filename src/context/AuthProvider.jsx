@@ -17,6 +17,7 @@ import {
   writeBatch,
 } from "firebase/firestore";
 import { auth, db } from "../config/firebase";
+import { apiRequest } from "../services/apiClient";
 import { logAuditEvent } from "../services/auditService";
 import { buildWalletDocument } from "../services/financialService";
 import {
@@ -105,8 +106,23 @@ export const AuthProvider = ({ children }) => {
       const data = await fetchUserProfile(targetUid);
       if (data) {
         setUserProfile(data);
-        setRole(normalizeRole(data.role));
+        const normalizedRole = normalizeRole(data.role);
+        setRole(normalizedRole);
         setFetchError(null);
+
+        // Optimization: If user is logged in but token claim is missing/mismatched, sync it
+        if (user && normalizedRole !== "client") {
+          const idTokenResult = await user.getIdTokenResult();
+          if (idTokenResult.claims.role !== normalizedRole) {
+            console.log("Role mismatch detected, syncing claims...");
+            try {
+              await apiRequest("/auth/sync-claims", { method: "POST", authMode: "required" });
+              await user.getIdToken(true);
+            } catch (syncErr) {
+              console.warn("Failed to background sync claims:", syncErr);
+            }
+          }
+        }
       }
     } catch (error) {
       console.error("Error refreshing profile:", error);
@@ -242,6 +258,14 @@ export const AuthProvider = ({ children }) => {
 
       await batch.commit();
 
+      // Sync claims on backend and refresh local token
+      try {
+        await apiRequest("/auth/sync-claims", { method: "POST", authMode: "required" });
+        await cred.user.getIdToken(true);
+      } catch (syncError) {
+        console.error("Failed to sync claims after signup:", syncError);
+      }
+
       await logAuditEvent({
         actorId: uid,
         actorRole: roleValue,
@@ -360,6 +384,14 @@ export const AuthProvider = ({ children }) => {
       });
 
       await batch.commit();
+
+      // Sync claims on backend and refresh local token
+      try {
+        await apiRequest("/auth/sync-claims", { method: "POST", authMode: "required" });
+        await cred.user.getIdToken(true);
+      } catch (syncError) {
+        console.error("Failed to sync claims after signup:", syncError);
+      }
 
       await logAuditEvent({
         actorId: uid,

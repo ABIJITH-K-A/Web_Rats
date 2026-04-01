@@ -1,7 +1,7 @@
 import { FieldValue } from 'firebase-admin/firestore';
 import { Router } from 'express';
 import { z } from 'zod';
-import { adminDb } from '../config/firebaseAdmin.js';
+import { adminAuth, adminDb } from '../config/firebaseAdmin.js';
 import { asyncHandler } from '../lib/asyncHandler.js';
 import { HttpError } from '../lib/httpError.js';
 import { authGuard } from '../middleware/authGuard.js';
@@ -108,6 +108,9 @@ router.post(
 
     // Apply role update
     await adminDb().collection('users').doc(targetUid).update(updates);
+
+    // Apply custom claims update for Firebase Auth
+    await adminAuth().setCustomUserClaims(targetUid, { role: newRole });
 
     // Audit log
     await adminDb().collection('auditLogs').add({

@@ -74,7 +74,18 @@ const EarningsView = () => {
         const avgRating =
           reviews.length > 0 ? Number((totalRating / reviews.length).toFixed(1)) : 0;
 
+        const last7Days = Array.from({ length: 7 }, (_, i) => {
+          const d = new Date();
+          d.setDate(d.getDate() - i);
+          return d.toLocaleDateString("en-IN", {
+            day: "2-digit",
+            month: "short",
+          });
+        }).reverse();
+
         const throughputMap = {};
+        last7Days.forEach(label => { throughputMap[label] = 0; });
+
         completedOrders.forEach((order) => {
           const dateValue = order.completedAt || order.closedAt || order.updatedAt || order.createdAt;
           const date = typeof dateValue?.toDate === "function" ? dateValue.toDate() : new Date(dateValue);
@@ -84,12 +95,16 @@ const EarningsView = () => {
             day: "2-digit",
             month: "short",
           });
-          throughputMap[label] = (throughputMap[label] || 0) + 1;
+          
+          if (throughputMap[label] !== undefined) {
+            throughputMap[label]++;
+          }
         });
 
-        const throughputData = Object.entries(throughputMap)
-          .slice(-7)
-          .map(([label, value]) => ({ label, value }));
+        const throughputData = last7Days.map(label => ({
+          label,
+          value: throughputMap[label]
+        }));
 
         setRecentReviews(reviews);
         setWeeklyThroughput(throughputData);

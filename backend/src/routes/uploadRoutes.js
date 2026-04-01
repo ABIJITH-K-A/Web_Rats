@@ -55,7 +55,7 @@ router.post(
       if (order.userId !== uid) throw new HttpError(403, 'Only the client can upload references.');
     } else {
       const isAssigned = [order.assignedTo, order.workerAssigned, ...(order.assignedWorkers || [])].includes(uid);
-      if (!isAssigned && !['admin', 'manager', 'owner', 'super_admin'].includes(role)) {
+      if (!isAssigned && !['admin', 'manager', 'owner', 'superadmin'].includes(role)) {
         throw new HttpError(403, 'Unauthorized to upload deliverables.');
       }
     }
@@ -121,7 +121,7 @@ router.get(
 
     // Access check
     const isClient = order.userId === uid;
-    const isStaff = ['admin', 'manager', 'owner', 'super_admin', 'worker'].includes(role);
+    const isStaff = ['admin', 'manager', 'owner', 'superadmin', 'worker'].includes(role);
     if (!isClient && !isStaff) throw new HttpError(403, 'Access denied.');
 
     const storagePath = `orders/${orderId}/${category}/${filename}`;

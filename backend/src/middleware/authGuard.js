@@ -48,7 +48,8 @@ export const optionalAuthGuard = async (req, res, next) => {
     await attachCurrentUser(req, decodedToken);
     next();
   } catch (error) {
-    next(new HttpError(401, 'Invalid or expired auth token.'));
+    console.error('Auth verification failed:', error.message);
+    next(new HttpError(401, `Invalid or expired auth token: ${error.message}`));
   }
 };
 
@@ -64,10 +65,11 @@ export const authGuard = async (req, res, next) => {
     await attachCurrentUser(req, decodedToken);
     next();
   } catch (error) {
+    console.error('Auth verification failed:', error.message);
     next(
       error instanceof HttpError
         ? error
-        : new HttpError(401, 'Invalid or expired auth token.')
+        : new HttpError(401, `Invalid or expired auth token: ${error.message}`)
     );
   }
 };

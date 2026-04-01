@@ -28,9 +28,26 @@ router.get(
   authGuard,
   roleGuard(['admin', 'superadmin', 'owner']),
   asyncHandler(async (req, res) => {
-    const snapshot = await adminDb().collection('orders').limit(150).get();
+    const limit = Number(req.query.limit) || 50;
+    const lastDocId = req.query.lastDocId;
+
+    let query = adminDb()
+      .collection('orders')
+      .orderBy('createdAt', 'desc')
+      .limit(limit);
+
+    if (lastDocId) {
+      const lastDoc = await adminDb().collection('orders').doc(lastDocId).get();
+      if (lastDoc.exists) {
+        query = query.startAfter(lastDoc);
+      }
+    }
+
+    const snapshot = await query.get();
     res.json({
-      orders: sortByCreatedAtDesc(snapshot.docs.map(serializeDocument)),
+      orders: snapshot.docs.map(serializeDocument),
+      lastDocId: snapshot.docs.length > 0 ? snapshot.docs[snapshot.docs.length - 1].id : null,
+      hasMore: snapshot.docs.length === limit,
     });
   })
 );

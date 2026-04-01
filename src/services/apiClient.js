@@ -32,7 +32,7 @@ const getAuthorizationHeader = async (authMode = 'optional') => {
     return {};
   }
 
-  const token = await currentUser.getIdToken();
+  const token = await currentUser.getIdToken(authMode === 'required');
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 

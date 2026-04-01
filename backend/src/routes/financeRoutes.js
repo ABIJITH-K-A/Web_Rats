@@ -65,9 +65,17 @@ router.put(
 router.get(
   '/overview',
   authGuard,
-  roleGuard(['owner', 'super_admin']),
+  roleGuard(['owner', 'superadmin']),
   asyncHandler(async (req, res) => {
-    const txSnap = await adminDb().collection('transactions').get();
+    // Immediate Fix: Limit to 50 to prevent crash at scale.
+    // NOTE: This will only provide overview of the latest 50 transactions.
+    // REAL FIX: Move to PostgreSQL for proper aggregation.
+    const txSnap = await adminDb()
+      .collection('transactions')
+      .orderBy('createdAt', 'desc')
+      .limit(50)
+      .get();
+    
     const transactions = txSnap.docs.map((d) => d.data());
 
     const revenue = transactions
@@ -114,7 +122,7 @@ router.get(
 router.post(
   '/generate-bills',
   authGuard,
-  roleGuard(['owner', 'super_admin']),
+  roleGuard(['owner', 'superadmin']),
   asyncHandler(async (req, res) => {
     const { month } = req.body; // format '2026-03'
     if (!month) throw new HttpError(400, 'Month is required.');
@@ -128,7 +136,7 @@ router.post(
 router.post(
   '/pay-bill',
   authGuard,
-  roleGuard(['owner', 'super_admin']),
+  roleGuard(['owner', 'superadmin']),
   asyncHandler(async (req, res) => {
     const { billId } = req.body;
     if (!billId) throw new HttpError(400, 'Bill ID is required.');

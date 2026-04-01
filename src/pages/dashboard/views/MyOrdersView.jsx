@@ -8,6 +8,7 @@ import {
   ExternalLink,
   Package,
   UserRound,
+  MessageCircle,
 } from 'lucide-react';
 import {
   addDoc,
@@ -22,9 +23,11 @@ import {
 import { db } from '../../../config/firebase';
 import { useAuth } from '../../../context/AuthContext';
 import OrderDetailsModal from '../../../components/dashboard/OrderDetailsModal';
+import ContactClientModal from '../../../components/dashboard/ContactClientModal';
 import { logAuditEvent } from '../../../services/auditService';
 import { notifyOrderStatusChanged } from '../../../services/notificationService';
 import { fetchOrdersAssignedToUser } from '../../../services/orderService';
+import { initializeChatThread } from '../../../services/chatService';
 import {
   buildOrderStatusPatch,
   getCustomerTypeLabel,
@@ -47,6 +50,7 @@ const MyOrdersView = () => {
   const [orders, setOrders] = useState([]);
   const [statusFilter, setStatusFilter] = useState('assigned');
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [contactModalOrder, setContactModalOrder] = useState(null);
 
   useEffect(() => {
     if (!user?.uid) return;
@@ -112,6 +116,37 @@ const MyOrdersView = () => {
     } catch (error) {
       console.error(error);
     }
+  };
+
+  const handleContactClient = (order) => {
+    setContactModalOrder(order);
+    setSelectedOrder(null);
+  };
+
+  const handleOpenChat = async () => {
+    if (!contactModalOrder || !user?.uid) return;
+    
+    // Initialize chat thread if needed
+    const clientId = contactModalOrder.userId || contactModalOrder.customerId;
+    if (clientId && clientId !== 'guest') {
+      await initializeChatThread(contactModalOrder.id, [
+        user.uid,
+        clientId
+      ]);
+    }
+    
+    // Close contact modal
+    setContactModalOrder(null);
+    
+    // Open chat via global event
+    window.dispatchEvent(new CustomEvent('open-chat', {
+      detail: { 
+        activeOrder: { 
+          id: contactModalOrder.id, 
+          serviceTitle: contactModalOrder.service 
+        } 
+      }
+    }));
   };
 
   return (
@@ -287,12 +322,22 @@ const MyOrdersView = () => {
       </div>
 
       <AnimatePresence>
+        {contactModalOrder && (
+          <ContactClientModal 
+            order={contactModalOrder}
+            onClose={() => setContactModalOrder(null)}
+            onOpenChat={handleOpenChat}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
         {selectedOrder && (
           <OrderDetailsModal 
             order={selectedOrder}
             userRole={userProfile?.role}
             onClose={() => setSelectedOrder(null)}
-            onContact={() => {/* handle contact logic */}}
+            onContact={() => handleContactClient(selectedOrder)}
             onUpdateStatus={(o, s) => handleUpdateStatus(o, s)}
           />
         )}

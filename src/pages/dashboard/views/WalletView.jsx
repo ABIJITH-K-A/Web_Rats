@@ -70,7 +70,12 @@ const WalletView = () => {
     }
 
     if (amount < FINANCIAL_CONSTANTS.MIN_WITHDRAWAL) {
-      setError(`Minimum withdrawal is Rs ${FINANCIAL_CONSTANTS.MIN_WITHDRAWAL}`);
+      setError(`Minimum withdrawal is ₹${FINANCIAL_CONSTANTS.MIN_WITHDRAWAL}`);
+      return;
+    }
+
+    if (!payoutForm.note || payoutForm.note.length < 5) {
+      setError('Please provide valid payment details (UPI ID or Bank Info) in the notes.');
       return;
     }
 
@@ -109,8 +114,8 @@ const WalletView = () => {
   };
 
   const formatCurrency = (value) => {
-    if (value === undefined || value === null) return 'Rs 0';
-    return `Rs ${Number(value).toLocaleString('en-IN')}`;
+    if (value === undefined || value === null) return '₹0';
+    return `₹${Number(value).toLocaleString('en-IN')}`;
   };
 
   const stats = wallet
@@ -147,28 +152,28 @@ const WalletView = () => {
     : [
         {
           label: 'Total Earnings',
-          val: 'Rs 0',
+          val: '₹0',
           icon: <Coins size={20} />,
           color: 'text-cyan-primary',
           bg: 'bg-[#0f1f1f]',
         },
         {
           label: 'Withdrawable',
-          val: 'Rs 0',
+          val: '₹0',
           icon: <Wallet size={20} />,
           color: 'text-green-500',
           bg: 'bg-[#0f1f15]',
         },
         {
           label: 'Pending',
-          val: 'Rs 0',
+          val: '₹0',
           icon: <Clock size={20} />,
           color: 'text-yellow-500',
           bg: 'bg-[#1f1f0f]',
         },
         {
           label: 'On Hold',
-          val: 'Rs 0',
+          val: '₹0',
           icon: <AlertCircle size={20} />,
           color: 'text-red-500',
           bg: 'bg-[#1f0f0f]',
@@ -270,9 +275,10 @@ const WalletView = () => {
             </div>
             <div className="space-y-1">
               <label className="text-[10px] font-mono uppercase tracking-widest text-white/20">
-                Payment Details / Notes
+                Payment Details / Notes *
               </label>
               <textarea
+                required
                 className="min-h-[100px] w-full resize-none rounded-xl border border-white/10 bg-[#262B25] px-4 py-3 text-sm outline-none transition-all focus:border-cyan-primary"
                 placeholder="Enter UPI ID or Bank details (A/C Name, Number, IFSC)"
                 value={payoutForm.note}
@@ -337,7 +343,7 @@ const WalletView = () => {
                         #{payout.id.slice(-8).toUpperCase()}
                       </td>
                       <td className="px-6 py-4 font-black italic text-cyan-primary">
-                        Rs {payout.amount?.toLocaleString('en-IN')}
+                        ₹ {payout.amount?.toLocaleString('en-IN')}
                       </td>
                       <td className="px-6 py-4 text-[10px] font-mono uppercase text-white/40">
                         <div>{payout.method}</div>
@@ -373,7 +379,7 @@ const WalletView = () => {
           </h4>
           <p className="text-[10px] font-mono uppercase tracking-[0.15em] leading-relaxed text-white/40">
             Standard payouts are processed on the 1st of every month. Emergency
-            withdrawals (Min Rs 1000) can be requested anytime but require 48h approval
+            withdrawals (Min ₹{FINANCIAL_CONSTANTS.MIN_WITHDRAWAL}) can be requested anytime but require 48h approval
             from the Finance team. Ensure your UPI details are accurate in the notes.
           </p>
         </div>

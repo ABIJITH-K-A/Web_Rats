@@ -1,14 +1,17 @@
-import { FieldValue } from 'firebase-admin/firestore';
+import { FieldValue, Filter } from 'firebase-admin/firestore';
 import { Router } from 'express';
+// ... (rest of imports)
 import { z } from 'zod';
 import { adminDb } from '../config/firebaseAdmin.js';
 import { asyncHandler } from '../lib/asyncHandler.js';
 import { HttpError } from '../lib/httpError.js';
 import {
   buildOrderStatusPatch,
+  canTransitionOrderStatus,
   getAllowedStatusUpdates,
   getAssignedWorkerIds,
   getOrderStatusLabel,
+  normalizeOrderStatus,
 } from '../lib/orderStatus.js';
 import { isAdminLikeRole, isManagerLikeRole, normalizeValue } from '../lib/roles.js';
 import { serializeDocument } from '../lib/serialize.js';
@@ -171,26 +174,37 @@ router.get(
   asyncHandler(async (req, res) => {
     const targetUid = req.params.uid;
     const currentUser = req.currentUser;
+    const limit = Number(req.query.limit) || 20;
+    const lastDocId = req.query.lastDocId;
 
     if (currentUser.uid !== targetUid && !isManagerLikeRole(currentUser.role)) {
       throw new HttpError(403, 'You do not have access to this order list.');
     }
 
-    const [userOrdersSnapshot, customerOrdersSnapshot] = await Promise.all([
-      adminDb().collection('orders').where('userId', '==', targetUid).get(),
-      adminDb().collection('orders').where('customerId', '==', targetUid).get(),
-    ]);
+    let query = adminDb()
+      .collection('orders')
+      .where(
+        Filter.or(
+          Filter.where('userId', '==', targetUid),
+          Filter.where('customerId', '==', targetUid)
+        )
+      )
+      .orderBy('createdAt', 'desc')
+      .limit(limit);
 
-    const merged = new Map();
+    if (lastDocId) {
+      const lastDoc = await adminDb().collection('orders').doc(lastDocId).get();
+      if (lastDoc.exists) {
+        query = query.startAfter(lastDoc);
+      }
+    }
 
-    [userOrdersSnapshot, customerOrdersSnapshot].forEach((snapshot) => {
-      snapshot.docs.forEach((docSnapshot) => {
-        merged.set(docSnapshot.id, serializeDocument(docSnapshot));
-      });
-    });
+    const snapshot = await query.get();
 
     res.json({
-      orders: sortByCreatedAtDesc(Array.from(merged.values())),
+      orders: snapshot.docs.map(serializeDocument),
+      lastDocId: snapshot.docs.length > 0 ? snapshot.docs[snapshot.docs.length - 1].id : null,
+      hasMore: snapshot.docs.length === limit,
     });
   })
 );
@@ -217,11 +231,24 @@ router.patch(
       throw new HttpError(403, 'You cannot move the order to that status.');
     }
 
+    const currentStatusKey = normalizeOrderStatus(order?.statusKey || order?.status);
+    const requestedStatusKey = normalizeOrderStatus(nextStatus);
+
+    if (
+      !canTransitionOrderStatus({
+        role: currentUser.role,
+        currentStatus: currentStatusKey,
+        nextStatus: requestedStatusKey,
+      })
+    ) {
+      throw new HttpError(403, 'Invalid order status transition.');
+    }
+
     if (!canViewOrder(currentUser, { id: orderSnapshot.id, ...order })) {
       throw new HttpError(403, 'You do not have access to update this order.');
     }
 
-    const patch = buildOrderStatusPatch(nextStatus);
+    const patch = buildOrderStatusPatch(requestedStatusKey);
     await orderRef.update(patch);
 
     const updatedSnapshot = await orderRef.get();

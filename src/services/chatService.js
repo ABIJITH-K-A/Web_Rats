@@ -13,7 +13,8 @@ import {
   getDoc,
   setDoc,
   limit,
-  writeBatch
+  writeBatch,
+  startAfter
 } from "firebase/firestore";
 import { sanitizeData } from "../utils/sanitize";
 
@@ -142,21 +143,35 @@ export const getUnreadMessageCount = async (userId, role) => {
 };
 
 /**
- * Listen for new messages in a single thread
+ * Listen for new messages in a single thread with pagination support
+ * @param {string} orderId - The order ID
+ * @param {Function} callback - Called with messages array
+ * @param {Object} options - Pagination options
+ * @param {number} options.limit - Number of messages to fetch (default: 50)
+ * @param {DocumentSnapshot} options.startAfter - Document to start after for pagination
  */
-export const subscribeToThread = (orderId, callback) => {
-  const q = query(
+export const subscribeToThread = (orderId, callback, options = {}) => {
+  const { limit: msgLimit = 50, startAfter } = options;
+  
+  let q = query(
     collection(db, "chatMessages"),
     where("orderId", "==", orderId),
-    orderBy("createdAt", "asc")
+    orderBy("createdAt", "desc"),
+    limit(msgLimit)
   );
 
+  if (startAfter) {
+    q = query(q, startAfter(startAfter));
+  }
+
   return onSnapshot(q, (snapshot) => {
-    const messages = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data()
-    }));
-    callback(messages);
+    const messages = snapshot.docs
+      .map((doc) => ({
+        id: doc.id,
+        ...doc.data()
+      }))
+      .reverse(); // Reverse to show oldest first
+    callback(messages, snapshot.docs[snapshot.docs.length - 1]);
   });
 };
 

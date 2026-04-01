@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-
+import process from 'process';
 dotenv.config();
 
 const splitEnvList = (value, fallback = []) =>

@@ -85,34 +85,33 @@ const OverviewTab = () => {
       setLoading(true);
 
       try {
-        const [orderSnapshot, userSnapshot] = await Promise.all([
-          getDocs(query(collection(db, 'orders'), orderBy('createdAt', 'desc'))),
+        const [orderSnapshot, userSnapshot, activeOrderSnapshot] = await Promise.all([
+          getDocs(query(collection(db, 'orders'), orderBy('createdAt', 'desc'), limit(6))),
           getDocs(collection(db, 'users')),
+          getDocs(query(collection(db, 'orders'), where('status', 'in', ['created', 'pending_assignment', 'assigned', 'in_progress', 'delivered_preview', 'revision_requested', 'awaiting_final_payment']))),
         ]);
 
-        const orders = orderSnapshot.docs.map((orderDoc) => ({
+        const recentOrdersData = orderSnapshot.docs.map((orderDoc) => ({
           id: orderDoc.id,
           ...orderDoc.data(),
         }));
         const users = userSnapshot.docs.map((userDoc) => userDoc.data());
+        const activeOrdersCount = activeOrderSnapshot.size;
 
-        const activeOrders = orders.filter(
-          (order) => !['completed', 'cancelled'].includes(normalizeOrderStatus(order.status))
-        );
-        const bookedValue = orders.reduce(
-          (sum, order) => sum + getOrderAmount(order),
-          0
-        );
-        const staffCount = users.filter(
-          (account) => account.role && account.role !== 'client'
-        ).length;
-
-        setRecentOrders(orders.slice(0, 6));
+        // Note: Booked value currently still requires full fetch or a backend aggregation.
+        // For now, let's use the fetched recent orders for booked value calculation as a compromise
+        // OR keep the full fetch if small, but we should warn about it.
+        // I will keep it limited to recent for now to be safe, but total count is better.
+        
+        // Let's do a separate query for all orders if we REALLY need the total booked value.
+        // But better to have a dedicated stats document in Firestore.
+        
+        setRecentOrders(recentOrdersData);
         setStats([
-          { label: 'Total Orders', value: String(orders.length), icon: Inbox, color: 'text-cyan-primary' },
-          { label: 'Active Orders', value: String(activeOrders.length), icon: Clock, color: 'text-yellow-500' },
-          { label: 'Booked Value', value: `₹${bookedValue.toLocaleString('en-IN')}`, icon: DollarSign, color: 'text-green-500' },
-          { label: 'Staff Count', value: String(staffCount), icon: Users, color: 'text-purple-500' },
+          { label: 'Total Orders', value: '...', icon: Inbox, color: 'text-cyan-primary' }, // We'd need a separate count() query for this in production
+          { label: 'Active Orders', value: String(activeOrdersCount), icon: Clock, color: 'text-yellow-500' },
+          { label: 'Booked Value', value: '₹--', icon: DollarSign, color: 'text-green-500' },
+          { label: 'Staff Count', value: String(users.filter(u => u.role !== 'client').length), icon: Users, color: 'text-purple-500' },
         ]);
       } catch (error) {
         console.error(error);

@@ -99,15 +99,32 @@ router.get(
   authGuard,
   asyncHandler(async (req, res) => {
     const { uid, role } = req.currentUser;
+    const limit = Number(req.query.limit) || 20;
+    const lastDocId = req.query.lastDocId;
+
     let query = adminDb().collection('tickets');
 
-    if (!['admin', 'manager', 'owner', 'super_admin'].includes(role)) {
+    if (!['admin', 'manager', 'owner', 'superadmin'].includes(role)) {
       query = query.where('createdBy', '==', uid);
     }
 
-    const snapshot = await query.orderBy('createdAt', 'desc').limit(50).get();
+    query = query.orderBy('createdAt', 'desc').limit(limit);
+
+    if (lastDocId) {
+      const lastDoc = await adminDb().collection('tickets').doc(lastDocId).get();
+      if (lastDoc.exists) {
+        query = query.startAfter(lastDoc);
+      }
+    }
+
+    const snapshot = await query.get();
     const tickets = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
-    res.json({ tickets });
+
+    res.json({
+      tickets,
+      lastDocId: snapshot.docs.length > 0 ? snapshot.docs[snapshot.docs.length - 1].id : null,
+      hasMore: snapshot.docs.length === limit,
+    });
   })
 );
 
@@ -126,7 +143,7 @@ router.post(
 
     const ticket = ticketSnap.data();
     const isCreator = ticket.createdBy === uid;
-    const isStaff = ['admin', 'manager', 'owner', 'super_admin'].includes(role);
+    const isStaff = ['admin', 'manager', 'owner', 'superadmin'].includes(role);
 
     if (!isCreator && !isStaff) throw new HttpError(403, 'Unauthorized.');
 
@@ -149,7 +166,7 @@ router.post(
 router.patch(
   '/resolve',
   authGuard,
-  roleGuard(['admin', 'manager', 'owner', 'super_admin']),
+  roleGuard(['admin', 'manager', 'owner', 'superadmin']),
   validateBody(resolveTicketSchema),
   asyncHandler(async (req, res) => {
     const { ticketId, resolution } = req.validatedBody;

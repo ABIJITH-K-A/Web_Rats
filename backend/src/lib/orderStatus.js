@@ -50,6 +50,47 @@ export const normalizeOrderStatus = (value) => {
 export const getOrderStatusLabel = (value) =>
   ORDER_STATUS_LABELS[normalizeOrderStatus(value)] || ORDER_STATUS_LABELS.pending_assignment;
 
+export const canTransitionOrderStatus = ({
+  role = 'client',
+  currentStatus,
+  nextStatus,
+} = {}) => {
+  const normalizedRole = normalizeValue(role);
+  const fromStatus = normalizeOrderStatus(currentStatus);
+  const toStatus = normalizeOrderStatus(nextStatus);
+
+  if (!fromStatus || !toStatus) return false;
+  if (fromStatus === toStatus) return true;
+
+  const isWorker = normalizedRole === 'worker';
+  const isClient = normalizedRole === 'client';
+  const isManagerLike = normalizedRole === 'manager' || normalizedRole === 'admin' || normalizedRole === 'superadmin' || normalizedRole === 'owner';
+
+  if (isManagerLike) return true;
+
+  if (isWorker) {
+    const allowed = {
+      assigned: ['in_progress'],
+      in_progress: ['delivered_preview'],
+      revision_requested: ['in_progress', 'delivered_preview'],
+      delivered_preview: ['awaiting_final_payment'],
+    };
+
+    return Boolean(allowed[fromStatus]?.includes(toStatus));
+  }
+
+  if (isClient) {
+    const allowed = {
+      delivered_preview: ['revision_requested', 'awaiting_final_payment'],
+      awaiting_final_payment: ['completed'],
+    };
+
+    return Boolean(allowed[fromStatus]?.includes(toStatus));
+  }
+
+  return false;
+};
+
 export const getAllowedStatusUpdates = (role = 'client') => {
   const normalizedRole = normalizeValue(role);
 

@@ -3,7 +3,7 @@ import express from 'express';
 import helmet from 'helmet';
 import { env } from './config/env.js';
 import { HttpError } from './lib/httpError.js';
-import { apiLimiter } from './middleware/rateLimits.js';
+import { apiLimiter, authLimiter } from './middleware/rateLimits.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { notFoundHandler } from './middleware/notFound.js';
 import { sanitizeRequest } from './middleware/sanitize.js';
@@ -27,6 +27,7 @@ import ticketRoutes from './routes/ticketRoutes.js';
 import workerProfileRoutes from './routes/workerProfileRoutes.js';
 import financeRoutes from './routes/financeRoutes.js';
 import announcementRoutes from './routes/announcementRoutes.js';
+import downloadRoutes from './routes/downloadRoutes.js';
 import qpayRoutes from './routes/temp/qpayRoutes.js';
 
 const app = express();
@@ -72,7 +73,7 @@ app.use(requestLogger);
 app.use(generateCsrfToken);
 
 app.use(healthRoutes);
-app.use('/auth', authRoutes);
+app.use('/auth', authLimiter, authRoutes);
 app.use('/payment', paymentRoutes);
 app.use('/orders', orderRoutes);
 app.use('/wallet', walletRoutes);
@@ -89,6 +90,7 @@ app.use('/worker-profile', workerProfileRoutes);
 app.use('/finance', financeRoutes);
 app.use('/announcements', announcementRoutes);
 app.use('/cron', cronRoutes);
+app.use('/download', downloadRoutes);
 app.use('/temp/qpay', qpayRoutes);
 
 app.use(notFoundHandler);
