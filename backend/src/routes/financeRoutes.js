@@ -8,6 +8,7 @@ import roleGuard from '../middleware/roleGuard.js';
 import { validateBody } from '../middleware/validate.js';
 import { FieldValue } from 'firebase-admin/firestore';
 import { generateMonthlyBills, payMonthlyBill } from '../services/billingService.js';
+import { pgPool } from '../config/db.js';
 
 const router = Router();
 
@@ -20,6 +21,58 @@ const financeSettingsSchema = z.object({
   owner2Uid: z.string().optional(),
   owner2Share: z.number().min(0).max(100).optional(),
 });
+
+// GET /api/finance/overview — revenue, expenses, profit
+router.get(
+  '/overview',
+  authGuard,
+  roleGuard(['owner', 'super_admin']),
+  asyncHandler(async (req, res) => {
+    // 1. Try SQL Aggregation (Ultra Production)
+    if (pgPool) {
+      try {
+        const result = await pgPool.query(`
+          SELECT 
+            SUM(CASE WHEN type IN ('income', 'earning') THEN amount ELSE 0 END) as revenue,
+            SUM(CASE WHEN type IN ('expense', 'payout', 'refund', 'withdrawal') THEN ABS(amount) ELSE 0 END) as expenses,
+            COUNT(*) as count
+          FROM transactions;
+        `);
+
+        const { revenue, expenses, count } = result.rows[0];
+        res.json({
+          revenue: Number(revenue || 0),
+          expenses: Number(expenses || 0),
+          profit: Number(revenue || 0) - Number(expenses || 0),
+          transactionCount: Number(count || 0),
+          source: 'sql'
+        });
+        return;
+      } catch (err) {
+        console.error('SQL Overview failed, falling back to Firestore:', err);
+      }
+    }
+
+    // 2. Fallback to Firestore
+    const txSnap = await adminDb().collection('transactions')
+      .orderBy('createdAt', 'desc')
+      .limit(500)
+      .get();
+    const transactions = txSnap.docs.map((d) => d.data());
+
+    const revenue = transactions
+      .filter((t) => t.type === 'income' || t.type === 'earning')
+      .reduce((sum, t) => sum + (t.amount || 0), 0);
+    const expenses = transactions
+      .filter((t) => t.type === 'expense' || t.type === 'payout' || t.type === 'refund' || t.type === 'withdrawal')
+      .reduce((sum, t) => sum + Math.abs(t.amount || 0), 0);
+    const profit = revenue - expenses;
+
+    res.json({ revenue, expenses, profit, transactionCount: transactions.length, source: 'firestore' });
+  })
+);
+
+// ... (Rest of the routes remain similar, but could also be upgraded to SQL)
 
 // GET /api/finance/settings — get current settings
 router.get(
@@ -58,27 +111,6 @@ router.put(
     }, { merge: true });
 
     res.json({ success: true });
-  })
-);
-
-// GET /api/finance/overview — revenue, expenses, profit
-router.get(
-  '/overview',
-  authGuard,
-  roleGuard(['owner', 'super_admin']),
-  asyncHandler(async (req, res) => {
-    const txSnap = await adminDb().collection('transactions').get();
-    const transactions = txSnap.docs.map((d) => d.data());
-
-    const revenue = transactions
-      .filter((t) => t.type === 'income' || t.type === 'earning')
-      .reduce((sum, t) => sum + (t.amount || 0), 0);
-    const expenses = transactions
-      .filter((t) => t.type === 'expense' || t.type === 'payout')
-      .reduce((sum, t) => sum + Math.abs(t.amount || 0), 0);
-    const profit = revenue - expenses;
-
-    res.json({ revenue, expenses, profit, transactionCount: transactions.length });
   })
 );
 

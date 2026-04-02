@@ -16,11 +16,31 @@ import {
   writeBatch
 } from "firebase/firestore";
 import { sanitizeData } from "../utils/sanitize";
+import { apiRequest, isBackendConfigured } from "./apiClient";
 
 /**
  * Send a message to an order's chat thread
+ * Uses Backend API for security, rate limiting and validation.
  */
 export const sendMessage = async (orderId, messageData) => {
+  if (isBackendConfigured()) {
+    try {
+      const response = await apiRequest('/chat/send', {
+        method: 'POST',
+        authMode: 'required',
+        body: {
+          orderId,
+          text: messageData.text,
+          userName: messageData.userName,
+          userRole: messageData.userRole
+        }
+      });
+      return response?.id;
+    } catch (error) {
+      console.warn('Backend chat send failed, falling back to direct Firestore:', error.message);
+    }
+  }
+
   try {
     const safeMessageData = sanitizeData(messageData);
 
@@ -65,6 +85,25 @@ export const sendMessage = async (orderId, messageData) => {
     console.error("Error sending message:", error);
     throw error;
   }
+};
+
+/**
+ * Listen for new messages in a single thread (Real-time via Firestore)
+ */
+export const subscribeToThread = (orderId, callback) => {
+  const q = query(
+    collection(db, "chatMessages"),
+    where("orderId", "==", orderId),
+    orderBy("createdAt", "asc")
+  );
+
+  return onSnapshot(q, (snapshot) => {
+    const messages = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    callback(messages);
+  });
 };
 
 /**
@@ -142,44 +181,7 @@ export const getUnreadMessageCount = async (userId, role) => {
 };
 
 /**
- * Listen for new messages in a single thread
- */
-export const subscribeToThread = (orderId, callback) => {
-  const q = query(
-    collection(db, "chatMessages"),
-    where("orderId", "==", orderId),
-    orderBy("createdAt", "asc")
-  );
-
-  return onSnapshot(q, (snapshot) => {
-    const messages = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data()
-    }));
-    callback(messages);
-  });
-};
-
-/**
- * Get a conversation by ID
- */
-export const getConversationById = async (conversationId) => {
-  try {
-    const threadRef = doc(db, "chatThreads", conversationId);
-    const threadSnap = await getDoc(threadRef);
-    
-    if (threadSnap.exists()) {
-      return { id: threadSnap.id, ...threadSnap.data() };
-    }
-    return null;
-  } catch (error) {
-    console.error("Error getting conversation:", error);
-    return null;
-  }
-};
-
-/**
- * Get active threads for a specific user based on their role
+ * Get active threads for a specific user
  */
 export const getThreads = (userId, role, callback) => {
   let ordersQuery;
@@ -223,7 +225,7 @@ export const getThreads = (userId, role, callback) => {
 };
 
 /**
- * Initialize chat thread for an order
+ * Initialize chat thread
  */
 export const initializeChatThread = async (orderId, participants) => {
   try {

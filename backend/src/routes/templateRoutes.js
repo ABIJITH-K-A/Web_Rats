@@ -26,7 +26,7 @@ router.get(
     today.setHours(0, 0, 0, 0);
 
     const snapshots = await db.collection('templatePurchases')
-      .where('userId', '==', req.user.uid)
+      .where('userId', '==', req.currentUser.uid)
       .where('createdAt', '>=', today.toISOString())
       .where('type', '==', 'free')
       .get();
@@ -46,7 +46,7 @@ router.post(
   asyncHandler(async (req, res) => {
     const { templateId, templateTitle, isFree, price } = req.body;
     const db = adminDb();
-    const userId = req.user.uid;
+    const userId = req.currentUser.uid;
 
     // Check if already unlocked
     const existing = await db.collection('templatePurchases')

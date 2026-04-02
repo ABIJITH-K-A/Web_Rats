@@ -57,7 +57,7 @@ router.post(
         statusKey: 'created',
         paymentStatus: 'paid',
         paymentVerifiedAt: FieldValue.serverTimestamp(),
-        paymentVerifiedBy: req.user.uid,
+        paymentVerifiedBy: req.currentUser.uid,
         updatedAt: FieldValue.serverTimestamp(),
       });
     } else {

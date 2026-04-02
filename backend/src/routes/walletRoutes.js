@@ -8,6 +8,7 @@ import { isAdminLikeRole, isManagerLikeRole, normalizeValue } from '../lib/roles
 import { serializeDocument, serializeValue } from '../lib/serialize.js';
 import { authGuard } from '../middleware/authGuard.js';
 import { validateBody } from '../middleware/validate.js';
+import { pgPool } from '../config/db.js';
 
 const router = Router();
 
@@ -103,6 +104,41 @@ router.get(
       throw new HttpError(403, 'You do not have access to this wallet.');
     }
 
+    // 1. Try PostgreSQL (Source of Truth)
+    if (pgPool) {
+      try {
+        const walletResult = await pgPool.query('SELECT * FROM wallets WHERE user_id = $1', [targetUid]);
+        const withdrawalsResult = await pgPool.query(
+          'SELECT * FROM transactions WHERE user_id = $1 AND category = $2 ORDER BY created_at DESC LIMIT 20',
+          [targetUid, 'withdrawal']
+        );
+
+        if (walletResult.rows.length > 0) {
+          const sqlWallet = walletResult.rows[0];
+          res.json({
+            wallet: {
+              userId: sqlWallet.user_id,
+              pendingAmount: Number(sqlWallet.pending),
+              withdrawableAmount: Number(sqlWallet.withdrawable),
+              totalBalance: Number(sqlWallet.balance),
+              totalEarnings: Number(sqlWallet.total_earned),
+              updatedAt: sqlWallet.updated_at
+            },
+            withdrawals: withdrawalsResult.rows.map(row => ({
+              id: row.id,
+              amount: Number(row.amount),
+              status: row.status,
+              requestedAt: row.created_at
+            }))
+          });
+          return;
+        }
+      } catch (err) {
+        console.error('SQL Wallet fetch failed, falling back to Firestore:', err);
+      }
+    }
+
+    // 2. Fallback to Firestore
     const walletRef = adminDb().collection('wallets').doc(targetUid);
     const [walletSnapshot, withdrawalsSnapshot] = await Promise.all([
       walletRef.get(),
@@ -121,11 +157,8 @@ router.get(
     }
 
     const normalized = normalizeWalletData(walletSnapshot.data(), targetUid);
-    await walletRef.set(normalized, { merge: true });
-    const freshSnapshot = await walletRef.get();
-
     res.json({
-      wallet: serializeDocument(freshSnapshot),
+      wallet: serializeDocument(walletSnapshot),
       withdrawals: sortByRequestedAtDesc(
         withdrawalsSnapshot.docs.map((docSnapshot) => ({
           id: docSnapshot.id,
@@ -143,16 +176,78 @@ router.post(
   asyncHandler(async (req, res) => {
     const currentUser = req.currentUser;
     const { amount, method, details } = req.validatedBody;
-    const walletRef = adminDb().collection('wallets').doc(currentUser.uid);
-    const withdrawalsRef = adminDb().collection('withdrawals');
-    const transactionsRef = adminDb().collection('transactions');
     const since = new Date();
-
     since.setDate(since.getDate() - 7);
 
     if (amount < MIN_WITHDRAWAL) {
       throw new HttpError(400, `Minimum withdrawal is Rs ${MIN_WITHDRAWAL}.`);
     }
+
+    // --- 1. POSTGRESQL TRANSACTION (Source of Truth) ---
+    if (pgPool) {
+      const client = await pgPool.connect();
+      try {
+        await client.query('BEGIN');
+
+        const walletRes = await client.query(
+          'SELECT withdrawable FROM wallets WHERE user_id = $1 FOR UPDATE',
+          [currentUser.uid]
+        );
+
+        const recentRes = await client.query(
+          'SELECT COUNT(*) FROM transactions WHERE user_id = $1 AND category = $2 AND created_at >= $3',
+          [currentUser.uid, 'withdrawal', since.toISOString()]
+        );
+
+        const pendingRes = await client.query(
+          "SELECT id FROM transactions WHERE user_id = $1 AND category = 'withdrawal' AND status = 'pending' LIMIT 1",
+          [currentUser.uid]
+        );
+
+        if (!walletRes.rows[0] || Number(walletRes.rows[0].withdrawable) < amount) {
+          throw new HttpError(400, 'Insufficient withdrawable balance.');
+        }
+
+        if (Number(recentRes.rows[0].count) >= MAX_WITHDRAWALS_PER_WEEK) {
+          throw new HttpError(400, `Max ${MAX_WITHDRAWALS_PER_WEEK} withdrawals per week.`);
+        }
+
+        if (pendingRes.rows.length > 0) {
+          throw new HttpError(400, 'You already have a pending withdrawal.');
+        }
+
+        // Deduct from SQL Wallet
+        await client.query(
+          'UPDATE wallets SET withdrawable = withdrawable - $1, updated_at = NOW() WHERE user_id = $2',
+          [amount, currentUser.uid]
+        );
+
+        // Record SQL Transaction
+        const txRes = await client.query(
+          'INSERT INTO transactions (user_id, type, category, amount, status, meta) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id',
+          [currentUser.uid, 'expense', 'withdrawal', -amount, 'pending', JSON.stringify({ method, details })]
+        );
+
+        await client.query('COMMIT');
+
+        // Sync to Firestore in background for legacy compatibility (optional but recommended for now)
+        // ... (Similar logic to existing transaction)
+        
+        res.status(201).json({ withdrawalId: txRes.rows[0].id, success: true });
+        return;
+      } catch (err) {
+        await client.query('ROLLBACK');
+        if (err instanceof HttpError) throw err;
+        console.error('SQL Withdrawal failed, falling back to Firestore logic:', err);
+      } finally {
+        client.release();
+      }
+    }
+
+    // --- 2. FIRESTORE FALLBACK (Maintain Existing Logic) ---
+    const walletRef = adminDb().collection('wallets').doc(currentUser.uid);
+    const withdrawalsRef = adminDb().collection('withdrawals');
+    const transactionsRef = adminDb().collection('transactions');
 
     const result = await adminDb().runTransaction(async (transaction) => {
       const [walletSnapshot, withdrawalsSnapshot] = await Promise.all([

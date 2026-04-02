@@ -177,8 +177,8 @@ router.get(
     }
 
     const [userOrdersSnapshot, customerOrdersSnapshot] = await Promise.all([
-      adminDb().collection('orders').where('userId', '==', targetUid).get(),
-      adminDb().collection('orders').where('customerId', '==', targetUid).get(),
+      adminDb().collection('orders').where('userId', '==', targetUid).orderBy('createdAt', 'desc').limit(50).get(),
+      adminDb().collection('orders').where('customerId', '==', targetUid).orderBy('createdAt', 'desc').limit(50).get(),
     ]);
 
     const merged = new Map();

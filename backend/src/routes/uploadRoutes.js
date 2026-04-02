@@ -41,6 +41,12 @@ router.post(
     const { uid, role } = req.currentUser;
 
     if (!file) throw new HttpError(400, 'No file provided.');
+
+    // Validate file type (MIME type check)
+    if (!ALLOWED_TYPES.includes(file.mimetype)) {
+      throw new HttpError(400, `Invalid file type: ${file.mimetype}. Allowed types are: ${ALLOWED_TYPES.join(', ')}`);
+    }
+
     if (!['reference', 'preview', 'revision', 'final'].includes(category)) {
       throw new HttpError(400, 'Invalid category.');
     }

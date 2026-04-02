@@ -26,6 +26,10 @@ const profileSchema = z.object({
   }).optional(),
 });
 
+const availabilitySchema = z.object({
+  status: z.enum(['available', 'busy', 'unavailable']),
+});
+
 // GET /api/worker-profile/:uid
 router.get('/:uid', authGuard, asyncHandler(async (req, res) => {
   const snap = await adminDb().collection('workerProfiles').doc(req.params.uid).get();
@@ -48,8 +52,8 @@ router.put('/', authGuard, validateBody(profileSchema), asyncHandler(async (req,
 }));
 
 // PATCH /api/worker-profile/availability — quick toggle
-router.patch('/availability', authGuard, asyncHandler(async (req, res) => {
-  const { status } = req.body; // 'available' | 'busy' | 'unavailable'
+router.patch('/availability', authGuard, validateBody(availabilitySchema), asyncHandler(async (req, res) => {
+  const { status } = req.validatedBody;
   const { uid } = req.currentUser;
 
   await adminDb().collection('workerProfiles').doc(uid).update({

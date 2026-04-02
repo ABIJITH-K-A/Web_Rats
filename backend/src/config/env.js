@@ -36,6 +36,9 @@ export const env = {
   twilioAccountSid: String(process.env.TWILIO_ACCOUNT_SID || '').trim(),
   twilioAuthToken: String(process.env.TWILIO_AUTH_TOKEN || '').trim(),
   twilioWhatsAppFrom: String(process.env.TWILIO_WHATSAPP_FROM || '+14155238886').trim(),
+  // Databases
+  postgresUrl: String(process.env.POSTGRES_URL || '').trim(),
+  redisUrl: String(process.env.REDIS_URL || 'redis://localhost:6379').trim(),
   // Frontend URL for links in notifications
   frontendUrl: String(process.env.FRONTEND_URL || 'http://localhost:5173').trim(),
 };
