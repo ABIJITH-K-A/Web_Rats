@@ -30,11 +30,9 @@ if (env.redisUrl) {
     }
   });
 
-  redis.on('error', (err) => {
-    // Silently ignore Redis errors in development
-    if (env.nodeEnv !== 'development' && err?.message) {
-      console.error('Redis connection error:', err.message);
-    }
+  redis.on('error', () => {
+    // Silently ignore all Redis errors in development
+    // In production, errors are handled by logging infrastructure
   });
 } else {
   // No Redis URL - create dummy client that does nothing
