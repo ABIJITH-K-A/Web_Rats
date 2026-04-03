@@ -1,4 +1,5 @@
 import { auth } from '../config/firebase';
+import { getErrorMessage } from '../utils/errorHandler';
 
 const API_BASE_URL = String(import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8787')
   .trim()
@@ -14,7 +15,7 @@ const readErrorPayload = async (response) => {
   try {
     const payload = await response.json();
     return payload?.message || payload?.error || null;
-  } catch (error) {
+  } catch {
     return null;
   }
 };
@@ -68,10 +69,11 @@ export const apiRequest = async (
     });
 
     if (!response.ok) {
-      const message =
-        (await readErrorPayload(response)) || 'The request could not be completed.';
-      throw createApiError(message, {
+      const backendMessage = await readErrorPayload(response);
+      const userMessage = getErrorMessage({ status: response.status }, backendMessage);
+      throw createApiError(userMessage, {
         statusCode: response.status,
+        originalMessage: backendMessage,
       });
     }
 
@@ -82,11 +84,18 @@ export const apiRequest = async (
     return response.json();
   } catch (error) {
     if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
-      throw createApiError('Could not connect to the backend server. Please ensure it is running.', {
+      throw createApiError('Could not connect to the server. Please check your internet connection and try again.', {
         code: 'connection_refused',
       });
     }
-    throw error;
+    // If it's already a user-friendly message, re-throw it
+    if (error.message && error.message.length < 100 && !error.message.includes('Error:')) {
+      throw error;
+    }
+    // Otherwise wrap it in a user-friendly message
+    throw createApiError(getErrorMessage(error, 'Something went wrong. Please try again.'), {
+      originalError: error,
+    });
   }
 };
 
