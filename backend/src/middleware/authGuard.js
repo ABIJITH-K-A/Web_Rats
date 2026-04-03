@@ -1,7 +1,7 @@
 import { adminAuth, adminDb } from '../config/firebaseAdmin.js';
 import { HttpError } from '../lib/httpError.js';
 import { normalizeRole } from '../lib/roles.js';
-import { redis } from '../config/db.js';
+import { redis, isRedisReady } from '../config/db.js';
 
 const parseBearerToken = (headerValue = '') => {
   const [scheme, token] = String(headerValue || '').trim().split(/\s+/);
@@ -15,7 +15,7 @@ const attachCurrentUser = async (req, decodedToken) => {
   let profile = null;
 
   // 1. Try Cache (Redis)
-  if (redis) {
+  if (isRedisReady()) {
     try {
       const cached = await redis.get(cacheKey);
       if (cached) {
@@ -34,7 +34,7 @@ const attachCurrentUser = async (req, decodedToken) => {
     profile = userSnapshot.exists ? userSnapshot.data() : {};
 
     // 3. Store in Cache (TTL 10 mins)
-    if (redis && userSnapshot.exists) {
+    if (isRedisReady() && userSnapshot.exists) {
       try {
         await redis.set(cacheKey, JSON.stringify(profile), 'EX', 600);
       } catch (err) {

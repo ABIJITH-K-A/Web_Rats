@@ -21,6 +21,8 @@ if (env.postgresUrl) {
 }
 
 // Initialize Redis Client
+let redisConnected = false;
+
 if (env.redisUrl) {
   redis = new Redis(env.redisUrl, {
     maxRetriesPerRequest: 3,
@@ -30,15 +32,22 @@ if (env.redisUrl) {
     }
   });
 
-  redis.on('error', () => {
-    // Silently ignore all Redis errors in development
-    // In production, errors are handled by logging infrastructure
+  redis.on('connect', () => {
+    redisConnected = true;
+    console.log('Redis connected');
+  });
+
+  redis.on('error', (err) => {
+    redisConnected = false;
+    console.error('Redis connection error:', err.message || err);
   });
 } else {
-  // No Redis URL - create dummy client that does nothing
   redis = null;
   console.warn('REDIS_URL not provided. Redis features will be unavailable.');
 }
+
+// Helper to check if Redis is ready
+export const isRedisReady = () => redis && redisConnected;
 
 // Table Initialization (Ultra Production)
 export const initDB = async () => {
