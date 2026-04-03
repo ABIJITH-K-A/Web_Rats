@@ -171,27 +171,27 @@ const OrderDetailsModal = ({
 
                 {/* Right Column: Requirements */}
                 <div className="lg:col-span-8 space-y-6">
-                  <Card hoverEffect={false} className="bg-white/[0.02] border-white/5 p-8 rounded-[32px]">
-                    <h4 className="text-[10px] font-mono uppercase tracking-[0.2em] text-white/30 mb-8 flex items-center gap-2">
+                  <Card hoverEffect={false} className="bg-white/2 border-white/5 p-8 rounded-4xl">
+                    <h4 className="text-[10px] font-mono uppercase tracking-[0.2em] text-white/30 mb-8 flex items-center gap-2 wrap-break-word">
                       <Info size={14} /> Brief & Requirements
                     </h4>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
                       <div>
-                        <div className="text-[8px] font-mono uppercase text-white/20 mb-2 tracking-widest">Project Summary</div>
-                        <p className="text-sm leading-relaxed text-white/70 italic">
+                        <div className="text-[8px] font-mono uppercase text-white/20 mb-2 tracking-widest wrap-break-word">Project Summary</div>
+                        <p className="text-sm leading-relaxed text-white/70 italic wrap-break-word">
                           "{order.projectDescription || order.requirements?.projectDescription || 'No description provided.'}"
                         </p>
                       </div>
                       <div className="space-y-6">
                         <div>
-                          <div className="text-[8px] font-mono uppercase text-white/20 mb-2 tracking-widest">Key Deliverables</div>
-                          <p className="text-xs text-white/60 font-medium">
+                          <div className="text-[8px] font-mono uppercase text-white/20 mb-2 tracking-widest wrap-break-word">Key Deliverables</div>
+                          <p className="text-xs text-white/60 font-medium wrap-break-word">
                             {order.features || order.requirements?.features || 'Standard project features.'}
                           </p>
                         </div>
                         <div>
-                          <div className="text-[8px] font-mono uppercase text-white/20 mb-2 tracking-widest">External Assets</div>
+                          <div className="text-[8px] font-mono uppercase text-white/20 mb-2 tracking-widest flex wrap-break-word">External Assets</div>
                           {order.references || order.requirements?.references ? (
                             <a href={order.references || order.requirements?.references} target="_blank" rel="noreferrer" className="text-xs text-cyan-primary underline underline-offset-4 flex items-center gap-2">
                               <ExternalLink size={12} /> Open Reference Link

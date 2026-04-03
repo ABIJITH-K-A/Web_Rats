@@ -362,7 +362,6 @@ const Home = () => {
                 className="w-full"
               >
                 <Card className="relative overflow-hidden border-white/8 bg-black/70 p-0 h-64 group">
-                  {/* Full card image */}
                   <img
                     src={project.image}
                     alt={project.title}
