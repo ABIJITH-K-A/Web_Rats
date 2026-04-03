@@ -24,7 +24,7 @@ service firebase.storage {
     }
 
     function isEscalated(orderId) {
-      let chat = get(/databases/$(database)/documents/chats/$(orderId)).data;
+      let chat = get(/databases/$(database)/documents/chatThreads/$(orderId)).data;
       return chat.escalated == true;
     }
 
@@ -32,14 +32,28 @@ service firebase.storage {
       return request.auth.token.role in ['admin', 'manager', 'owner', 'super_admin'];
     }
 
-    // References: client can upload, assigned worker can read
+    // Valid file types for production
+    function isValidFileType() {
+      return request.resource.contentType.matches('image/.*') ||
+             request.resource.contentType.matches('application/pdf') ||
+             request.resource.contentType.matches('text/plain') ||
+             request.resource.contentType.matches('application/zip') ||
+             request.resource.contentType.matches('application/x-zip-compressed');
+    }
+
+    // Max 50MB file size
+    function isValidFileSize() {
+      return request.resource.size <= 50 * 1024 * 1024;
+    }
+
+    // References: client can upload, assigned worker + admins (if escalated) can read
     match /orders/{orderId}/references/{filename} {
       allow read: if isAuthenticated() && (
         isOrderClient(orderId) ||
         isAssignedWorker(orderId) ||
         (isEscalated(orderId) && isAdminLikeRole())
       );
-      allow write: if isAuthenticated() && isOrderClient(orderId);
+      allow write: if isAuthenticated() && isOrderClient(orderId) && isValidFileType() && isValidFileSize();
     }
 
     // Deliverables: worker can upload, client can download
@@ -48,7 +62,7 @@ service firebase.storage {
         isOrderClient(orderId) ||
         isAssignedWorker(orderId)
       );
-      allow write: if isAuthenticated() && isAssignedWorker(orderId);
+      allow write: if isAuthenticated() && isAssignedWorker(orderId) && isValidFileType() && isValidFileSize();
     }
 
     // Revisions: both client and worker can upload
@@ -60,7 +74,7 @@ service firebase.storage {
       allow write: if isAuthenticated() && (
         isOrderClient(orderId) ||
         isAssignedWorker(orderId)
-      );
+      ) && isValidFileType() && isValidFileSize();
     }
   }
 }
