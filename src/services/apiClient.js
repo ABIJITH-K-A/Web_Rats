@@ -32,7 +32,7 @@ const getAuthorizationHeader = async (authMode = 'optional') => {
     return {};
   }
 
-  const token = await currentUser.getIdToken();
+  const token = await currentUser.getIdToken(true); // Force refresh to avoid expired tokens
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
