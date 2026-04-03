@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { enforceSessionPersistence, installIdleSessionTimeout } from "./auth-session.js";
 
 /* ═══════════════════════════════════════════════════════════
@@ -3310,4 +3309,3 @@ _q("confirmCancel").addEventListener("click",()=>{
 _q("confirmModal").addEventListener("click",e=>{
   if(e.target===_q("confirmModal")){_q("confirmModal").classList.remove("open");_confirmCallback=null;}
 });
->>>>>>> b344e4367531f76f877c8b38de94eec732d42d27
