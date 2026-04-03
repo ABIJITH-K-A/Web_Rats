@@ -11,4 +11,14 @@ services:
         value: 10000
       - key: NODE_ENV
         value: production
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: tnwebrats-redis
+          property: connectionString
       - fromGroup: tnwebrats-secrets
+
+  - type: redis
+    name: tnwebrats-redis
+    plan: free
+    region: oregon
