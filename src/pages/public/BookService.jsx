@@ -16,7 +16,6 @@ import {
 } from "lucide-react";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import {
-  deleteDoc,
   doc,
   setDoc,
 } from "firebase/firestore";
@@ -25,9 +24,7 @@ import { useAuth } from "../../context/AuthContext";
 import { Button, Card, SectionHeading } from "../../components/ui/Primitives";
 import Stepper, { Step } from "../../components/ui/Stepper";
 import QRPaymentStep from "../../components/temp/QRPaymentStep";
-import { initializeRazorpayCheckout } from "../../services/razorpayService";
 import { logAuditEvent } from "../../services/auditService";
-import { notifyAdmin } from "../../services/notificationService";
 import { createOrder } from "../../services/orderService";
 import {
   BOOKING_STEP_LABELS,
@@ -367,103 +364,40 @@ const BookService = () => {
         return;
       }
 
-      // Otherwise proceed to Razorpay
-      await initializeRazorpayCheckout({
-        amount: payment.advancePayment,
-        orderId: orderDocId.slice(-8).toUpperCase(),
-        orderDocId,
-        userDetails: {
-          name: formData.name.trim(),
-          email: formData.email.trim(),
-          phone: formData.phone.trim(),
+      // Use Cashfree for payment
+      const cashfreeResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/payment/create-order`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-        paymentType: "advance",
-        onSuccess: async () => {
-          const whatsappMessage = createWhatsAppMessage(orderDocId);
-          await logAuditEvent({
-            actorId: user?.uid || null,
-            actorRole: userProfile?.role || "client",
-            action: "order_created",
-            targetType: "order",
-            targetId: orderDocId,
-            severity: "medium",
-            metadata: {
-              serviceId: selectedService.id,
-              planId: selectedPlan.id,
-              isPriority,
-              customerType: resolvedCustomerType,
-            },
-          });
-          if (whatsappMessage) {
-            window.open(
-              `https://wa.me/${CONTACT_INFO.whatsappNumber}?text=${encodeURIComponent(
-                whatsappMessage
-              )}`,
-              "_blank"
-            );
-          }
-
-          setOrderId(orderDocId);
-          setOrderConfirmed(true);
-          setIsSubmitting(false);
-        },
-        onError: async (error) => {
-          const paymentError =
-            error instanceof Error
-              ? error
-              : new Error(String(error || "Payment could not be completed."));
-
-          if (!paymentError.preserveOrder) {
-            try {
-              await deleteDoc(doc(db, "orders", orderDocId));
-              await logAuditEvent({
-                actorId: user?.uid || null,
-                actorRole: userProfile?.role || "client",
-                action: "order_payment_cancelled",
-                targetType: "order",
-                targetId: orderDocId,
-                severity: "low",
-                metadata: {
-                  reason: paymentError.message,
-                },
-              });
-            } catch (cleanupError) {
-              console.error("Order cleanup error:", cleanupError);
-              await notifyAdmin({
-                title: "Booking cleanup required",
-                message: `${formData.name.trim()} cancelled or failed payment for ${selectedService.name}, but the draft order ${orderDocId} could not be cleaned automatically.`,
-                category: "payment",
-                orderId: orderDocId,
-              });
-            }
-
-            setSubmitError(
-              `Payment verification failed: ${paymentError.message}. For your safety, the draft order was removed. Please retry or contact us.`
-            );
-            setIsSubmitting(false);
-            return;
-          }
-
-          await notifyAdmin({
-            title: "Booking needs manual payment review",
-            message: `${formData.name.trim()} reached payment confirmation for ${selectedService.name}, but follow-up sync failed. Review order ${orderDocId}.`,
-            category: "payment",
-            orderId: orderDocId,
-          });
-
-          setSubmitError(
-            `Payment connection issue: ${paymentError.message}. Your order was kept for manual review by our team. Please don't re-submit.`
-          );
-          setIsSubmitting(false);
-          setOrderId(orderDocId);
-          setOrderConfirmed(true);
-        },
+        body: JSON.stringify({
+          amount: payment.advancePayment,
+          orderId: orderDocId,
+          userDetails: {
+            name: formData.name.trim(),
+            email: formData.email.trim(),
+            phone: formData.phone.trim(),
+          },
+        }),
       });
+
+      if (!cashfreeResponse.ok) {
+        throw new Error('Failed to create payment order');
+      }
+
+      const { paymentSessionId } = await cashfreeResponse.json();
+
+      // Redirect to Cashfree checkout
+      if (paymentSessionId) {
+        window.location.href = `https://payments.cashfree.com/checkout?session_id=${paymentSessionId}`;
+      } else {
+        throw new Error('No payment session created');
+      }
 
     } catch (error) {
       console.error("Booking error:", error);
       setSubmitError(
-        `We're having trouble saving your order right now (${error.message || 'Server Busy'}). Please check your connection and try again in 30 seconds.`
+        `We're having trouble processing your payment right now (${error.message || 'Server Busy'}). Please check your connection and try again in 30 seconds.`
       );
       setIsSubmitting(false);
     }

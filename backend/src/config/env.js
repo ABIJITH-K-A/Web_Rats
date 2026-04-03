@@ -27,8 +27,6 @@ export const env = {
   cashfreeWebhookSecret: String(process.env.CASHFREE_WEBHOOK_SECRET || '').trim(),
   backendUrl: String(process.env.BACKEND_URL || 'http://localhost:5000').trim(),
   nodeEnv: String(process.env.NODE_ENV || 'development').trim(),
-  razorpayKeySecret: String(process.env.RAZORPAY_KEY_SECRET || '').trim(),
-  razorpayWebhookSecret: String(process.env.RAZORPAY_WEBHOOK_SECRET || '').trim(),
   // Email (Gmail SMTP)
   smtpUser: String(process.env.SMTP_USER || '').trim(),
   smtpPass: String(process.env.SMTP_PASS || '').trim(),
