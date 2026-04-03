@@ -5,6 +5,7 @@ import {
   getNotificationPriority,
   normalizeRole,
 } from "../utils/systemRules";
+import { apiRequest, isBackendConfigured } from "./apiClient";
 
 const NOTIFICATION_RETRY_LIMIT = 2;
 const NOTIFICATION_RETRY_DELAY_MS = 250;
@@ -54,6 +55,21 @@ export const createNotification = async ({
     createdAt: serverTimestamp(),
   };
 
+  // Prefer API for security, logging, and business logic (email triggers, etc.)
+  if (isBackendConfigured()) {
+    try {
+      const response = await apiRequest('/notifications', {
+        method: 'POST',
+        authMode: 'required',
+        body: payload,
+      });
+      return response?.id ? { id: response.id } : null;
+    } catch (error) {
+      console.warn('Backend notification create failed, falling back to direct Firestore:', error.message);
+    }
+  }
+
+  // Fallback to direct Firestore write
   for (let attempt = 1; attempt <= NOTIFICATION_RETRY_LIMIT; attempt += 1) {
     try {
       return await addDoc(collection(db, "notifications"), payload);
@@ -62,7 +78,6 @@ export const createNotification = async ({
         console.error("Notification create error:", error);
         return null;
       }
-
       await delay(NOTIFICATION_RETRY_DELAY_MS * attempt);
     }
   }
