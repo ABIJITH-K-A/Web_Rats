@@ -22,7 +22,8 @@ const attachCurrentUser = async (req, decodedToken) => {
         profile = JSON.parse(cached);
       }
     } catch (err) {
-      console.error('Redis Profile Cache Error:', err);
+      // Silently fail cache - will fallback to Firestore
+      console.debug('Redis cache miss, using Firestore');
     }
   }
 

@@ -31,9 +31,13 @@ if (env.redisUrl) {
   });
 
   redis.on('error', (err) => {
-    console.error('Redis connection error:', err);
+    if (env.nodeEnv !== 'development') {
+      console.error('Redis connection error:', err.message);
+    }
   });
 } else {
+  // No Redis URL - create dummy client that does nothing
+  redis = null;
   console.warn('REDIS_URL not provided. Redis features will be unavailable.');
 }
 
