@@ -42,8 +42,18 @@ router.get(
       throw new HttpError(403, 'You do not have access to this chat.');
     }
 
+    // Fetch recent messages from top-level chatMessages collection
+    const messagesSnap = await adminDb().collection('chatMessages')
+      .where('orderId', '==', orderId)
+      .orderBy('createdAt', 'desc')
+      .limit(50)
+      .get();
+
+    const messages = messagesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
     res.json({
-      chat: chatSnap.exists ? chatSnap.data() : null,
+      thread: chatSnap.exists ? chatSnap.data() : null,
+      messages: messages.reverse(), // Reverse to get ascending order for UI
       orderId,
     });
   })

@@ -13,6 +13,7 @@ import {
   setDoc,
   updateDoc,
   where,
+  writeBatch,
 } from "firebase/firestore";
 import { logAuditEvent } from "./auditService";
 import { createNotification } from "./notificationService";
@@ -376,10 +377,13 @@ export const getTransactionHistory = async (userId, limitCount = 50) => {
   }));
 };
 
-export const applyPenalty = async (userId, amount, reason) => {
+export const applyPenaltyWithBatch = async (userId, amount, reason) => {
+  const batch = writeBatch(db);
   const walletRef = doc(db, "wallets", userId);
+  const penaltyRef = doc(collection(db, "penalties"));
+  const transRef = doc(collection(db, "transactions"));
 
-  await updateDoc(walletRef, {
+  batch.update(walletRef, {
     withdrawableAmount: increment(-amount),
     onHoldAmount: increment(amount),
     withdrawable: increment(-amount),
@@ -388,7 +392,7 @@ export const applyPenalty = async (userId, amount, reason) => {
     lastUpdated: serverTimestamp(),
   });
 
-  await addDoc(collection(db, "penalties"), {
+  batch.set(penaltyRef, {
     userId,
     amount,
     reason,
@@ -396,7 +400,7 @@ export const applyPenalty = async (userId, amount, reason) => {
     createdAt: serverTimestamp(),
   });
 
-  await addDoc(collection(db, "transactions"), {
+  batch.set(transRef, {
     userId,
     type: "expense",
     category: "salary",
@@ -405,6 +409,9 @@ export const applyPenalty = async (userId, amount, reason) => {
     status: "applied",
     createdAt: serverTimestamp(),
   });
+
+  await batch.commit(); // Atomic: all succeed or all fail
+  return { penaltyId: penaltyRef.id, transactionId: transRef.id };
 };
 
 export const applyBonus = async (userId, amount, reason) => {
@@ -444,6 +451,6 @@ export default {
   requestWithdrawal,
   processRefund,
   getTransactionHistory,
-  applyPenalty,
+  applyPenalty: applyPenaltyWithBatch,
   applyBonus,
 };

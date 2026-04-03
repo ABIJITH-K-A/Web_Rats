@@ -21,13 +21,14 @@ export const cleanupExpiredChats = async () => {
 
     const batch = adminDb().batch();
     messagesQuery.docs.forEach((msg) => batch.delete(msg.ref));
-    await batch.commit();
-
-    // Mark chat thread as deleted
-    await chatDoc.ref.update({
+    
+    // Update thread to mark as deleted
+    batch.update(chatDoc.ref, {
       deletedAt: new Date().toISOString(),
       lastMessage: null,
     });
+    
+    await batch.commit();
 
     console.log(`Chat deleted for order ${orderId}`);
   }
