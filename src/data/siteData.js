@@ -799,6 +799,33 @@ export const FEATURED_PROJECTS = [
     builtBy: "TNWebRats",
     image: "/Images/gears/gear_3.webp",
   },
+  {
+    id: "PlaceHolder1",
+    title: "PlaceHolder1",
+    category: "PlaceHolder1",
+    status: "PlaceHolder1",
+    description: "PlaceHolder1",
+    builtBy: "PlaceHolder1",
+    image: "ImageDir",
+  },
+  {
+    id: "PlaceHolder2",
+    title: "PlaceHolder2",
+    category: "PlaceHolder2",
+    status: "PlaceHolder2",
+    description: "PlaceHolder2",
+    builtBy: "PlaceHolder2",
+    image: "ImageDir",
+  },
+  {
+    id: "PlaceHolder3",
+    title: "PlaceHolder3",
+    category: "PlaceHolder3",
+    status: "PlaceHolder3",
+    description: "PlaceHolder3",
+    builtBy: "PlaceHolder3",
+    image: "ImageDir",
+  }
 ];
 
 export const PORTFOLIO_GALLERY = [
@@ -833,6 +860,35 @@ export const PORTFOLIO_GALLERY = [
     link: "https://drive.google.com/drive/folders/1aO3Z-mfWXL7PXlot4fbmJ2K49iyyp8tQ?usp=sharing",
   },
 ];
+ export const HORIZONTAL_PROJECTS = [
+  {
+    id: "PlaceHolder1",
+    title: "PlaceHolder1",
+    category: "PlaceHolder1",
+    status: "PlaceHolder1",
+    description: "PlaceHolder1",
+    builtBy: "PlaceHolder1",
+    image: "ImageDir",
+  },
+  {
+    id: "PlaceHolder2",
+    title: "PlaceHolder2",
+    category: "PlaceHolder2",
+    status: "PlaceHolder2",
+    description: "PlaceHolder2",
+    builtBy: "PlaceHolder2",
+    image: "public/Images/for_templates/res_1.png",
+  },
+  {
+    id: "PlaceHolder3",
+    title: "PlaceHolder3",
+    category: "PlaceHolder3",
+    status: "PlaceHolder3",
+    description: "PlaceHolder3",
+    builtBy: "PlaceHolder3",
+    image: "ImageDir",
+  }
+ ]
 
 export const ABOUT_POINTS = [
   "Two founders working directly with the people they build for.",

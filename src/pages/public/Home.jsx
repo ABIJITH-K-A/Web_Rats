@@ -14,7 +14,7 @@ import { Button, Card, SectionHeading } from "../../components/ui/Primitives";
 import SpotlightCard from "../../components/ui/SpotlightCard";
 import {
   FEATURED_PROJECTS,
-  PORTFOLIO_GALLERY,
+  HORIZONTAL_PROJECTS,
   SERVICE_CATEGORIES,
   STATS,
   VALUE_POINTS,
@@ -48,11 +48,11 @@ const Home = () => {
               TNWebRats We Build
             </div>
             <h1 className="max-w-4xl text-5xl font-black leading-[1.05] text-white md:text-7xl">
-              We Build. We Design. We{" "}
+              We{" "}<span className="text-cyan-primary">Build</span>. We{" "}<span className="text-cyan-primary">Design</span>. We{" "}
               <span className="text-cyan-primary">Deliver.</span>
             </h1>
             <p className="mt-7 max-w-2xl text-lg leading-8 text-light-gray/74 md:text-xl">
-              Welcome to TNWebRats - a creative studio run by two builders who
+              Welcome to TNWebRats - We <span className="font-bold text-cyan-primary">Build</span>. We <span className="font-bold text-cyan-primary">Design</span>. We <span className="font-bold text-cyan-primary">Deliver</span>. run by two builders who
               turn ideas into polished digital experiences. Websites,
               presentations, posters, and quick-turn digital support all live in
               one place.
@@ -351,26 +351,39 @@ const Home = () => {
               </motion.div>
             ))}
           </div>
-
-          <div className="mt-12 grid gap-4 md:grid-cols-4">
-            {PORTFOLIO_GALLERY.map((item) => (
-              <a
-                key={item.id}
-                href={item.link}
-                target="_blank"
-                rel="noreferrer"
-                className="group relative overflow-hidden rounded-[24px] border border-white/8"
+          <div className="grid gap-6 lg:grid-cols-2 place-items-center mt-6">
+            {HORIZONTAL_PROJECTS.map((project, index) => (
+              <motion.div
+                key={project.id}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.45, delay: index * 0.1 }}
+                viewport={{ once: true }}
+                className="w-full"
               >
-                <img
-                  src={item.image}
-                  alt={item.title}
-                  className="h-48 w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
-                <div className="absolute bottom-4 left-4 right-4 text-sm font-semibold text-white">
-                  {item.title}
-                </div>
-              </a>
+                <Card className="relative overflow-hidden border-white/8 bg-black/70 p-0 h-64 group">
+                  {/* Full card image */}
+                  <img
+                    src={project.image}
+                    alt={project.title}
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                  {/* Gradient overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
+                  {/* Text content */}
+                  <div className="absolute bottom-0 left-0 right-0 p-6">
+                    <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary mb-2">
+                      {project.category}
+                    </div>
+                    <h3 className="text-2xl font-black text-white mb-2">
+                      {project.title}
+                    </h3>
+                    <p className="text-sm leading-relaxed text-white/70 line-clamp-2">
+                      {project.description}
+                    </p>
+                  </div>
+                </Card>
+              </motion.div>
             ))}
           </div>
         </div>

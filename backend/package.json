@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "node --watch src/index.js",
     "build": "echo 'No build step required'",
-    "start": "node src/index.js"
+    "start": "node --no-deprecation src/index.js"
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.1",
