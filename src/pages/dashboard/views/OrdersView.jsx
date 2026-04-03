@@ -382,7 +382,10 @@ const OrdersView = () => {
                     <td className="px-5 py-5">
                       <button
                         type="button"
-                        onClick={() => handleTogglePayment(order)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleTogglePayment(order);
+                        }}
                         className="inline-flex items-center gap-2 rounded-full border border-white/8 bg-white/5 px-3 py-1 text-[10px] font-mono uppercase tracking-[0.16em] text-white/60 transition-colors hover:text-white"
                       >
                         {order.paymentStatus || 'Pending'}
@@ -393,6 +396,7 @@ const OrdersView = () => {
                     <td className="px-5 py-5">
                       <select
                         value={normalizeOrderStatus(order.status)}
+                        onClick={(e) => e.stopPropagation()}
                         onChange={(event) =>
                           handleUpdateStatus(order, event.target.value)
                         }
@@ -429,7 +433,10 @@ const OrdersView = () => {
                         )}
                         <button
                           type="button"
-                          onClick={() => openAssignModal(order)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openAssignModal(order);
+                          }}
                           className="inline-flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.16em] text-cyan-primary"
                         >
                           <UserPlus size={12} /> Assign
