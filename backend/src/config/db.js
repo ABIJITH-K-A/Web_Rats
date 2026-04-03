@@ -31,7 +31,8 @@ if (env.redisUrl) {
   });
 
   redis.on('error', (err) => {
-    if (env.nodeEnv !== 'development') {
+    // Silently ignore Redis errors in development
+    if (env.nodeEnv !== 'development' && err?.message) {
       console.error('Redis connection error:', err.message);
     }
   });
