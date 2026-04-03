@@ -16,22 +16,6 @@ import {
 } from '../utils/systemRules';
 import { apiRequest, isBackendConfigured } from './apiClient';
 
-const sortByCreatedAtDesc = (records = []) =>
-  [...records].sort((left, right) => {
-    const leftValue =
-      (typeof left?.createdAt?.toDate === 'function'
-        ? left.createdAt.toDate()
-        : new Date(left?.createdAt || 0)
-      )?.getTime?.() || 0;
-    const rightValue =
-      (typeof right?.createdAt?.toDate === 'function'
-        ? right.createdAt.toDate()
-        : new Date(right?.createdAt || 0)
-      )?.getTime?.() || 0;
-
-    return rightValue - leftValue;
-  });
-
 export const fetchNotificationsForUser = async (user, role) => {
   if (!user?.uid) return [];
 
@@ -66,12 +50,11 @@ export const fetchNotificationsForUser = async (user, role) => {
     )
   );
 
-  return sortByCreatedAtDesc(
-    snapshot.docs.map((docSnapshot) => ({
-      id: docSnapshot.id,
-      ...docSnapshot.data(),
-    }))
-  );
+  // Already sorted by Firestore orderBy, no need for client-side sort
+  return snapshot.docs.map((docSnapshot) => ({
+    id: docSnapshot.id,
+    ...docSnapshot.data(),
+  }));
 };
 
 export const markNotificationRead = async (notificationId) => {

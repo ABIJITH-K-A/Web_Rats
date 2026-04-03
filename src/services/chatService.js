@@ -94,7 +94,8 @@ export const subscribeToThread = (orderId, callback) => {
   const q = query(
     collection(db, "chatMessages"),
     where("orderId", "==", orderId),
-    orderBy("createdAt", "asc")
+    orderBy("createdAt", "asc"),
+    limit(100)
   );
 
   return onSnapshot(q, (snapshot) => {
