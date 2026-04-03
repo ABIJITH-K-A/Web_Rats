@@ -102,6 +102,35 @@ service cloud.firestore {
       allow write: if false; // Admin SDK only
     }
 
+    // ── Chat Threads ──────────────────────────────────────────
+
+    match /chatThreads/{threadId} {
+      allow read: if isAuthenticated() && (
+        resource.data.participants.hasAny([request.auth.uid]) ||
+        resource.data.clientId == request.auth.uid ||
+        resource.data.workerId == request.auth.uid ||
+        isAdminLikeRole()
+      );
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && (
+        resource.data.participants.hasAny([request.auth.uid]) ||
+        isAdminLikeRole()
+      );
+      allow delete: if isAdmin();
+    }
+
+    // ── Chat Messages ──────────────────────────────────────────
+
+    match /chatMessages/{messageId} {
+      allow read: if isAuthenticated() && (
+        resource.data.senderId == request.auth.uid ||
+        resource.data.recipientId == request.auth.uid ||
+        isAdminLikeRole()
+      );
+      allow create: if isAuthenticated();
+      allow update, delete: if isAdmin();
+    }
+
     // ── Tickets ───────────────────────────────────────────────
 
     match /tickets/{ticketId} {
