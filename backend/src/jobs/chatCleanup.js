@@ -3,7 +3,8 @@ import { adminDb } from '../config/firebaseAdmin.js';
 export const cleanupExpiredChats = async () => {
   const now = new Date().toISOString();
 
-  const snapshot = await adminDb().collection('chats')
+  // Query chatThreads for scheduled deletion
+  const snapshot = await adminDb().collection('chatThreads')
     .where('deletionScheduledAt', '<=', now)
     .where('deletedAt', '==', null)
     .limit(20)
@@ -12,19 +13,20 @@ export const cleanupExpiredChats = async () => {
   for (const chatDoc of snapshot.docs) {
     const orderId = chatDoc.id;
 
-    // Delete all messages subcollection
-    const messagesSnap = await adminDb()
-      .collection('chats').doc(orderId)
-      .collection('messages').get();
+    // Delete all messages from chatMessages collection (top-level, not subcollection)
+    const messagesQuery = await adminDb()
+      .collection('chatMessages')
+      .where('orderId', '==', orderId)
+      .get();
 
     const batch = adminDb().batch();
-    messagesSnap.docs.forEach((msg) => batch.delete(msg.ref));
+    messagesQuery.docs.forEach((msg) => batch.delete(msg.ref));
     await batch.commit();
 
-    // Mark chat as deleted
+    // Mark chat thread as deleted
     await chatDoc.ref.update({
       deletedAt: new Date().toISOString(),
-      messageCount: 0,
+      lastMessage: null,
     });
 
     console.log(`Chat deleted for order ${orderId}`);

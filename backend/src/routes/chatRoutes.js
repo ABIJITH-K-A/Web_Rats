@@ -35,7 +35,7 @@ router.get(
     if (!orderSnap.exists) throw new HttpError(404, 'Order not found.');
 
     const order = orderSnap.data();
-    const chatRef = adminDb().collection('chats').doc(orderId);
+    const chatRef = adminDb().collection('chatThreads').doc(orderId);
     const chatSnap = await chatRef.get();
 
     if (!canAccessChat(order, uid, role, chatSnap.data()?.escalated)) {
@@ -60,7 +60,7 @@ router.post(
     if (!orderSnap.exists) throw new HttpError(404, 'Order not found.');
 
     const order = orderSnap.data();
-    const chatRef = adminDb().collection('chats').doc(orderId);
+    const chatRef = adminDb().collection('chatThreads').doc(orderId);
     const chatSnap = await chatRef.get();
 
     if (chatSnap.exists) return res.json({ exists: true });
@@ -73,10 +73,9 @@ router.post(
       escalationReason: null,
       escalatedAt: null,
       resolvedAt: null,
-      messageCount: 0,
-      lastMessageAt: FieldValue.serverTimestamp(),
-      deletionScheduledAt: null,
-      deletedAt: null,
+      unreadCount: {},
+      lastMessage: null,
+      updatedAt: FieldValue.serverTimestamp(),
       createdAt: FieldValue.serverTimestamp(),
     });
 
@@ -92,8 +91,8 @@ router.post(
   '/send',
   authGuard,
   asyncHandler(async (req, res) => {
-    const { orderId, text, userName, userRole } = req.body;
-    const { uid } = req.currentUser;
+    const { orderId, text, userName } = req.body;
+    const { uid, role } = req.currentUser;
     
     if (!orderId || !text) {
       throw new HttpError(400, 'orderId and text are required');
@@ -110,7 +109,7 @@ router.post(
 
     const order = orderDoc.data();
     const isOwner = order.userId === uid;
-    const isStaff = ['admin', 'manager', 'worker', 'owner', 'superadmin'].includes(userRole);
+    const isStaff = ['admin', 'manager', 'worker', 'owner', 'superadmin'].includes(role);
     
     if (!isOwner && !isStaff) {
       throw new HttpError(403, 'Forbidden to chat in this order');
@@ -119,10 +118,10 @@ router.post(
     // 2. Write message to Firestore 
     const newMsg = {
       orderId,
-      text, // Sanitization should be applied globally/middleware
+      text,
       userId: uid,
       userName,
-      userRole,
+      userRole: role,
       createdAt: FieldValue.serverTimestamp()
     };
 
