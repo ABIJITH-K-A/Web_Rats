@@ -30,7 +30,6 @@ import ReviewsView from './views/ReviewsView';
 import WalletView from './views/WalletView';
 import ReportsView from './views/ReportsView';
 import SamplesView from './views/SamplesView';
-import DemoDataView from './views/DemoDataView';
 import PayrollView from './views/PayrollView';
 import TeamPayView from './views/TeamPayView';
 import ApprovalsView from './views/ApprovalsView';
@@ -60,7 +59,6 @@ const AdminDashboard = () => (
           {currentView === 'wallet' && <WalletView />}
           {currentView === 'reports' && <ReportsView />}
           {currentView === 'samples' && <SamplesView />}
-          {currentView === 'demodata' && <DemoDataView />}
           {currentView === 'payroll' && <PayrollView />}
           {currentView === 'teampay' && <TeamPayView />}
           {currentView === 'approvals' && <ApprovalsView />}

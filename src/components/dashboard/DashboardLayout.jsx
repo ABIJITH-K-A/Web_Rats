@@ -53,7 +53,6 @@ const DashboardLayout = ({ children }) => {
     { id: 'wallet', label: 'Wallet', icon: <Wallet size={18} />, roles: ['owner', 'superadmin', 'admin', 'manager', 'worker'] },
     { id: 'reports', label: 'Reports', icon: <Bug size={18} />, roles: ['owner', 'superadmin', 'admin', 'manager', 'worker'] },
     { id: 'samples', label: 'Samples', icon: <Box size={18} />, roles: ['owner', 'superadmin', 'admin', 'manager', 'worker'] },
-    { id: 'demodata', label: 'Demo Data', icon: <Package size={18} />, roles: ['owner', 'superadmin', 'admin'] },
     { id: 'payroll', label: 'Payroll', icon: <DollarSign size={18} />, roles: ['owner', 'superadmin', 'admin'] },
     { id: 'teampay', label: 'Team Payments', icon: <DollarSign size={18} />, roles: ['manager'] },
     { id: 'approvals', label: 'Approvals', icon: <CheckSquare size={18} />, roles: ['owner', 'superadmin', 'admin'] },
