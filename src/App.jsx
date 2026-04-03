@@ -25,16 +25,15 @@ import ScrollToTop from './components/utils/ScrollToTop';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import ResilienceLayer from './components/utils/ResilienceLayer';
 import { Analytics } from "@vercel/analytics/react"
-import QRPaymentPage from './pages/payment/QRPaymentPage';
 import PaymentSuccess from './pages/payment/PaymentSuccess';
 
 function App() {
   return (
-    <ResilienceLayer>
-      <ErrorBoundary variant="page">
-        <AuthProvider>
-          <DashboardProvider>
-            <BrowserRouter>
+    <BrowserRouter>
+      <ResilienceLayer>
+        <ErrorBoundary variant="page">
+          <AuthProvider>
+            <DashboardProvider>
               <ScrollToTop />
               <RootLayout>
                 <Routes>
@@ -68,11 +67,11 @@ function App() {
                 </Routes>
                 <Analytics />
               </RootLayout>
-            </BrowserRouter>
-          </DashboardProvider>
-        </AuthProvider>
-      </ErrorBoundary>
-    </ResilienceLayer>
+            </DashboardProvider>
+          </AuthProvider>
+        </ErrorBoundary>
+      </ResilienceLayer>
+    </BrowserRouter>
   );
 }
 
