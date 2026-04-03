@@ -18,9 +18,15 @@ export const env = {
   corsOrigins: splitEnvList(process.env.CORS_ORIGIN, ['http://localhost:5173']),
   firebaseProjectId: String(process.env.FIREBASE_PROJECT_ID || '').trim(),
   firebaseClientEmail: String(process.env.FIREBASE_CLIENT_EMAIL || '').trim(),
-  firebasePrivateKey: String(process.env.FIREBASE_PRIVATE_KEY || '')
-    .replace(/\\n/g, '\n')
-    .trim(),
+  firebasePrivateKey: (() => {
+    const key = String(process.env.FIREBASE_PRIVATE_KEY || '');
+    if (!key) return '';
+    // Handle various newline formats from env vars
+    return key
+      .replace(/\\n/g, '\n')  // Convert \\n to actual newlines
+      .replace(/\n/g, '\n')   // Normalize any existing newlines
+      .trim();
+  })(),
   // Cashfree
   cashfreeAppId: String(process.env.CASHFREE_APP_ID || '').trim(),
   cashfreeSecretKey: String(process.env.CASHFREE_SECRET_KEY || '').trim(),
