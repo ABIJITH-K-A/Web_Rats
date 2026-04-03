@@ -224,16 +224,6 @@ const JoinHub = () => {
     { id: 'staff',    label: 'Join as Staff',  icon: Users },
   ];
 
-  const DEMO_ACCOUNTS = [
-    { label: 'Admin', email: 'admin@tnwebrats.com', pass: 'Staff@123' },
-    { label: 'Worker', email: 'worker@tnwebrats.com', pass: 'Staff@123' },
-  ];
-
-  const fillDemo = (acc) => {
-    setTab('login');
-    setLoginData({ email: acc.email, password: acc.pass });
-  };
-
   return (
     <div className="min-h-screen py-20 flex flex-col items-center justify-center px-4">
       {/* Session Expired Banner */}
@@ -401,22 +391,6 @@ const JoinHub = () => {
                 <Button className="w-full py-3" disabled={loading} type="submit">
                   {loading ? 'Signing In...' : 'Sign In'} <LogIn size={16} className="ml-1" />
                 </Button>
-
-                <div className="pt-4 border-t border-white/5">
-                  <p className="text-[10px] font-mono text-white/20 uppercase tracking-widest mb-3 text-center">Quick Access (Testing Only)</p>
-                  <div className="grid grid-cols-2 gap-2">
-                    {DEMO_ACCOUNTS.map(acc => (
-                      <button
-                        key={acc.label}
-                        type="button"
-                        onClick={() => fillDemo(acc)}
-                        className="py-2 px-3 rounded-lg border border-white/5 bg-white/5 hover:bg-cyan-primary/10 hover:border-cyan-primary/30 text-[10px] font-bold text-white/40 hover:text-cyan-primary transition-all flex items-center justify-center gap-2"
-                      >
-                        <Bolt size={10} /> {acc.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
 
                 <p className="text-center text-[10px] font-mono text-white/20">
                   <Link to="/forgot-password" size={16} className="hover:text-cyan-primary transition-colors">
