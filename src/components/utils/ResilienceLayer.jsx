@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { WifiOff, RefreshCw } from 'lucide-react';
 import LoginModal from '../auth/LoginModal';
+import { useAuth } from '../../context/AuthContext';
 
 /**
  * ResilienceLayer - Global Error Catch-All
@@ -12,6 +13,7 @@ import LoginModal from '../auth/LoginModal';
  */
 const ResilienceLayer = ({ children }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [hasCorruption, setHasCorruption] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -42,12 +44,19 @@ const ResilienceLayer = ({ children }) => {
         return;
       }
 
-      // Handle Firebase permission errors - show login modal
+      // Handle Firebase permission errors
       if (errorMessage.includes('permission-denied') || 
           errorMessage.includes('Missing or insufficient permissions') ||
           errorMessage.includes('FirebaseError') && errorMessage.includes('permissions')) {
-        console.warn('🔒 Firebase permission denied. Showing login modal.');
-        setLoginMessage("You need to log in to access this feature");
+        
+        // If user is logged in, they just don't have permission for this data
+        if (user) {
+          console.warn('🔒 Firebase permission denied for logged-in user. Role may not have access.');
+          setLoginMessage("You don't have permission to access this feature");
+        } else {
+          console.warn('🔒 Firebase permission denied. Showing login modal.');
+          setLoginMessage("You need to log in to access this feature");
+        }
         setShowLoginModal(true);
         return;
       }
@@ -88,7 +97,7 @@ const ResilienceLayer = ({ children }) => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  }, [hasCorruption]);
+  }, [hasCorruption, user]);
 
   const handleHardReset = () => {
     // Clear Firestore IndexedDB manually and reload
@@ -110,8 +119,9 @@ const ResilienceLayer = ({ children }) => {
         isOpen={showLoginModal} 
         onClose={() => setShowLoginModal(false)} 
         message={loginMessage}
-        onLogin={() => navigate('/join?login=1')}
-        onSignup={() => navigate('/join?tab=register')}
+        isLoggedIn={!!user}
+        onLogin={() => navigate(user ? '/profile' : '/join?login=1')}
+        onSignup={() => navigate(user ? '/profile' : '/join?tab=register')}
       />
       
       <AnimatePresence>

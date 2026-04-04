@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const LoginModal = ({ isOpen, onClose, onLogin, onSignup, message = "Please log in to continue" }) => {
+const LoginModal = ({ isOpen, onClose, onLogin, onSignup, isLoggedIn = false, message = "Please log in to continue" }) => {
   const [isVisible, setIsVisible] = useState(isOpen);
 
   useEffect(() => {
@@ -62,7 +62,7 @@ const LoginModal = ({ isOpen, onClose, onLogin, onSignup, message = "Please log 
 
               {/* Title */}
               <h3 className="text-xl font-semibold text-white text-center mb-2">
-                Authentication Required
+                {isLoggedIn ? "Access Denied" : "Authentication Required"}
               </h3>
 
               {/* Message */}
@@ -76,15 +76,17 @@ const LoginModal = ({ isOpen, onClose, onLogin, onSignup, message = "Please log 
                   onClick={handleLogin}
                   className="w-full py-3 px-4 bg-cyan-600 hover:bg-cyan-500 text-white font-medium rounded-xl transition-colors"
                 >
-                  Log In
+                  {isLoggedIn ? "Go to Profile" : "Log In"}
                 </button>
                 
-                <button
-                  onClick={handleSignup}
-                  className="w-full py-3 px-4 bg-white/5 hover:bg-white/10 text-white font-medium rounded-xl border border-white/10 transition-colors"
-                >
-                  Create Account
-                </button>
+                {!isLoggedIn && (
+                  <button
+                    onClick={handleSignup}
+                    className="w-full py-3 px-4 bg-white/5 hover:bg-white/10 text-white font-medium rounded-xl border border-white/10 transition-colors"
+                  >
+                    Create Account
+                  </button>
+                )}
 
                 <button
                   onClick={onClose}
