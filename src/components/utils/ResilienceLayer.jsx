@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 // eslint-disable-next-line no-unused-vars
 import { AnimatePresence, motion } from 'framer-motion';
 import { WifiOff, RefreshCw } from 'lucide-react';
@@ -10,6 +11,7 @@ import LoginModal from '../auth/LoginModal';
  * and Firebase permission errors with user-friendly messages.
  */
 const ResilienceLayer = ({ children }) => {
+  const navigate = useNavigate();
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [hasCorruption, setHasCorruption] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -108,6 +110,8 @@ const ResilienceLayer = ({ children }) => {
         isOpen={showLoginModal} 
         onClose={() => setShowLoginModal(false)} 
         message={loginMessage}
+        onLogin={() => navigate('/join?login=1')}
+        onSignup={() => navigate('/join')}
       />
       
       <AnimatePresence>

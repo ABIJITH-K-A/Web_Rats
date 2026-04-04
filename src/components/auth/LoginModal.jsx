@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
 
-const LoginModal = ({ isOpen, onClose, message = "Please log in to continue" }) => {
-  const navigate = useNavigate();
+const LoginModal = ({ isOpen, onClose, onLogin, onSignup, message = "Please log in to continue" }) => {
   const [isVisible, setIsVisible] = useState(isOpen);
 
   useEffect(() => {
@@ -13,12 +11,12 @@ const LoginModal = ({ isOpen, onClose, message = "Please log in to continue" }) 
 
   const handleLogin = () => {
     onClose();
-    navigate('/join?login=1');
+    if (onLogin) onLogin();
   };
 
   const handleSignup = () => {
     onClose();
-    navigate('/join');
+    if (onSignup) onSignup();
   };
 
   // Close on escape key
