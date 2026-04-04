@@ -123,16 +123,28 @@ const Footer = () => {
                   Profile
                 </Link>
               ) : (
-                <Link
-                  to="/join"
-                  className="group flex items-center gap-2 text-light-gray/68 transition-colors hover:text-cyan-primary"
-                >
-                  <ArrowRight
-                    size={14}
-                    className="transition-transform group-hover:translate-x-1"
-                  />
-                  Sign In / Join
-                </Link>
+                <>
+                  <Link
+                    to="/join?tab=register"
+                    className="group flex items-center gap-2 text-light-gray/68 transition-colors hover:text-cyan-primary"
+                  >
+                    <ArrowRight
+                      size={14}
+                      className="transition-transform group-hover:translate-x-1"
+                    />
+                    Join
+                  </Link>
+                  <Link
+                    to="/join?login=1"
+                    className="group flex items-center gap-2 text-light-gray/68 transition-colors hover:text-cyan-primary"
+                  >
+                    <ArrowRight
+                      size={14}
+                      className="transition-transform group-hover:translate-x-1"
+                    />
+                    Sign In
+                  </Link>
+                </>
               )}
             </div>
           </div>

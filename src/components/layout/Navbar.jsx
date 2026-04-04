@@ -80,18 +80,31 @@ const Navbar = () => {
             );
           })}
 
-          <Link
-            to={user ? getDashboardPath() : "/join"}
-            className="rounded-full border border-cyan-primary bg-cyan-primary px-6 py-2.5 text-sm font-bold text-primary-dark transition-transform hover:-translate-y-0.5"
-          >
-            {user ? (
+          {user ? (
+            <Link
+              to={getDashboardPath()}
+              className="rounded-full border border-cyan-primary bg-cyan-primary px-6 py-2.5 text-sm font-bold text-primary-dark transition-transform hover:-translate-y-0.5"
+            >
               <span className="flex items-center gap-2">
                 <User size={16} /> Dashboard
               </span>
-            ) : (
-              "Join / Sign In"
-            )}
-          </Link>
+            </Link>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Link
+                to="/join?tab=register"
+                className="rounded-full border border-cyan-primary/50 px-4 py-2 text-sm font-semibold text-cyan-primary transition-all hover:bg-cyan-primary/10"
+              >
+                Join
+              </Link>
+              <Link
+                to="/join?login=1"
+                className="rounded-full border border-cyan-primary bg-cyan-primary px-4 py-2 text-sm font-bold text-primary-dark transition-transform hover:-translate-y-0.5"
+              >
+                Sign In
+              </Link>
+            </div>
+          )}
         </div>
 
         <button
@@ -121,12 +134,29 @@ const Navbar = () => {
               </Link>
             ))}
 
-            <Link
-              to={user ? getDashboardPath() : "/join"}
-              className="mt-2 rounded-2xl border border-cyan-primary bg-cyan-primary px-5 py-3 text-center text-sm font-bold text-primary-dark"
-            >
-              {user ? "Open Dashboard" : "Join / Sign In"}
-            </Link>
+            {user ? (
+              <Link
+                to={getDashboardPath()}
+                className="mt-2 rounded-2xl border border-cyan-primary bg-cyan-primary px-5 py-3 text-center text-sm font-bold text-primary-dark"
+              >
+                Open Dashboard
+              </Link>
+            ) : (
+              <div className="mt-2 flex gap-2">
+                <Link
+                  to="/join?tab=register"
+                  className="flex-1 rounded-2xl border border-cyan-primary/50 px-4 py-3 text-center text-sm font-semibold text-cyan-primary transition-all hover:bg-cyan-primary/10"
+                >
+                  Join
+                </Link>
+                <Link
+                  to="/join?login=1"
+                  className="flex-1 rounded-2xl border border-cyan-primary bg-cyan-primary px-4 py-3 text-center text-sm font-bold text-primary-dark"
+                >
+                  Sign In
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       )}
