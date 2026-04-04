@@ -111,7 +111,7 @@ const ResilienceLayer = ({ children }) => {
         onClose={() => setShowLoginModal(false)} 
         message={loginMessage}
         onLogin={() => navigate('/join?login=1')}
-        onSignup={() => navigate('/join')}
+        onSignup={() => navigate('/join?tab=register')}
       />
       
       <AnimatePresence>

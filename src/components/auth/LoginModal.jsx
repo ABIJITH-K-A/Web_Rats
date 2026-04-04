@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
 
 const LoginModal = ({ isOpen, onClose, onLogin, onSignup, message = "Please log in to continue" }) => {
@@ -43,7 +42,6 @@ const LoginModal = ({ isOpen, onClose, onLogin, onSignup, message = "Please log 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={onClose}
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
           />
           
