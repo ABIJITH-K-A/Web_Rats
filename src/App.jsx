@@ -54,7 +54,7 @@ function App() {
                   <Route path="/join" element={<JoinHub />} />
                   <Route path="/signup" element={<JoinHub />} />
                   <Route path="/forgot-password" element={<ForgotPassword />} />
-                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                   <Route
                     path="/dashboard"
                     element={
