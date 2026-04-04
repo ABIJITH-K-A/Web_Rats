@@ -1,23 +1,16 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 // eslint-disable-next-line no-unused-vars
 import { AnimatePresence, motion } from 'framer-motion';
 import { WifiOff, RefreshCw } from 'lucide-react';
-import LoginModal from '../auth/LoginModal';
-import { useAuth } from '../../context/AuthContext';
 
 /**
  * ResilienceLayer - Global Error Catch-All
  * Handles window errors, unhandled promise rejections, connectivity status,
- * and Firebase permission errors with user-friendly messages.
+ * and Firebase permission errors (dispatches event for PermissionErrorHandler).
  */
 const ResilienceLayer = ({ children }) => {
-  const navigate = useNavigate();
-  const { user } = useAuth();
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [hasCorruption, setHasCorruption] = useState(false);
-  const [showLoginModal, setShowLoginModal] = useState(false);
-  const [loginMessage, setLoginMessage] = useState("Please log in to continue");
 
   useEffect(() => {
     const handleGlobalError = (event) => {
@@ -44,20 +37,14 @@ const ResilienceLayer = ({ children }) => {
         return;
       }
 
-      // Handle Firebase permission errors
+      // Handle Firebase permission errors - dispatch event for PermissionErrorHandler
       if (errorMessage.includes('permission-denied') || 
           errorMessage.includes('Missing or insufficient permissions') ||
           errorMessage.includes('FirebaseError') && errorMessage.includes('permissions')) {
-        
-        // If user is logged in, they just don't have permission for this data
-        if (user) {
-          console.warn('🔒 Firebase permission denied for logged-in user. Role may not have access.');
-          setLoginMessage("You don't have permission to access this feature");
-        } else {
-          console.warn('🔒 Firebase permission denied. Showing login modal.');
-          setLoginMessage("You need to log in to access this feature");
-        }
-        setShowLoginModal(true);
+        console.warn('🔒 Firebase permission denied. Dispatching event to PermissionErrorHandler.');
+        window.dispatchEvent(new CustomEvent('firebase-permission-error', { 
+          detail: { message: errorMessage } 
+        }));
         return;
       }
 
@@ -97,7 +84,7 @@ const ResilienceLayer = ({ children }) => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  }, [hasCorruption, user]);
+  }, [hasCorruption]);
 
   const handleHardReset = () => {
     // Clear Firestore IndexedDB manually and reload
@@ -113,16 +100,6 @@ const ResilienceLayer = ({ children }) => {
   return (
     <>
       {children}
-      
-      {/* Login Modal for permission errors */}
-      <LoginModal 
-        isOpen={showLoginModal} 
-        onClose={() => setShowLoginModal(false)} 
-        message={loginMessage}
-        isLoggedIn={!!user}
-        onLogin={() => navigate(user ? '/profile' : '/join?login=1')}
-        onSignup={() => navigate(user ? '/profile' : '/join?tab=register')}
-      />
       
       <AnimatePresence>
         {(isOffline || hasCorruption) && (

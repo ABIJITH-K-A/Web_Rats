@@ -24,6 +24,7 @@ import ProtectedRoute from './components/auth/ProtectedRoute';
 import ScrollToTop from './components/utils/ScrollToTop';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import ResilienceLayer from './components/utils/ResilienceLayer';
+import PermissionErrorHandler from './components/utils/PermissionErrorHandler';
 import { Analytics } from "@vercel/analytics/react"
 import PaymentSuccess from './pages/payment/PaymentSuccess';
 
@@ -33,6 +34,7 @@ function App() {
       <ResilienceLayer>
         <ErrorBoundary variant="page">
           <AuthProvider>
+            <PermissionErrorHandler />
             <DashboardProvider>
               <ScrollToTop />
               <RootLayout>
