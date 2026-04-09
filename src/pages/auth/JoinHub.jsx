@@ -5,6 +5,7 @@ import {
   Eye, EyeOff, Ticket, Check, ArrowRight, KeyRound,
   Bolt, ShieldCheck, Users, Info
 } from 'lucide-react';
+import BackButton from '../../components/ui/BackButton';
 import { Button, Card } from '../../components/ui/Primitives';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
@@ -15,11 +16,9 @@ import { normalizeRole } from '../../utils/systemRules';
 /* ─── Role routing ─────────────────────────────────────────── */
 const ROLE_ROUTES = {
   client:     '/profile',
-  worker:     '/dashboard',
-  manager:    '/dashboard',
-  admin:      '/dashboard',
-  superadmin: '/dashboard',
-  owner:      '/dashboard',
+  worker:     '/profile',
+  admin:      '/profile',
+  owner:      '/profile',
 };
 
 /* ─── Reusable field ───────────────────────────────────────── */
@@ -480,7 +479,8 @@ const JoinHub = () => {
         </Card>
 
         {/* Footer Links */}
-        <div className="mt-6 text-center space-x-4">
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
+          <BackButton to="/" label="Back to home" className="min-w-[170px] h-12" />
           <Link to="/" className="text-[10px] font-mono uppercase tracking-widest text-light-gray/30 hover:text-cyan-primary transition-colors">
             ← Back to Home
           </Link>

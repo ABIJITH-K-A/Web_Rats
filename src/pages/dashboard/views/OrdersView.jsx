@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import {
   CheckCircle,
   Info,
@@ -10,7 +11,6 @@ import {
 } from 'lucide-react';
 import { Button } from '../../../components/ui/Primitives';
 import {
-  addDoc,
   collection,
   doc,
   getDocs,
@@ -43,6 +43,7 @@ import {
 } from '../../../utils/orderHelpers';
 
 const OrdersView = () => {
+  const navigate = useNavigate();
   const { user, userProfile } = useAuth();
   const { searchQuery, setSearchQuery } = useDashboard();
   const [orders, setOrders] = useState([]);
@@ -165,46 +166,29 @@ const OrdersView = () => {
 
     try {
       const selectedOrder = orders.find((order) => order.id === assignModal.orderId);
-      const isManager = userProfile?.role === 'manager';
       const primaryWorkerId = selectedWorkers[0] || null;
       const primaryWorker = workers.find((worker) => worker.id === primaryWorkerId);
+      const assignmentStatusPatch =
+        normalizeOrderStatus(selectedOrder?.status) === "pending_assignment"
+          ? buildOrderStatusPatch("assigned")
+          : {};
 
-      if (isManager && selectedWorkers.length > 2) {
-        await addDoc(collection(db, 'assignmentRequests'), {
-          orderId: assignModal.orderId,
-          requestedWorkers: selectedWorkers,
-          requestedBy: user?.uid || 'anonymous',
-          requestedByName: userProfile?.name || 'Manager',
-          status: 'pending',
-          createdAt: serverTimestamp(),
-        });
+      await updateDoc(doc(db, 'orders', assignModal.orderId), {
+        ...assignmentStatusPatch,
+        assignedWorkers: selectedWorkers,
+        workerAssigned: primaryWorkerId,
+        workerAssignedName: primaryWorker?.name || null,
+        assignedTo: primaryWorkerId,
+        assignedToName: primaryWorker?.name || null,
+        assignmentStatus: 'approved',
+        pendingAssignedWorkers: [],
+        assignedAt: serverTimestamp(),
+      });
 
-        await updateDoc(doc(db, 'orders', assignModal.orderId), {
-          assignmentStatus: 'pending_approval',
-          pendingAssignedWorkers: selectedWorkers,
-        });
-      } else {
-        const assignmentStatusPatch =
-          normalizeOrderStatus(selectedOrder?.status) === "pending_assignment"
-            ? buildOrderStatusPatch("assigned")
-            : {};
-
-        await updateDoc(doc(db, 'orders', assignModal.orderId), {
-          ...assignmentStatusPatch,
-          assignedWorkers: selectedWorkers,
-          workerAssigned: primaryWorkerId,
-          workerAssignedName: primaryWorker?.name || null,
-          assignedTo: primaryWorkerId,
-          assignedToName: primaryWorker?.name || null,
-          assignmentStatus: 'approved',
-          assignedAt: serverTimestamp(),
-        });
-
-        await notifyWorkersAssigned({
-          workerIds: selectedWorkers,
-          order: { ...selectedOrder, id: assignModal.orderId },
-        });
-      }
+      await notifyWorkersAssigned({
+        workerIds: selectedWorkers,
+        order: { ...selectedOrder, id: assignModal.orderId },
+      });
 
       await logAuditEvent({
         actorId: user?.uid || null,
@@ -215,8 +199,7 @@ const OrdersView = () => {
         severity: "medium",
         metadata: {
           workerIds: selectedWorkers,
-          assignmentMode:
-            isManager && selectedWorkers.length > 2 ? "approval_request" : "direct",
+          assignmentMode: "direct",
         },
       });
 
@@ -231,18 +214,13 @@ const OrdersView = () => {
                 workerAssignedName: primaryWorker?.name || null,
                 assignedTo: primaryWorkerId,
                 assignedToName: primaryWorker?.name || null,
-                assignmentStatus: isManager && selectedWorkers.length > 2
-                  ? 'pending_approval'
-                  : 'approved',
-                ...(isManager && selectedWorkers.length > 2
-                  ? {}
-                  : buildOrderStatusPatch(
-                      normalizeOrderStatus(order.status) === "pending_assignment"
-                        ? "assigned"
-                        : normalizeOrderStatus(order.status)
-                    )),
-                pendingAssignedWorkers:
-                  isManager && selectedWorkers.length > 2 ? selectedWorkers : [],
+                assignmentStatus: 'approved',
+                pendingAssignedWorkers: [],
+                ...buildOrderStatusPatch(
+                  normalizeOrderStatus(order.status) === "pending_assignment"
+                    ? "assigned"
+                    : normalizeOrderStatus(order.status)
+                ),
               }
             : order
         )
@@ -457,13 +435,16 @@ const OrdersView = () => {
             order={selectedOrder}
             userRole={userProfile?.role}
             onClose={() => setSelectedOrder(null)}
-            onContact={() => {/* handle contact logic */}}
+            onContact={() => {
+              setSelectedOrder(null);
+              navigate(`/messages?id=${selectedOrder.id}`);
+            }}
             onUpdateStatus={(o, s) => handleUpdateStatus(o, s)}
           />
         )}
 
         {assignModal.open && (
-          <div className="fixed inset-0 z-[110] flex items-center justify-center p-6">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -534,16 +515,6 @@ const OrdersView = () => {
                   </label>
                 ))}
               </div>
-
-              {userProfile?.role === 'manager' && selectedWorkers.length > 2 && (
-                <div className="mt-5 flex items-start gap-3 rounded-2xl border border-yellow-500/20 bg-yellow-500/10 p-4 text-yellow-300">
-                  <Info size={16} className="mt-0.5 shrink-0" />
-                  <p className="text-[10px] font-mono uppercase tracking-[0.16em] leading-relaxed">
-                    Assigning more than two workers will create an approval
-                    request instead of assigning directly.
-                  </p>
-                </div>
-              )}
 
               <div className="mt-6 flex gap-3">
                 <Button

@@ -21,7 +21,7 @@ const verifyPaymentSchema = z.object({
 router.get(
   '/pending',
   authGuard,
-  roleGuard(['admin', 'manager', 'owner']),
+  roleGuard(['admin', 'owner']),
   asyncHandler(async (req, res) => {
     const snapshot = await adminDb().collection('orders')
       .where('statusKey', '==', 'pending_payment_verification')
@@ -37,7 +37,7 @@ router.get(
 router.post(
   '/verify',
   authGuard,
-  roleGuard(['admin', 'manager', 'owner']),
+  roleGuard(['admin', 'owner']),
   validateBody(verifyPaymentSchema),
   asyncHandler(async (req, res) => {
     const { orderId, status, reason } = req.body;

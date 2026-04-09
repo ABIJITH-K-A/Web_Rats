@@ -1,6 +1,7 @@
 @import url("https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&display=swap");
 @import "tailwindcss";
 @import "./styles/theme.css";
+@import "./styles/actionControls.css";
 
 @theme {
   --color-primary-dark: var(--color-primary-dark);
@@ -16,7 +17,7 @@
 @layer base {
   body {
     @apply bg-primary-dark text-light-gray font-sans cursor-default overflow-x-hidden m-0 p-0;
-    background: rgba(38, 43, 37, 0.85);
+    background: rgba(9, 10, 14, 0.94);
   }
 
   /* Grid overlay from original styles.css */
@@ -24,8 +25,8 @@
     content: "";
     @apply fixed inset-0 pointer-events-none z-[-1];
     background-image:
-      linear-gradient(rgba(103, 248, 29, 0.04) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(103, 248, 29, 0.04) 1px, transparent 1px);
+      linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
     background-size: 40px 40px;
     animation: gridMove 30s linear infinite;
   }
@@ -64,5 +65,74 @@
   .service-card:hover {
     @apply -translate-y-4 shadow-2xl;
     background: linear-gradient(145deg, var(--color-secondary-dark), var(--color-teal-primary));
+  }
+
+  /* --- Dynamic Lighting & High Opacity Overrides --- */
+  
+  /* Force a high-opacity backing on any section or glass elements so text remains readable over the intense neural background */
+  section[class*="bg-"] {
+    background-color: rgba(9, 10, 14, 0.94) !important;
+    backdrop-filter: blur(28px) !important;
+    position: relative;
+  }
+
+  /* Create a dynamic top/bottom border glow on major wrapper sections across pages */
+  section[class*="bg-"]::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: inset 0 20px 40px -20px rgba(255, 255, 255, 0.025), inset 0 -20px 40px -20px rgba(255, 255, 255, 0.025);
+    z-index: 1;
+  }
+
+  /* Treat specific transparent panel overrides */
+  .backdrop-blur-md, 
+  .backdrop-blur-xl, 
+  [class*="bg-black/"], 
+  [class*="bg-secondary-dark/"],
+  [class*="bg-white/"] {
+    backdrop-filter: blur(16px);
+  }
+}
+
+@layer utilities {
+  @keyframes textGradient {
+    0%,
+    100% {
+      background-size: 200% 200%;
+      background-position: left center;
+    }
+
+    50% {
+      background-size: 200% 200%;
+      background-position: right center;
+    }
+  }
+
+  .text-gradient-brand {
+    background-image: linear-gradient(
+      90deg,
+      rgb(var(--rgb-cyan-primary)) 0%,
+      rgb(var(--rgb-teal-primary)) 35%,
+      rgba(255, 255, 255, 0.98) 50%,
+      rgb(var(--rgb-teal-primary)) 65%,
+      rgb(var(--rgb-cyan-primary)) 100%
+    );
+    background-size: 200% 200%;
+    background-position: left center;
+    background-repeat: no-repeat;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: textGradient 5s ease infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .text-gradient-brand {
+      animation: none;
+    }
   }
 }

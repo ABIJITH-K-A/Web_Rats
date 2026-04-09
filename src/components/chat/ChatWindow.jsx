@@ -42,7 +42,7 @@ const ChatMessage = ({ message, isOwn }) => {
           </div>
         )}
         <p className="text-sm text-light-gray/90 leading-relaxed">
-          {message.content}
+          {message.text || message.content || ''}
         </p>
         <div className="flex items-center justify-end gap-1 mt-1">
           <span className="text-[10px] text-white/40">

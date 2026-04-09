@@ -9,7 +9,6 @@ import About from './pages/public/About';
 import Projects from './pages/public/Projects';
 import Help from './pages/public/Help';
 import BookService from './pages/public/BookService';
-import Templates from './pages/public/Templates';
 import MarketplaceIndex from './pages/marketplace/Index';
 import TemplateDetail from './pages/marketplace/TemplateDetail';
 import Checkout from './pages/marketplace/Checkout';
@@ -19,6 +18,7 @@ import NotFound from './pages/public/NotFound';
 import Terms from './pages/public/Terms';
 import Privacy from './pages/public/Privacy';
 import Profile from './pages/auth/Profile';
+import Messages from './pages/auth/Messages';
 import RoleBasedDashboard from './components/dashboard/RoleBasedDashboard';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import ScrollToTop from './components/utils/ScrollToTop';
@@ -46,7 +46,7 @@ function App() {
                   <Route path="/projects" element={<Projects />} />
                   <Route path="/help" element={<Help />} />
                   <Route path="/book" element={<BookService />} />
-                  <Route path="/templates" element={<Templates />} />
+                  <Route path="/templates" element={<MarketplaceIndex />} />
                   <Route path="/marketplace" element={<MarketplaceIndex />} />
                   <Route path="/template/:id" element={<TemplateDetail />} />
                   <Route path="/checkout/:id" element={<Checkout />} />
@@ -58,8 +58,16 @@ function App() {
                   <Route
                     path="/dashboard"
                     element={
-                      <ProtectedRoute allowedRoles={['owner', 'superadmin', 'admin', 'manager', 'worker']}>
+                      <ProtectedRoute allowedRoles={['owner', 'admin', 'worker']}>
                         <RoleBasedDashboard />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/messages"
+                    element={
+                      <ProtectedRoute>
+                        <Messages />
                       </ProtectedRoute>
                     }
                   />

@@ -1,17 +1,16 @@
-import { motion } from "framer-motion";
+import { useRef } from "react";
+import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import {
   ArrowRight,
   BriefcaseBusiness,
-  Clock3,
   FileStack,
   Package,
-  Users,
   Wrench,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import BorderGlow from "../../components/ui/BorderGlow";
 import { Button, Card, SectionHeading } from "../../components/ui/Primitives";
 import SpotlightCard from "../../components/ui/SpotlightCard";
+import backgroundTheme from "../../config/backgroundTheme";
 import {
   FEATURED_PROJECTS,
   HORIZONTAL_PROJECTS,
@@ -35,132 +34,95 @@ const categorySpotlightColors = {
 };
 
 const Home = () => {
+  const heroRef = useRef(null);
+  const shouldReduceMotion = useReducedMotion();
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ["start start", "end start"],
+  });
+  const heroWallpaperScale = useTransform(
+    scrollYProgress,
+    [0, 0.4, 0.8, 1],
+    shouldReduceMotion ? [1, 1, 1, 1] : [1, 1.5, 1.95, 2.08],
+  );
+  const heroWallpaperOpacity = useTransform(
+    scrollYProgress,
+    [0, 0.5, 0.8, 1],
+    shouldReduceMotion ? [0.34, 0.24, 0.12, 0.08] : [0.42, 0.24, 0, 0],
+  );
+  const heroWallpaperY = useTransform(
+    scrollYProgress,
+    [0, 1],
+    shouldReduceMotion ? ["0%", "0%"] : ["0%", "10%"],
+  );
+  const heroOverlayOpacity = useTransform(
+    scrollYProgress,
+    [0, 1],
+    shouldReduceMotion ? [0.34, 0.5] : [0.28, 0.72],
+  );
+  const heroContentY = useTransform(
+    scrollYProgress,
+    [0, 1],
+    shouldReduceMotion ? [0, 0] : [0, 96],
+  );
+  const heroWallpaperStyle = {
+    backgroundImage: `${backgroundTheme.homeHero.overlay}, url("${backgroundTheme.homeHero.image}")`,
+    backgroundPosition: backgroundTheme.homeHero.position,
+    backgroundSize: backgroundTheme.homeHero.size,
+    backgroundRepeat: backgroundTheme.homeHero.repeat ?? "no-repeat",
+  };
+
   return (
     <div className="flex flex-col">
-      <section className="relative overflow-hidden py-16 md:py-24">
-        <div className="container mx-auto grid items-center gap-14 px-6 lg:grid-cols-[1.05fr_0.95fr]">
+      <section ref={heroRef} className="relative isolate overflow-hidden py-20 md:py-28">
+        <div aria-hidden="true" className="absolute inset-0 z-0 overflow-hidden">
           <motion.div
-            initial={{ opacity: 0, x: -32 }}
-            animate={{ opacity: 1, x: 0 }}
+            className="absolute inset-[-8%] bg-no-repeat"
+            style={{
+              ...heroWallpaperStyle,
+              opacity: heroWallpaperOpacity,
+              scale: heroWallpaperScale,
+              y: heroWallpaperY,
+            }}
+          />
+          <motion.div
+            className="absolute inset-0 bg-black"
+            style={{ opacity: heroOverlayOpacity }}
+          />
+          <div className="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-b from-transparent via-primary-dark/45 to-primary-dark" />
+        </div>
+
+        <div className="container relative z-10 mx-auto flex min-h-[82vh] flex-col items-center justify-center gap-14 px-6 text-center md:min-h-[96vh]">
+          <motion.div
+            initial={{ opacity: 0, y: -32 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7 }}
+            style={{ y: heroContentY }}
+            className="flex flex-col items-center"
           >
-            <div className="mb-6 inline-flex items-center rounded-full border border-cyan-primary/20 bg-cyan-primary/8 px-4 py-2 text-[10px] font-mono uppercase tracking-[0.24em] text-cyan-primary">
-              TNWebRats We Build
-            </div>
-            <h1 className="max-w-4xl text-5xl font-black leading-[1.05] text-white md:text-7xl">
-              We{" "}<span className="text-cyan-primary">Build</span>. We{" "}<span className="text-cyan-primary">Design</span>. We{" "}
-              <span className="text-cyan-primary">Deliver.</span>
+            <h1 className="max-w-4xl text-5xl font-black leading-[1.05] text-white md:text-7xl text-center ">
+              We{" "}<span className="text-gradient-brand inline-block">Build</span>. We{" "}<span className="text-gradient-brand inline-block">Design</span>. We{" "}
+              <span className="text-gradient-brand inline-block">Deliver.</span>
             </h1>
-            <p className="mt-7 max-w-2xl text-lg leading-8 text-light-gray/74 md:text-xl">
-              Welcome to TNWebRats - We <span className="font-bold text-cyan-primary">Build</span>. We <span className="font-bold text-cyan-primary">Design</span>. We <span className="font-bold text-cyan-primary">Deliver</span>. run by two builders who
-              turn ideas into polished digital experiences. Websites,
-              presentations, posters, and quick-turn digital support all live in
-              one place.
+            <p className="mt-7 max-w-2xl text-lg leading-8 text-light-gray/74 md:text-xl text-center">
+             We Build. We Design. We Deliver.
+             Crafted by two dedicated builders,
+             we transform ideas into refined digital
+             experiences — from high-performing websites
+             to polished presentations and visual assets,
+             all delivered with precision and speed.
             </p>
 
-            <div className="mt-10 flex flex-wrap gap-4">
+            <div className="mt-20 flex flex-wrap justify-center gap-8">
               <Link to="/services">
                 <Button>
-                  Explore Our Services <ArrowRight size={16} />
+                  Explore Our Services <ArrowRight size={18} />
                 </Button>
               </Link>
               <Link to="/projects">
-                <Button variant="outline">See Our Projects</Button>
+                <Button variant="outline">See Our Projects <ArrowRight size={18} /></Button>
               </Link>
             </div>
-
-            <div className="mt-12 grid gap-4 md:grid-cols-3">
-              {[
-                {
-                  label: "Direct Collaboration",
-                  detail: "You work with the actual makers.",
-                  icon: Users,
-                },
-                {
-                  label: "Fast Turnaround",
-                  detail: "Deadlines stay visible from day one.",
-                  icon: Clock3,
-                },
-                {
-                  label: "Intentional Output",
-                  detail: "Custom work instead of recycled templates.",
-                  icon: FileStack,
-                },
-              ].map((item) => {
-                const Icon = item.icon;
-                return (
-                  <div
-                    key={item.label}
-                    className="rounded-2xl border border-white/8 bg-secondary-dark/70 p-5"
-                  >
-                    <Icon size={18} className="mb-3 text-cyan-primary" />
-                    <div className="text-sm font-semibold text-white">
-                      {item.label}
-                    </div>
-                    <div className="mt-1 text-sm leading-6 text-light-gray/58">
-                      {item.detail}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 28 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.1 }}
-            className="relative"
-          >
-            <div className="absolute left-1/2 top-6 h-56 w-56 -translate-x-1/2 rounded-full bg-cyan-primary/10 blur-3xl" />
-            <BorderGlow
-              backgroundColor="rgba(0,0,0,0.75)"
-              glowColor="103 248 29"
-              colors={["#67F81D", "#62CB2C", "#0B0C10"]}
-              borderRadius={32}
-              className="overflow-hidden"
-            >
-              <div className="grid gap-0 lg:grid-cols-[1.1fr_0.9fr]">
-                <img
-                  src="/Images/Icons/WebRatBannerDark.png"
-                  alt="TNWebRats hero banner"
-                  className="h-full min-h-[320px] w-full object-cover"
-                />
-                <div className="flex flex-col justify-between gap-6 bg-black/85 p-8">
-                  <div>
-                    <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-cyan-primary/75">
-                      Studio Snapshot
-                    </div>
-                    <h2 className="mt-3 text-3xl font-black text-white">
-                      Two minds. One mission. Infinite creativity.
-                    </h2>
-                    <p className="mt-4 text-sm leading-7 text-light-gray/65">
-                      From student portfolios to startup launch assets, we help
-                      people show up like they mean it.
-                    </p>
-                  </div>
-
-                  <div className="grid gap-4">
-                    {SERVICE_CATEGORIES.slice(0, 3).map((category) => (
-                      <div
-                        key={category.id}
-                        className="rounded-2xl border border-white/8 bg-white/3 p-4"
-                      >
-                        <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary/70">
-                          {category.shortName}
-                        </div>
-                        <div className="mt-1 font-semibold text-white">
-                          {category.name}
-                        </div>
-                        <div className="mt-1 text-sm text-light-gray/55">
-                          {category.pricingHint}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </BorderGlow>
           </motion.div>
         </div>
       </section>
@@ -169,7 +131,7 @@ const Home = () => {
         <div className="container mx-auto px-6 text-center">
           <p className="text-2xl font-black italic leading-snug text-white md:text-4xl">
             "Two minds. One mission.{" "}
-            <span className="text-cyan-primary">Infinite creativity.</span>"
+            <span className="text-gradient-brand inline-block">Infinite creativity.</span>"
           </p>
         </div>
       </section>
@@ -183,15 +145,15 @@ const Home = () => {
           <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
             <Card className="border-cyan-primary/10 bg-secondary-dark/65">
               <p className="text-lg leading-8 text-light-gray/72">
-                We are not a giant agency and we are not trying to sound like
-                one. We are two people who care about what gets shipped, how it
-                looks, and whether it actually helps the person who asked for
-                it.
+               We’re not a large agency — and we don’t aim to be.
+               We’re two builders who care deeply about what we ship, 
+               how it looks, and whether it truly delivers value to the 
+               people we work with.
               </p>
               <p className="mt-6 text-lg leading-8 text-light-gray/72">
-                From students to startups, from a single poster to a full
-                website, we help you show up with work that feels clear, bold,
-                and ready to be seen.
+                From students to startups — 
+                from a single poster to a complete website 
+                — we create work that is clear, bold, and built to be seen.
               </p>
             </Card>
 
@@ -392,7 +354,7 @@ const Home = () => {
         <div className="container mx-auto px-6">
           <Card hoverEffect={false} className="overflow-hidden border-cyan-primary/15 bg-gradient-to-r from-black to-secondary-dark px-8 py-16 text-center md:px-14">
             <h2 className="text-4xl font-black text-white md:text-5xl">
-              Ready to build something people will actually notice?
+              Ready to build something people will actually <span className="text-gradient-brand inline-block">notice</span> ?
             </h2>
             <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-light-gray/70">
               Start with the service lane that fits your goal, or book directly

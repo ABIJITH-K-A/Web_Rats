@@ -1,139 +1,188 @@
+import { FieldValue } from 'firebase-admin/firestore';
+import multer from 'multer';
 import { Router } from 'express';
 import { adminDb, adminStorage } from '../config/firebaseAdmin.js';
 import { asyncHandler } from '../lib/asyncHandler.js';
 import { HttpError } from '../lib/httpError.js';
 import { authGuard } from '../middleware/authGuard.js';
-import { FieldValue } from 'firebase-admin/firestore';
-import multer from 'multer';
+import { buildOrderStatusPatch, getAssignedWorkerIds } from '../lib/orderStatus.js';
+import { normalizeValue } from '../lib/roles.js';
 
 const router = Router();
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 100 * 1024 * 1024 }, // 100MB max
+  limits: { fileSize: 100 * 1024 * 1024 },
 });
 
-const ALLOWED_TYPES = [
-  'image/jpeg', 'image/png', 'image/webp', 'image/gif',
+const ALLOWED_TYPES = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
   'application/pdf',
-  'application/zip', 'application/x-zip-compressed',
-  'video/mp4', 'video/quicktime',
-];
+  'application/zip',
+  'application/x-zip-compressed',
+  'video/mp4',
+  'video/quicktime',
+]);
 
-const getShortSignedUrl = async (storagePath) => {
-  const bucket = adminStorage().bucket();
-  const fileRef = bucket.file(storagePath);
-  const [url] = await fileRef.getSignedUrl({
+const getSignedUrl = async (storagePath) => {
+  const [url] = await adminStorage().bucket().file(storagePath).getSignedUrl({
     action: 'read',
-    expires: Date.now() + 10 * 60 * 1000, // 10 minutes
+    expires: new Date('2035-01-01T00:00:00.000Z'),
   });
+
   return url;
 };
 
-// POST /api/upload/:category/:orderId
-// categories: reference, preview, revision, final
+const canUploadReference = (order, currentUser) =>
+  [order.userId, order.customerId].filter(Boolean).includes(currentUser.uid);
+
+const canUploadDelivery = (order, currentUser) => {
+  if (normalizeValue(currentUser.role) === 'owner') {
+    return true;
+  }
+
+  return getAssignedWorkerIds(order).includes(currentUser.uid);
+};
+
 router.post(
-  '/:category/:orderId',
+  '/',
   authGuard,
   upload.single('file'),
   asyncHandler(async (req, res) => {
-    const { category, orderId } = req.params;
     const file = req.file;
-    const { uid, role } = req.currentUser;
+    const orderId = String(req.body.orderId || '').trim();
+    const uploadType = String(req.body.uploadType || '').trim().toLowerCase();
+    const message = String(req.body.message || '').trim();
 
-    if (!file) throw new HttpError(400, 'No file provided.');
-
-    // Validate file type (MIME type check)
-    if (!ALLOWED_TYPES.includes(file.mimetype)) {
-      throw new HttpError(400, `Invalid file type: ${file.mimetype}. Allowed types are: ${ALLOWED_TYPES.join(', ')}`);
+    if (!file) {
+      throw new HttpError(400, 'File is required.');
     }
 
-    if (!['reference', 'preview', 'revision', 'final'].includes(category)) {
-      throw new HttpError(400, 'Invalid category.');
+    if (!orderId) {
+      throw new HttpError(400, 'orderId is required.');
+    }
+
+    if (!['reference', 'delivery'].includes(uploadType)) {
+      throw new HttpError(400, 'uploadType must be either "reference" or "delivery".');
+    }
+
+    if (!ALLOWED_TYPES.has(file.mimetype)) {
+      throw new HttpError(400, `Unsupported file type: ${file.mimetype}`);
     }
 
     const orderRef = adminDb().collection('orders').doc(orderId);
-    const orderSnap = await orderRef.get();
-    if (!orderSnap.exists) throw new HttpError(404, 'Order not found.');
-    const order = orderSnap.data();
+    const orderSnapshot = await orderRef.get();
 
-    // Permission checks
-    if (category === 'reference') {
-      if (order.userId !== uid) throw new HttpError(403, 'Only the client can upload references.');
-    } else {
-      const isAssigned = [order.assignedTo, order.workerAssigned, ...(order.assignedWorkers || [])].includes(uid);
-      if (!isAssigned && !['admin', 'manager', 'owner', 'super_admin'].includes(role)) {
-        throw new HttpError(403, 'Unauthorized to upload deliverables.');
-      }
+    if (!orderSnapshot.exists) {
+      throw new HttpError(404, 'Order not found.');
     }
 
-    const filename = `${Date.now()}_${file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
-    const storagePath = `orders/${orderId}/${category}/${filename}`;
-    const bucket = adminStorage().bucket();
-    const fileRef = bucket.file(storagePath);
+    const order = { id: orderSnapshot.id, ...orderSnapshot.data() };
 
-    await fileRef.save(file.buffer, {
-      metadata: { contentType: file.mimetype },
+    if (uploadType === 'reference' && !canUploadReference(order, req.currentUser)) {
+      throw new HttpError(403, 'Only the client can upload reference files.');
+    }
+
+    if (uploadType === 'delivery' && !canUploadDelivery(order, req.currentUser)) {
+      throw new HttpError(403, 'Only the assigned worker can upload delivery files.');
+    }
+
+    const safeFileName = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const fileName = `${Date.now()}_${safeFileName}`;
+    const storagePath = `orders/${orderId}/${uploadType}/${fileName}`;
+
+    await adminStorage().bucket().file(storagePath).save(file.buffer, {
+      metadata: {
+        contentType: file.mimetype,
+      },
     });
 
-    const url = await getShortSignedUrl(storagePath);
+    const fileUrl = await getSignedUrl(storagePath);
+    const versionSnapshot = await adminDb()
+      .collection('uploads')
+      .where('orderId', '==', orderId)
+      .where('uploadType', '==', uploadType)
+      .get();
 
-    const fileRecord = {
-      name: file.originalname,
-      filename,
-      url, // Short-lived
+    const previewOnly = uploadType === 'delivery';
+    const downloadable = uploadType !== 'delivery';
+    const version = versionSnapshot.size + 1;
+
+    const uploadPayload = {
+      orderId,
+      uploadedBy: req.currentUser.uid,
+      fileUrl,
+      previewOnly,
+      downloadable,
+      version,
+      uploadType,
+      fileName: file.originalname,
+      mimeType: file.mimetype,
       storagePath,
-      size: file.size,
-      type: file.mimetype,
-      category,
-      uploadedBy: uid,
-      uploadedAt: FieldValue.serverTimestamp(),
-      isLocked: category === 'final' && order.paymentStatus !== 'paid',
+      createdAt: FieldValue.serverTimestamp(),
     };
 
-    const updateData = {};
-    if (category === 'reference') updateData.references = FieldValue.arrayUnion(fileRecord);
-    else if (category === 'preview') updateData.previewFiles = FieldValue.arrayUnion(fileRecord);
-    else if (category === 'revision') {
-      updateData.revisionFiles = FieldValue.arrayUnion(fileRecord);
-      updateData.revisionUsed = FieldValue.increment(1);
+    const uploadRef = await adminDb().collection('uploads').add(uploadPayload);
+
+    const senderRole = normalizeValue(req.currentUser.role) === 'client' ? 'client' : 'worker';
+    const messageType = uploadType === 'delivery' ? 'delivery' : 'file';
+    const messagePayload = {
+      orderId,
+      senderId: req.currentUser.uid,
+      senderRole,
+      senderName: req.currentUser.profile?.name || req.currentUser.email || 'Team Member',
+      message:
+        message ||
+        (uploadType === 'delivery' ? 'Work uploaded for review' : `File shared: ${file.originalname}`),
+      fileUrl,
+      type: messageType,
+      fileName: file.originalname,
+      previewOnly,
+      downloadable,
+      uploadId: uploadRef.id,
+      createdAt: FieldValue.serverTimestamp(),
+    };
+
+    const chatMessageRef = await adminDb().collection('messages').add(messagePayload);
+
+    await adminDb()
+      .collection('chatThreads')
+      .doc(orderId)
+      .set(
+        {
+          orderId,
+          clientId: order.customerId || order.userId || null,
+          workerIds: getAssignedWorkerIds(order),
+          lastMessage: {
+            text: messagePayload.message,
+            senderId: req.currentUser.uid,
+            senderRole,
+            createdAt: FieldValue.serverTimestamp(),
+          },
+          updatedAt: FieldValue.serverTimestamp(),
+          createdAt: FieldValue.serverTimestamp(),
+        },
+        { merge: true }
+      );
+
+    if (uploadType === 'delivery') {
+      await orderRef.set(buildOrderStatusPatch('delivered_preview'), { merge: true });
     }
-    else if (category === 'final') updateData.finalFiles = FieldValue.arrayUnion(fileRecord);
 
-    updateData.updatedAt = FieldValue.serverTimestamp();
-    await orderRef.update(updateData);
-
-    res.status(201).json({ file: fileRecord });
-  })
-);
-
-// GET /api/upload/download/:orderId/:category/:filename
-router.get(
-  '/download/:orderId/:category/:filename',
-  authGuard,
-  asyncHandler(async (req, res) => {
-    const { orderId, category, filename } = req.params;
-    const { uid, role } = req.currentUser;
-
-    const orderSnap = await adminDb().collection('orders').doc(orderId).get();
-    if (!orderSnap.exists) throw new HttpError(404, 'Order not found.');
-    const order = orderSnap.data();
-
-    // Locking logic
-    if (category === 'final' && order.paymentStatus !== 'paid') {
-      if (order.userId === uid) {
-        throw new HttpError(403, 'Please complete the final payment to download these files.');
-      }
-    }
-
-    // Access check
-    const isClient = order.userId === uid;
-    const isStaff = ['admin', 'manager', 'owner', 'super_admin', 'worker'].includes(role);
-    if (!isClient && !isStaff) throw new HttpError(403, 'Access denied.');
-
-    const storagePath = `orders/${orderId}/${category}/${filename}`;
-    const url = await getShortSignedUrl(storagePath);
-
-    res.json({ url });
+    res.status(201).json({
+      upload: {
+        id: uploadRef.id,
+        ...uploadPayload,
+        fileUrl,
+      },
+      message: {
+        id: chatMessageRef.id,
+        ...messagePayload,
+        fileUrl,
+      },
+    });
   })
 );
 

@@ -29,7 +29,7 @@ export const fetchNotificationsForUser = async (user, role) => {
 
   const normalizedRole = normalizeRole(role);
 
-  if (['admin', 'owner', 'superadmin'].includes(normalizedRole)) {
+  if (['admin', 'owner'].includes(normalizedRole)) {
     const snapshot = await getDocs(
       query(collection(db, 'notifications'), orderBy('createdAt', 'desc'), limit(30))
     );

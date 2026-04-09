@@ -833,31 +833,26 @@ export const PORTFOLIO_GALLERY = [
     id: "gallery-1",
     title: "Presentation Work",
     image: "/Images/Project_Preview/ppt_2.jpg",
-    link: "https://drive.google.com/drive/folders/1aO3Z-mfWXL7PXlot4fbmJ2K49iyyp8tQ?usp=sharing",
   },
   {
     id: "gallery-2",
     title: "Brand And Web Visuals",
     image: "/Images/Project_Preview/website_1.png",
-    link: "https://drive.google.com/drive/folders/1aO3Z-mfWXL7PXlot4fbmJ2K49iyyp8tQ?usp=sharing",
   },
   {
     id: "gallery-3",
     title: "Creative Posters",
     image: "/Images/Project_Preview/poster_1.png",
-    link: "https://drive.google.com/drive/folders/1aO3Z-mfWXL7PXlot4fbmJ2K49iyyp8tQ?usp=sharing",
   },
   {
     id: "gallery-4",
     title: "Website Snapshots",
     image: "/Images/Project_Preview/website_2.png",
-    link: "https://drive.google.com/drive/folders/1aO3Z-mfWXL7PXlot4fbmJ2K49iyyp8tQ?usp=sharing",
   },
   {
     id: "gallery-5",
     title: "Academic & Pitch Decks",
     image: "/Images/Project_Preview/ppt_1.jpg",
-    link: "https://drive.google.com/drive/folders/1aO3Z-mfWXL7PXlot4fbmJ2K49iyyp8tQ?usp=sharing",
   },
 ];
  export const HORIZONTAL_PROJECTS = [
@@ -971,16 +966,26 @@ export const buildPaymentBreakdown = ({
   basePrice,
   isPriority = false,
   customerType = "new",
+  referralDiscountPercent = 0,
 }) => {
   const priorityFee = isPriority ? getPriorityFee(basePrice) : 0;
-  const total = basePrice + priorityFee;
+  const subtotal = basePrice + priorityFee;
   const advanceRate = getAdvanceRate(customerType);
+  const discountPercent = Math.max(0, Number(referralDiscountPercent || 0));
+  const discountAmount = Math.min(
+    subtotal,
+    Math.round(subtotal * (discountPercent / 100))
+  );
+  const total = subtotal - discountAmount;
   const advancePayment = Math.round(total * advanceRate);
   const remainingPayment = total - advancePayment;
 
   return {
     basePrice,
     priorityFee,
+    subtotal,
+    discountPercent,
+    discountAmount,
     total,
     advanceRate,
     advancePayment,

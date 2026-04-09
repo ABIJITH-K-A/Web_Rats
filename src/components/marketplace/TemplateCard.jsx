@@ -1,95 +1,83 @@
-import { useState } from "react";
+import { ArrowRight, Download, ShoppingCart } from "lucide-react";
 import { Link } from "react-router-dom";
+import DownloadActionButton from "../ui/DownloadActionButton";
+
+const formatPrice = (price, isFree) =>
+  isFree ? "Free" : `Rs ${Number(price || 0).toLocaleString("en-IN")}`;
 
 export default function TemplateCard({ template }) {
-  const [isHovered, setIsHovered] = useState(false);
-  const [liked, setLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState(template.likes || 0);
-
-  const handleLike = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setLiked(!liked);
-    setLikeCount((prev) => (liked ? prev - 1 : prev + 1));
-  };
+  const image = template.images?.[0] || "/Images/Project_Preview/Project_Preview_1.png";
 
   return (
-    <div
-      className="group relative overflow-hidden rounded-xl bg-white shadow-sm transition-shadow hover:shadow-md"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      {/* Image Container */}
-      <div className="relative aspect-4/3 overflow-hidden bg-gray-100">
-        <img
-          src={template.imageUrl}
-          alt={template.title}
-          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-        />
-        
-        {/* Hover Overlay */}
-        <div
-          className={`absolute inset-0 flex items-center justify-center gap-3 bg-black/50 transition-opacity duration-200 ${
-            isHovered ? "opacity-100" : "opacity-0"
-          }`}
-        >
+    <article className="group overflow-hidden rounded-[2rem] border border-white/8 bg-[#121417] shadow-[0_30px_60px_rgba(0,0,0,0.25)] transition hover:-translate-y-1 hover:border-cyan-primary/20">
+      <Link to={`/template/${template.id}`} className="block">
+        <div className="relative aspect-[16/10] overflow-hidden bg-black/40">
+          <img
+            src={image}
+            alt={template.title}
+            className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0D0F0D] via-transparent to-transparent" />
+          <div className="absolute left-4 top-4 flex items-center gap-2">
+            <span className="rounded-full border border-white/10 bg-black/45 px-3 py-1 text-[10px] font-mono uppercase tracking-[0.18em] text-white/65">
+              {template.category || "template"}
+            </span>
+            <span
+              className={`rounded-full border px-3 py-1 text-[10px] font-mono uppercase tracking-[0.18em] ${
+                template.isFree
+                  ? "border-emerald-400/20 bg-emerald-400/10 text-emerald-300"
+                  : "border-cyan-primary/20 bg-cyan-primary/10 text-cyan-primary"
+              }`}
+            >
+              {formatPrice(template.price, template.isFree)}
+            </span>
+          </div>
+        </div>
+      </Link>
+
+      <div className="space-y-4 p-5">
+        <div>
+          <h3 className="text-xl font-black text-white">{template.title}</h3>
+          <p className="mt-2 line-clamp-2 text-sm leading-6 text-white/52">
+            {template.description}
+          </p>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          {(template.tags || []).slice(0, 3).map((tag) => (
+            <span
+              key={tag}
+              className="rounded-full border border-white/8 bg-white/[0.03] px-3 py-1 text-[11px] text-white/48"
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
+
+        <div className="flex flex-col gap-3 sm:flex-row">
           <Link
             to={`/template/${template.id}`}
-            className="flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-gray-900 transition-transform hover:scale-105"
+            className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm font-semibold text-white/78 transition hover:border-white/18 hover:text-white"
           >
-            <Eye className="h-4 w-4" />
-            View
+            Explore <ArrowRight size={16} />
           </Link>
-          <Link
-            to={`/checkout/${template.id}`}
-            className="flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white transition-transform hover:scale-105"
-          >
-            <ShoppingCart className="h-4 w-4" />
-            {template.isFree ? "Get Free" : "Buy"}
-          </Link>
-        </div>
-
-        {/* Price Badge */}
-        <div className="absolute left-3 top-3">
-          {template.isFree ? (
-            <span className="rounded-full bg-green-500 px-3 py-1 text-xs font-medium text-white">
-              Free
-            </span>
+          {template.isUnlocked || template.isFree ? (
+            <DownloadActionButton
+              to={`/template/${template.id}`}
+              label="Download"
+              className="w-full sm:w-[190px]"
+            />
           ) : (
-            <span className="rounded-full bg-gray-900 px-3 py-1 text-xs font-medium text-white">
-              ${template.price}
-            </span>
+            <Link
+              to={`/checkout/${template.id}`}
+              className="flex items-center justify-center gap-2 rounded-[1.35rem] bg-gradient-to-r from-cyan-primary to-teal-primary px-4 py-3 text-sm font-black uppercase tracking-[0.14em] text-primary-dark transition hover:-translate-y-0.5 sm:w-[190px]"
+            >
+              <ShoppingCart size={16} />
+              Buy Now
+            </Link>
           )}
         </div>
-
-        {/* Category Badge */}
-        <div className="absolute right-3 top-3">
-          <span className="rounded-full bg-white/90 px-3 py-1 text-xs font-medium text-gray-700 backdrop-blur-sm">
-            {template.category}
-          </span>
-        </div>
       </div>
-
-      {/* Content */}
-      <div className="p-4">
-        <div className="mb-2 flex items-start justify-between">
-          <h3 className="font-semibold text-gray-900 line-clamp-1">
-            {template.title}
-          </h3>
-          <button
-            onClick={handleLike}
-            className="flex items-center gap-1 text-sm text-gray-500 transition-colors hover:text-red-500"
-          >
-            <Heart
-              className={`h-4 w-4 ${liked ? "fill-red-500 text-red-500" : ""}`}
-            />
-            <span>{likeCount}</span>
-          </button>
-        </div>
-        <p className="line-clamp-2 text-sm text-gray-600">
-          {template.description}
-        </p>
-      </div>
-    </div>
+    </article>
   );
 }

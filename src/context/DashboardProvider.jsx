@@ -36,6 +36,12 @@ export const DashboardProvider = ({ children }) => {
         setNotifications(nextNotifications);
         setUnreadCount(nextNotifications.filter((item) => !item.read).length);
       } catch (error) {
+        // Silently ignore auth errors - user session may have expired
+        if (error.code === 'missing_auth' || error.message?.includes('sign in')) {
+          setNotifications([]);
+          setUnreadCount(0);
+          return;
+        }
         console.error("Notification fetch error:", error);
       }
     };

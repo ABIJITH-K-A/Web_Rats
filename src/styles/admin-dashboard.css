@@ -161,9 +161,8 @@ body{background:var(--bg);font-family:var(--sans);color:var(--gray);min-height:1
 .pill-unpaid       {background:rgba(255,169,77,.1); color:#ffa94d;border:1px solid rgba(255,169,77,.22);}
 .pill-customer     {background:rgba(197,198,199,.06);color:rgba(197,198,199,.45);border:1px solid rgba(197,198,199,.1);}
 .pill-worker       {background:rgba(102,252,241,.07);color:var(--cyan);border:1px solid rgba(102,252,241,.16);}
-.pill-manager      {background:rgba(255,193,7,.08);color:#ffc107;border:1px solid rgba(255,193,7,.18);}
 .pill-admin        {background:rgba(220,53,69,.07);color:#ff6b7a;border:1px solid rgba(220,53,69,.16);}
-.pill-superadmin   {background:rgba(111,66,193,.1);color:#c59dff;border:1px solid rgba(111,66,193,.22);}
+.pill-owner        {background:rgba(239,68,68,.09);color:#f87171;border:1px solid rgba(239,68,68,.18);}
 .pill-distributed  {background:rgba(105,219,124,.1);color:#69db7c;border:1px solid rgba(105,219,124,.22);}
 .pill-allocated    {background:rgba(13,202,240,.1);color:#0dcaf0;border:1px solid rgba(13,202,240,.22);}
 

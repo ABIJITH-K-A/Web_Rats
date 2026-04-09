@@ -13,9 +13,9 @@ export const cleanupExpiredChats = async () => {
   for (const chatDoc of snapshot.docs) {
     const orderId = chatDoc.id;
 
-    // Delete all messages from chatMessages collection (top-level, not subcollection)
+    // Delete all order-linked messages from the simple messages collection.
     const messagesQuery = await adminDb()
-      .collection('chatMessages')
+      .collection('messages')
       .where('orderId', '==', orderId)
       .get();
 

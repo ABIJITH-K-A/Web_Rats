@@ -1,8 +1,8 @@
 import { useAuth } from '../../context/AuthContext';
 import { Navigate } from 'react-router-dom';
 import AdminDashboard from '../../pages/dashboard/AdminDashboard';
+import OwnerDashboard from '../../pages/dashboard/OwnerDashboard';
 import WorkerDashboard from '../../pages/dashboard/WorkerDashboard';
-import ManagerDashboard from '../../pages/dashboard/ManagerDashboard';
 import { normalizeRole } from '../../utils/systemRules';
 
 const RoleBasedDashboard = () => {
@@ -18,22 +18,18 @@ const RoleBasedDashboard = () => {
 
   const role = normalizeRole(userProfile?.role);
 
-  // Owner and Superadmin see full AdminDashboard
-  if (role === 'owner' || role === 'superadmin' || role === 'admin') {
+  if (role === 'owner') {
+    return <OwnerDashboard />;
+  }
+
+  if (role === 'admin') {
     return <AdminDashboard />;
   }
 
-  // Manager sees ManagerDashboard
-  if (role === 'manager') {
-    return <ManagerDashboard />;
-  }
-
-  // Worker sees WorkerDashboard
   if (role === 'worker') {
     return <WorkerDashboard />;
   }
 
-  // Fallback for client or unknown roles
   return <Navigate to="/profile" replace />;
 };
 

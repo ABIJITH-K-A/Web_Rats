@@ -18,7 +18,6 @@ import {
 } from "firebase/firestore";
 import { auth, db } from "../config/firebase";
 import { logAuditEvent } from "../services/auditService";
-import { buildWalletDocument } from "../services/financialService";
 import {
   STAFF_ROLES,
   getReferralTier,
@@ -223,7 +222,6 @@ export const AuthProvider = ({ children }) => {
         updatedAt: serverTimestamp(),
       });
 
-      batch.set(doc(db, "wallets", uid), buildWalletDocument(uid));
 
       batch.set(doc(db, "referralCodes", personalReferralCode), {
         ownerUid: uid,
@@ -339,7 +337,6 @@ export const AuthProvider = ({ children }) => {
         updatedAt: serverTimestamp(),
       });
 
-      batch.set(doc(db, "wallets", uid), buildWalletDocument(uid));
 
       batch.set(doc(db, "referralCodes", personalReferralCode), {
         ownerUid: uid,
@@ -413,11 +410,10 @@ export const AuthProvider = ({ children }) => {
     resetPassword,
     resendVerificationEmail,
     emailVerified: user?.emailVerified || false,
-    isAdmin: ["admin", "superadmin", "owner"].includes(role),
-    isManager: role === "manager",
+    isAdmin: ["admin", "owner"].includes(role),
     isWorker: role === "worker",
     isClient: role === "client",
-    isStaff: ["admin", "manager", "worker", "superadmin", "owner"].includes(role),
+    isStaff: ["admin", "worker", "owner"].includes(role),
     fetchError,
     refreshProfile,
     sessionExpired,

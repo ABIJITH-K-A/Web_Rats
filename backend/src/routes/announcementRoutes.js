@@ -21,7 +21,7 @@ const announcementSchema = z.object({
 router.post(
   '/',
   authGuard,
-  roleGuard(['owner', 'super_admin', 'admin']),
+  roleGuard(['owner', 'admin']),
   validateBody(announcementSchema),
   asyncHandler(async (req, res) => {
     const { title, content, target, priority } = req.validatedBody;
@@ -54,7 +54,7 @@ router.get(
     // Simple approach: get 'all' and those matching user role
     const targets = ['all'];
     if (role === 'worker') targets.push('workers');
-    if (['admin', 'manager', 'owner', 'super_admin'].includes(role)) targets.push('admins');
+    if (['admin', 'owner'].includes(role)) targets.push('admins');
     if (role === 'client') targets.push('clients');
 
     const snap = await db.collection('announcements')

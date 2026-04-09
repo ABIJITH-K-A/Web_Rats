@@ -1,10 +1,10 @@
 import { ReactLenis } from 'lenis/react';
-import NeuralBackground from './NeuralBackground';
+import SiteBg from './SiteBg';
 import Navbar from './Navbar';
 import Footer from './Footer';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Mail, RefreshCw, X } from 'lucide-react';
 import { useState } from 'react';
 
@@ -13,6 +13,10 @@ const VerificationBanner = () => {
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [dismissed, setDismissed] = useState(false);
+  const location = useLocation();
+
+  const allowedRoutes = ['/join', '/signup', '/forgot-password'];
+  if (!allowedRoutes.includes(location.pathname)) return null;
 
   if (!user || emailVerified || dismissed) return null;
 
@@ -63,12 +67,14 @@ const VerificationBanner = () => {
 const RootLayout = ({ children }) => {
   const location = useLocation();
   const isDashboardRoute =
-    location.pathname === '/dashboard' || location.pathname === '/profile';
+    location.pathname === '/dashboard' || 
+    location.pathname === '/profile' || 
+    location.pathname === '/messages';
 
   return (
     <ReactLenis root>
       <div className="relative min-h-screen bg-primary-dark font-sans selection:bg-cyan-primary selection:text-primary-dark">
-        <NeuralBackground />
+        <SiteBg />
         
         <div className="relative z-10 flex flex-col min-h-screen overflow-x-hidden">
           <VerificationBanner />
@@ -76,7 +82,7 @@ const RootLayout = ({ children }) => {
           
           <main 
             key={location.pathname}
-            className={`flex-grow ${isDashboardRoute ? '' : 'pt-24'}`}
+            className={`grow ${isDashboardRoute ? '' : 'pt-24'}`}
           >
             {children}
           </main>

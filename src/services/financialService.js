@@ -18,6 +18,7 @@ import {
 import { logAuditEvent } from "./auditService";
 import { createNotification } from "./notificationService";
 import { FINANCIAL_RULES, getNextMonthlyPayoutDate } from "../utils/systemRules";
+import { getErrorMessage } from "../utils/errorHandler";
 
 export const FINANCIAL_CONSTANTS = {
   BASE_WORKER_PERCENT: FINANCIAL_RULES.workerPercent,
@@ -132,19 +133,29 @@ export const calculatePriorityFee = (basePrice) => {
   return Math.max(fee, FINANCIAL_CONSTANTS.PRIORITY_FEE_MIN);
 };
 
+/**
+ * Fetches and strictly normalizes a user's wallet document
+ * @param {string} userId
+ * @returns {Promise<Object>} Normalized wallet record
+ */
 export const getWallet = async (userId) => {
-  const walletRef = doc(db, "wallets", userId);
-  const walletSnap = await getDoc(walletRef);
+  try {
+    const walletRef = doc(db, "wallets", userId);
+    const walletSnap = await getDoc(walletRef);
 
-  if (walletSnap.exists()) {
-    const normalized = normalizeWalletData(walletSnap.data(), userId);
-    await setDoc(walletRef, normalized, { merge: true });
-    return normalized;
+    if (walletSnap.exists()) {
+      const normalized = normalizeWalletData(walletSnap.data(), userId);
+      await setDoc(walletRef, normalized, { merge: true });
+      return normalized;
+    }
+
+    const walletData = buildWalletDocument(userId);
+    await setDoc(walletRef, walletData);
+    return normalizeWalletData(walletData, userId);
+  } catch (error) {
+    console.error("getWallet error:", getErrorMessage(error));
+    throw new Error("Unable to retrieve wallet. " + getErrorMessage(error));
   }
-
-  const walletData = buildWalletDocument(userId);
-  await setDoc(walletRef, walletData);
-  return normalizeWalletData(walletData, userId);
 };
 
 export const creditWallet = async (userId, amount, orderId) => {
@@ -219,147 +230,169 @@ const getRecentWithdrawals = async (userId, days) => {
   }));
 };
 
+/**
+ * Initiates a secure withdrawal request from the worker's wallet
+ * @param {string} userId Remote worker string pattern
+ * @param {number} amount Payout size
+ * @param {string} method Payment vector (e.g., Bank Transfer)
+ * @param {Object} details Transaction details
+ * @returns {Promise<string>} Withdrawal reference ID
+ */
 export const requestWithdrawal = async (
   userId,
   amount,
   method,
   details = {}
 ) => {
-  const wallet = await getWallet(userId);
+  try {
+    const wallet = await getWallet(userId);
 
-  if (amount < FINANCIAL_CONSTANTS.MIN_WITHDRAWAL) {
-    throw new Error(`Minimum withdrawal is ₹${FINANCIAL_CONSTANTS.MIN_WITHDRAWAL}`);
-  }
+    if (amount < FINANCIAL_CONSTANTS.MIN_WITHDRAWAL) {
+      throw new Error(`Minimum withdrawal is ₹${FINANCIAL_CONSTANTS.MIN_WITHDRAWAL}`);
+    }
 
-  if (amount > wallet.withdrawableAmount) {
-    throw new Error("Insufficient withdrawable balance");
-  }
+    if (amount > wallet.withdrawableAmount) {
+      throw new Error("Insufficient withdrawable balance.");
+    }
 
-  const recentWithdrawals = await getRecentWithdrawals(userId, 7);
-  if (
-    recentWithdrawals.length >= FINANCIAL_CONSTANTS.MAX_WITHDRAWAL_DAYS_PER_WEEK
-  ) {
-    throw new Error(
-      `Maximum ${FINANCIAL_CONSTANTS.MAX_WITHDRAWAL_DAYS_PER_WEEK} withdrawals per week allowed`
+    const recentWithdrawals = await getRecentWithdrawals(userId, 7);
+    if (
+      recentWithdrawals.length >= FINANCIAL_CONSTANTS.MAX_WITHDRAWAL_DAYS_PER_WEEK
+    ) {
+      throw new Error(
+        `Maximum ${FINANCIAL_CONSTANTS.MAX_WITHDRAWAL_DAYS_PER_WEEK} withdrawals per week allowed.`
+      );
+    }
+
+    const existingPending = recentWithdrawals.find((item) =>
+      ["pending", "approved"].includes(String(item.status || "").toLowerCase())
     );
+    if (existingPending) {
+      throw new Error("You already have a withdrawal being processed.");
+    }
+
+    const withdrawalRef = await addDoc(collection(db, "withdrawals"), {
+      userId,
+      amount,
+      method,
+      details,
+      status: "pending",
+      requestedAt: serverTimestamp(),
+    });
+
+    const walletRef = doc(db, "wallets", userId);
+    await updateDoc(walletRef, {
+      withdrawableAmount: increment(-amount),
+      onHoldAmount: increment(amount),
+      withdrawable: increment(-amount),
+      onHold: increment(amount),
+      updatedAt: serverTimestamp(),
+      lastUpdated: serverTimestamp(),
+    });
+
+    await addDoc(collection(db, "transactions"), {
+      userId,
+      type: "expense",
+      category: "withdrawal",
+      amount: -amount,
+      referenceId: withdrawalRef.id,
+      status: "pending",
+      createdAt: serverTimestamp(),
+    });
+
+    await createNotification({
+      recipientId: "admin",
+      recipientRole: "admin",
+      title: "Withdrawal Request Submitted",
+      message: `${details.userName || "A staff member"} requested ₹${amount.toLocaleString(
+        "en-IN"
+      )} by ${method}.`,
+      category: "finance",
+    });
+
+    await logAuditEvent({
+      actorId: userId,
+      actorRole: details.role || "worker",
+      action: "withdrawal_requested",
+      targetType: "withdrawal",
+      targetId: withdrawalRef.id,
+      severity: "medium",
+      metadata: { amount, method },
+    });
+
+    return withdrawalRef.id;
+  } catch (error) {
+    console.error("requestWithdrawal error:", getErrorMessage(error));
+    throw new Error(getErrorMessage(error, "Unable to request withdrawal."));
   }
-
-  const existingPending = recentWithdrawals.find((item) =>
-    ["pending", "approved"].includes(String(item.status || "").toLowerCase())
-  );
-  if (existingPending) {
-    throw new Error("You already have a withdrawal being processed.");
-  }
-
-  const withdrawalRef = await addDoc(collection(db, "withdrawals"), {
-    userId,
-    amount,
-    method,
-    details,
-    status: "pending",
-    requestedAt: serverTimestamp(),
-  });
-
-  const walletRef = doc(db, "wallets", userId);
-  await updateDoc(walletRef, {
-    withdrawableAmount: increment(-amount),
-    onHoldAmount: increment(amount),
-    withdrawable: increment(-amount),
-    onHold: increment(amount),
-    updatedAt: serverTimestamp(),
-    lastUpdated: serverTimestamp(),
-  });
-
-  await addDoc(collection(db, "transactions"), {
-    userId,
-    type: "expense",
-    category: "withdrawal",
-    amount: -amount,
-    referenceId: withdrawalRef.id,
-    status: "pending",
-    createdAt: serverTimestamp(),
-  });
-
-  await createNotification({
-    recipientId: "admin",
-    recipientRole: "admin",
-    title: "Withdrawal Request Submitted",
-    message: `${details.userName || "A staff member"} requested ₹${amount.toLocaleString(
-      "en-IN"
-    )} by ${method}.`,
-    category: "finance",
-  });
-
-  await logAuditEvent({
-    actorId: userId,
-    actorRole: details.role || "worker",
-    action: "withdrawal_requested",
-    targetType: "withdrawal",
-    targetId: withdrawalRef.id,
-    severity: "medium",
-    metadata: { amount, method },
-  });
-
-  return withdrawalRef.id;
 };
 
+/**
+ * Processes wallet refunds for an order using dynamic role splits
+ * @returns {Promise<Object>} Calculated refund distributions
+ */
 export const processRefund = async (
   orderId,
   amount,
   isReturningCustomer = false
 ) => {
-  const orderSnap = await getDoc(doc(db, "orders", orderId));
-  if (!orderSnap.exists()) throw new Error("Order not found");
+  try {
+    const orderSnap = await getDoc(doc(db, "orders", orderId));
+    if (!orderSnap.exists()) throw new Error("Order not found");
 
-  const order = orderSnap.data();
-  const customerId = order.customerId || order.userId;
+    const order = orderSnap.data();
+    const customerId = order.customerId || order.userId;
 
-  if (!customerId || customerId === "guest") {
-    throw new Error("Cannot refund guest orders");
+    if (!customerId || customerId === "guest") {
+      throw new Error("Cannot refund guest orders.");
+    }
+
+    const split = isReturningCustomer
+      ? FINANCIAL_RULES.returningRefund
+      : FINANCIAL_RULES.regularRefund;
+    const customerRefund = Math.round((amount * split.client) / 100);
+    const workerPortion = Math.round((amount * split.worker) / 100);
+    const companyPortion = Math.round((amount * split.company) / 100);
+
+    await addDoc(collection(db, "refunds"), {
+      orderId,
+      customerId,
+      totalAmount: amount,
+      customerRefund,
+      workerPortion,
+      companyPortion,
+      split,
+      status: "pending",
+      createdAt: serverTimestamp(),
+    });
+
+    const walletRef = doc(db, "wallets", customerId);
+    await setDoc(walletRef, buildWalletDocument(customerId), { merge: true });
+    await updateDoc(walletRef, {
+      withdrawableAmount: increment(customerRefund),
+      totalBalance: increment(customerRefund),
+      totalEarnings: increment(customerRefund),
+      withdrawable: increment(customerRefund),
+      total: increment(customerRefund),
+      updatedAt: serverTimestamp(),
+      lastUpdated: serverTimestamp(),
+    });
+
+    await addDoc(collection(db, "transactions"), {
+      userId: customerId,
+      type: "income",
+      category: "refund",
+      amount: customerRefund,
+      referenceId: orderId,
+      status: "pending",
+      createdAt: serverTimestamp(),
+    });
+
+    return { customerRefund, workerPortion, companyPortion };
+  } catch (error) {
+    console.error("processRefund error:", getErrorMessage(error));
+    throw new Error(getErrorMessage(error, "Unable to process refund."));
   }
-
-  const split = isReturningCustomer
-    ? FINANCIAL_RULES.returningRefund
-    : FINANCIAL_RULES.regularRefund;
-  const customerRefund = Math.round((amount * split.client) / 100);
-  const workerPortion = Math.round((amount * split.worker) / 100);
-  const companyPortion = Math.round((amount * split.company) / 100);
-
-  await addDoc(collection(db, "refunds"), {
-    orderId,
-    customerId,
-    totalAmount: amount,
-    customerRefund,
-    workerPortion,
-    companyPortion,
-    split,
-    status: "pending",
-    createdAt: serverTimestamp(),
-  });
-
-  const walletRef = doc(db, "wallets", customerId);
-  await setDoc(walletRef, buildWalletDocument(customerId), { merge: true });
-  await updateDoc(walletRef, {
-    withdrawableAmount: increment(customerRefund),
-    totalBalance: increment(customerRefund),
-    totalEarnings: increment(customerRefund),
-    withdrawable: increment(customerRefund),
-    total: increment(customerRefund),
-    updatedAt: serverTimestamp(),
-    lastUpdated: serverTimestamp(),
-  });
-
-  await addDoc(collection(db, "transactions"), {
-    userId: customerId,
-    type: "income",
-    category: "refund",
-    amount: customerRefund,
-    referenceId: orderId,
-    status: "pending",
-    createdAt: serverTimestamp(),
-  });
-
-  return { customerRefund, workerPortion, companyPortion };
 };
 
 export const getTransactionHistory = async (userId, limitCount = 50) => {

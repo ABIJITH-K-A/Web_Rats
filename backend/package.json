@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "node --watch src/index.js",
     "build": "echo 'No build step required'",
-    "start": "node --no-deprecation src/index.js"
+    "start": "node --no-deprecation src/index.js",
+    "migrate:legacy-roles": "node scripts/migrateLegacyRoles.js"
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.1",

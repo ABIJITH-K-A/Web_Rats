@@ -17,10 +17,13 @@ import {
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import {
   doc,
+  getDoc,
   setDoc,
 } from "firebase/firestore";
 import { db } from "../../config/firebase";
 import { useAuth } from "../../context/AuthContext";
+import AnimatedPaymentButton from "../../components/ui/AnimatedPaymentButton";
+import BackButton from "../../components/ui/BackButton";
 import { Button, Card, SectionHeading } from "../../components/ui/Primitives";
 import Stepper, { Step } from "../../components/ui/Stepper";
 import QRPaymentStep from "../../components/temp/QRPaymentStep";
@@ -36,8 +39,24 @@ import {
   TERMS_POINTS,
 } from "../../data/siteData";
 import { buildReorderDraft } from "../../utils/orderHelpers";
+import {
+  clampReferralDiscountPercent,
+  getEligibleReferralDiscount,
+} from "../../utils/systemRules";
 
 const formatPrice = (price) => `Rs ${price.toLocaleString("en-IN")}`;
+
+const buildReferralState = ({
+  code = "",
+  discountPercent = 0,
+  referredBy = null,
+  source = "manual",
+} = {}) => ({
+  code: String(code || "").trim().toUpperCase(),
+  discountPercent: clampReferralDiscountPercent(discountPercent),
+  referredBy: referredBy || null,
+  source,
+});
 
 const categoryGradients = {
   "presentation-design": "from-cyan-primary/15 to-teal-primary/10",
@@ -130,6 +149,11 @@ const BookService = () => {
   const [submitError, setSubmitError] = useState("");
   const [orderConfirmed, setOrderConfirmed] = useState(false);
   const [orderId, setOrderId] = useState("");
+  const [referralInput, setReferralInput] = useState("");
+  const [referralState, setReferralState] = useState(() => buildReferralState());
+  const [referralFeedback, setReferralFeedback] = useState("");
+  const [referralError, setReferralError] = useState("");
+  const [isApplyingReferral, setIsApplyingReferral] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({
     projectDescription: "",
     features: "",
@@ -165,6 +189,30 @@ const BookService = () => {
     }));
   }, [previousRequirements, reusePreviousData]);
 
+  useEffect(() => {
+    const profileDiscount = getEligibleReferralDiscount(userProfile);
+    const profileCode = String(userProfile?.usedReferralCode || "").trim().toUpperCase();
+
+    if (!profileCode || profileDiscount <= 0) {
+      return;
+    }
+
+    setReferralInput((current) => current || profileCode);
+    setReferralState((current) =>
+      current.code
+        ? current
+        : buildReferralState({
+            code: profileCode,
+            discountPercent: profileDiscount,
+            referredBy: userProfile?.referredBy || null,
+            source: "account",
+          })
+    );
+    setReferralFeedback((current) =>
+      current || `${profileDiscount}% student referral discount is linked to this order.`
+    );
+  }, [userProfile]);
+
   const selectedCategory = selectedCategoryId
     ? getCategoryById(selectedCategoryId)
     : null;
@@ -178,7 +226,9 @@ const BookService = () => {
     basePrice: selectedPlan?.price ?? 0,
     isPriority: Boolean(selectedPlan && isPriority),
     customerType: resolvedCustomerType,
+    referralDiscountPercent: referralState.discountPercent,
   });
+  const hasReferralDiscount = referralState.discountPercent > 0;
 
   const goToStep = (nextStep) => {
     setDirection(nextStep > step ? 1 : -1);
@@ -238,6 +288,63 @@ const BookService = () => {
     }
   };
 
+  const handleApplyReferral = async () => {
+    const normalizedCode = referralInput.trim().toUpperCase();
+
+    setReferralError("");
+    setReferralFeedback("");
+
+    if (!normalizedCode) {
+      setReferralState(buildReferralState());
+      return;
+    }
+
+    setIsApplyingReferral(true);
+
+    try {
+      const referralSnapshot = await getDoc(doc(db, "referralCodes", normalizedCode));
+
+      if (!referralSnapshot.exists()) {
+        setReferralError("Referral code not found. Check the code and try again.");
+        return;
+      }
+
+      const referralData = referralSnapshot.data() || {};
+      const discountPercent = clampReferralDiscountPercent(
+        referralData.discountPercent
+      );
+
+      if (discountPercent <= 0) {
+        setReferralError("This code does not include a student discount.");
+        return;
+      }
+
+      setReferralInput(normalizedCode);
+      setReferralState(
+        buildReferralState({
+          code: normalizedCode,
+          discountPercent,
+          referredBy: referralData.ownerUid || null,
+        })
+      );
+      setReferralFeedback(
+        `${discountPercent}% student referral discount applied to this order.`
+      );
+    } catch (error) {
+      console.error("Referral validation failed:", error);
+      setReferralError("Could not verify the referral code right now.");
+    } finally {
+      setIsApplyingReferral(false);
+    }
+  };
+
+  const handleClearReferral = () => {
+    setReferralInput("");
+    setReferralState(buildReferralState());
+    setReferralFeedback("");
+    setReferralError("");
+  };
+
   const createWhatsAppMessage = (newOrderId) => {
     if (!selectedCategory || !selectedService || !selectedPlan) {
       return "";
@@ -252,6 +359,9 @@ const BookService = () => {
       `Plan: ${selectedPlan.label}`,
       `Priority: ${isPriority ? "High" : "Normal"}`,
       `Customer Type: ${resolvedCustomerType}`,
+      hasReferralDiscount
+        ? `Student Referral: ${referralState.code} (${referralState.discountPercent}% off)`
+        : null,
       `Total: ${formatPrice(payment.total)}`,
       `Advance: ${formatPrice(payment.advancePayment)}`,
       "",
@@ -294,7 +404,12 @@ const BookService = () => {
         price: payment.total,
         basePrice: payment.basePrice,
         priorityFee: payment.priorityFee,
+        subtotalPrice: payment.subtotal,
         totalPrice: payment.total,
+        referralDiscountPercent: payment.discountPercent,
+        referralDiscountAmount: payment.discountAmount,
+        usedReferralCode: referralState.code || null,
+        referredBy: referralState.referredBy || null,
         advancePayment: payment.advancePayment,
         advancePaid: 0,
         remainingPayment: payment.remainingPayment,
@@ -428,7 +543,12 @@ const BookService = () => {
         price: payment.total,
         basePrice: payment.basePrice,
         priorityFee: payment.priorityFee,
+        subtotalPrice: payment.subtotal,
         totalPrice: payment.total,
+        referralDiscountPercent: payment.discountPercent,
+        referralDiscountAmount: payment.discountAmount,
+        usedReferralCode: referralState.code || null,
+        referredBy: referralState.referredBy || null,
         advancePayment: payment.advancePayment,
         advancePaid: payment.advancePayment,
         remainingPayment: payment.remainingPayment,
@@ -535,9 +655,7 @@ const BookService = () => {
                   <Button>Create Account To Track It</Button>
                 </Link>
               )}
-              <Link to="/">
-                <Button variant="outline">Back To Home</Button>
-              </Link>
+              <BackButton to="/" label="Back to home" />
             </div>
           </Card>
         </div>
@@ -604,13 +722,7 @@ const BookService = () => {
 
         <Step>
           <div className="space-y-8">
-            <button
-              type="button"
-              onClick={() => handleBack(1)}
-              className="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-[0.18em] text-light-gray/42 transition-colors hover:text-cyan-primary"
-            >
-              <ArrowLeft size={14} /> Back to categories
-            </button>
+            <BackButton onClick={() => handleBack(1)} label="Back to categories" />
 
             <div className="text-[11px] font-mono uppercase tracking-[0.22em] text-cyan-primary/72">
               Step 2 - Choose a service
@@ -644,13 +756,7 @@ const BookService = () => {
 
         <Step>
           <div className="space-y-8">
-            <button
-              type="button"
-              onClick={() => handleBack(2)}
-              className="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-[0.18em] text-light-gray/42 transition-colors hover:text-cyan-primary"
-            >
-              <ArrowLeft size={14} /> Back to services
-            </button>
+            <BackButton onClick={() => handleBack(2)} label="Back to services" />
 
             <div className="text-[11px] font-mono uppercase tracking-[0.22em] text-cyan-primary/72">
               Step 3 - Choose your plan
@@ -784,13 +890,7 @@ const BookService = () => {
 
         <Step>
           <div className="space-y-8">
-            <button
-              type="button"
-              onClick={() => handleBack(3)}
-              className="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-[0.18em] text-light-gray/42 transition-colors hover:text-cyan-primary"
-            >
-              <ArrowLeft size={14} /> Back to plan
-            </button>
+            <BackButton onClick={() => handleBack(3)} label="Back to plan" />
 
             <div className="text-[11px] font-mono uppercase tracking-[0.22em] text-cyan-primary/72">
               Step 4 - Your details and requirements
@@ -843,6 +943,102 @@ const BookService = () => {
                 </div>
               </Card>
             )}
+
+            <Card className="border-white/8 bg-black/72">
+              <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_260px] lg:items-start">
+                <div>
+                  <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary/72">
+                    Student Referral
+                  </div>
+                  <h2 className="mt-3 text-2xl font-black text-white">
+                    Apply up to 40% off
+                  </h2>
+                  <p className="mt-3 max-w-2xl text-sm leading-7 text-light-gray/64">
+                    We validate the code before payment and store the discount on
+                    the order. That keeps the final amount simple for the client
+                    and easy for the admin team to audit later.
+                  </p>
+
+                  <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                    <input
+                      type="text"
+                      name="referralCode"
+                      value={referralInput}
+                      onChange={(event) => {
+                        setReferralInput(event.target.value.toUpperCase());
+                        setReferralError("");
+                        setReferralFeedback("");
+                      }}
+                      placeholder="Enter student referral code"
+                      className="w-full rounded-2xl border border-white/10 bg-secondary-dark/70 px-4 py-3.5 text-sm uppercase tracking-[0.12em] text-white outline-none transition-colors placeholder:normal-case placeholder:tracking-normal placeholder:text-white/28 focus:border-cyan-primary"
+                    />
+                    <Button
+                      type="button"
+                      onClick={handleApplyReferral}
+                      disabled={isApplyingReferral}
+                      className="sm:min-w-[180px]"
+                    >
+                      {isApplyingReferral ? "Checking..." : "Apply Code"}
+                    </Button>
+                    {hasReferralDiscount && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleClearReferral}
+                        className="sm:min-w-[140px]"
+                      >
+                        Clear
+                      </Button>
+                    )}
+                  </div>
+
+                  {referralFeedback && (
+                    <div className="mt-4 rounded-2xl border border-cyan-primary/16 bg-cyan-primary/8 px-4 py-3 text-sm text-cyan-primary">
+                      {referralFeedback}
+                    </div>
+                  )}
+                  {referralError && (
+                    <div className="mt-4 rounded-2xl border border-red-500/18 bg-red-500/8 px-4 py-3 text-sm text-red-300">
+                      {referralError}
+                    </div>
+                  )}
+                </div>
+
+                <div className="rounded-[28px] border border-white/8 bg-black/35 p-5">
+                  <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-white/38">
+                    Live Pricing
+                  </div>
+                  <div className="mt-5 space-y-4">
+                    <div className="flex items-center justify-between text-sm text-light-gray/58">
+                      <span>Subtotal</span>
+                      <span className="font-semibold text-white">
+                        {formatPrice(payment.subtotal)}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm text-light-gray/58">
+                      <span>Referral discount</span>
+                      <span
+                        className={
+                          hasReferralDiscount
+                            ? "font-semibold text-emerald-300"
+                            : "font-semibold text-white"
+                        }
+                      >
+                        {hasReferralDiscount
+                          ? `- ${formatPrice(payment.discountAmount)}`
+                          : "Not applied"}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between border-t border-white/8 pt-4 text-sm text-light-gray/58">
+                      <span>Total to invoice</span>
+                      <span className="text-xl font-black text-cyan-primary">
+                        {formatPrice(payment.total)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Card>
 
             <Card className="border-white/8 bg-black/72">
               <div className="grid gap-6 md:grid-cols-2">
@@ -980,9 +1176,7 @@ const BookService = () => {
             </Card>
 
             <div className="flex justify-between gap-4">
-              <Button variant="outline" onClick={() => handleBack(3)}>
-                <ArrowLeft size={16} /> Back
-              </Button>
+              <BackButton onClick={() => handleBack(3)} label="Back" className="min-w-[150px]" />
               <Button
                 onClick={() =>
                   handleNextWithValidation(
@@ -1056,6 +1250,20 @@ const BookService = () => {
                           : "Not added"}
                       </span>
                     </div>
+                    <div className="flex items-center justify-between text-sm text-light-gray/66">
+                      <span>Referral discount</span>
+                      <span
+                        className={
+                          hasReferralDiscount
+                            ? "font-semibold text-emerald-300"
+                            : "font-semibold text-white"
+                        }
+                      >
+                        {hasReferralDiscount
+                          ? `- ${formatPrice(payment.discountAmount)}`
+                          : "Not applied"}
+                      </span>
+                    </div>
                     <div className="flex items-center justify-between border-t border-white/8 pt-5 text-sm text-light-gray/66">
                       <span>Total price</span>
                       <span className="text-2xl font-black text-cyan-primary">
@@ -1078,12 +1286,15 @@ const BookService = () => {
 
                   <div className="mt-8 rounded-2xl border border-cyan-primary/12 bg-black/45 p-5 text-sm leading-7 text-light-gray/64">
                     Please pay the <strong className="text-cyan-primary">Advance Payment</strong> amount via QR to proceed. The remaining amount will be due upon project completion.
+                    {hasReferralDiscount ? (
+                      <span className="mt-3 block text-emerald-300">
+                        Student referral saved: {referralState.discountPercent}% off.
+                      </span>
+                    ) : null}
                   </div>
                 </Card>
                 
-                <Button variant="outline" onClick={() => handleBack(4)} className="w-full">
-                  <ArrowLeft size={16} /> Back to requirements
-                </Button>
+                <BackButton onClick={() => handleBack(4)} label="Back to requirements" className="w-full min-w-0" />
                 
                 {/* Demo: Skip Payment Button */}
                 <Button 
@@ -1104,13 +1315,7 @@ const BookService = () => {
 
         <Step>
           <div className="space-y-8">
-            <button
-              type="button"
-              onClick={() => handleBack(5)}
-              className="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-[0.18em] text-light-gray/42 transition-colors hover:text-cyan-primary"
-            >
-              <ArrowLeft size={14} /> Back to payment
-            </button>
+            <BackButton onClick={() => handleBack(5)} label="Back to payment" />
 
             <div className="text-[11px] font-mono uppercase tracking-[0.22em] text-cyan-primary/72">
               Step 6 - Review and confirm
@@ -1136,6 +1341,12 @@ const BookService = () => {
                         ? "Returning customer"
                         : "New customer",
                     ],
+                    ...(hasReferralDiscount
+                      ? [[
+                          "Student Referral",
+                          `${referralState.code} (${referralState.discountPercent}% off)`,
+                        ]]
+                      : []),
                     ["Advance", formatPrice(payment.advancePayment)],
                     ["Remaining", formatPrice(payment.remainingPayment)],
                   ].map(([label, value]) => (
@@ -1259,9 +1470,7 @@ const BookService = () => {
                 and open the WhatsApp summary for quick follow-up.
               </div>
               <div className="flex flex-wrap gap-4">
-                <Button variant="outline" onClick={() => handleBack(5)}>
-                  <ArrowLeft size={16} /> Edit Review
-                </Button>
+                <BackButton onClick={() => handleBack(5)} label="Edit Review" className="min-w-[170px]" />
                 {import.meta.env.DEV && (
                   <Button
                     variant="outline"
@@ -1272,7 +1481,7 @@ const BookService = () => {
                     Bypass Payment (Test)
                   </Button>
                 )}
-                <Button
+                <AnimatedPaymentButton
                   onClick={() => {
                     if (!termsAccepted) {
                       setSubmitError("Please accept the Terms & Conditions to confirm your order.");
@@ -1280,10 +1489,17 @@ const BookService = () => {
                     }
                     handleSubmit();
                   }}
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? "Confirming..." : "Confirm Order"}
-                </Button>
+                  disabled={false}
+                  processing={isSubmitting}
+                  idleIcon={ShieldCheck}
+                  idleLabel="Confirm Order"
+                  processingLabel={
+                    paymentMethod === "qpay"
+                      ? "Submitting order..."
+                      : "Starting payment..."
+                  }
+                  className="min-w-[220px]"
+                />
               </div>
             </div>
           </div>

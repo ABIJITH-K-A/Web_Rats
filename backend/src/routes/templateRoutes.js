@@ -3,100 +3,223 @@ import { z } from 'zod';
 import { adminDb } from '../config/firebaseAdmin.js';
 import { asyncHandler } from '../lib/asyncHandler.js';
 import { HttpError } from '../lib/httpError.js';
-import { authGuard } from '../middleware/authGuard.js';
+import { authGuard, optionalAuthGuard } from '../middleware/authGuard.js';
 import { validateBody } from '../middleware/validate.js';
-import { FieldValue } from 'firebase-admin/firestore';
 
 const router = Router();
 
 const unlockSchema = z.object({
   templateId: z.string().trim().min(1).max(128),
-  templateTitle: z.string().trim().min(1).max(255),
-  isFree: z.boolean(),
-  price: z.number().nonnegative(),
 });
 
-// GET /templates/stats - Get user's unlock stats
-router.get(
-  '/stats',
-  authGuard,
-  asyncHandler(async (req, res) => {
-    const db = adminDb();
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+const normalizeTerm = (value) =>
+  String(value || '')
+    .trim()
+    .toLowerCase();
 
-    const snapshots = await db.collection('templatePurchases')
-      .where('userId', '==', req.currentUser.uid)
-      .where('createdAt', '>=', today.toISOString())
-      .where('type', '==', 'free')
-      .get();
+const normalizeStringArray = (value) =>
+  Array.isArray(value)
+    ? value
+        .map((item) => normalizeTerm(item))
+        .filter(Boolean)
+    : [];
+
+const mapTemplateDocument = (docSnapshot, unlockedIds = new Set()) => {
+  const data = docSnapshot.data() || {};
+  const images = Array.isArray(data.images) && data.images.length
+    ? data.images
+    : [data.imageUrl, data.image].filter(Boolean);
+  const tags = normalizeStringArray(data.tags);
+  const keywords = normalizeStringArray(
+    Array.isArray(data.keywords) && data.keywords.length ? data.keywords : tags
+  );
+  const price = Number(data.price || 0);
+  const isFree = Boolean(data.isFree || price <= 0);
+
+  return {
+    id: docSnapshot.id,
+    title: data.title || 'Untitled Template',
+    images,
+    description: data.description || '',
+    tags,
+    keywords,
+    price,
+    isFree,
+    fileUrl: data.fileUrl || data.downloadUrl || null,
+    isUnlocked: isFree || unlockedIds.has(docSnapshot.id),
+  };
+};
+
+const getUnlockedTemplateIds = async (userId) => {
+  if (!userId) {
+    return new Set();
+  }
+
+  const purchaseSnapshot = await adminDb()
+    .collection('templatePurchases')
+    .where('userId', '==', userId)
+    .get();
+
+  return new Set(
+    purchaseSnapshot.docs
+      .map((docSnapshot) => docSnapshot.data())
+      .filter((purchase) => purchase.paid)
+      .map((purchase) => String(purchase.templateId || '').trim())
+      .filter(Boolean)
+  );
+};
+
+router.get(
+  '/',
+  optionalAuthGuard,
+  asyncHandler(async (req, res) => {
+    const search = normalizeTerm(req.query.search);
+    const tag = normalizeTerm(req.query.tag);
+    const priceFilter = normalizeTerm(req.query.price);
+    const sort = normalizeTerm(req.query.sort);
+
+    let queryRef = adminDb().collection('templates');
+
+    if (search) {
+      queryRef = queryRef.where('keywords', 'array-contains', search);
+    } else if (tag) {
+      queryRef = queryRef.where('tags', 'array-contains', tag);
+    }
+
+    if (priceFilter === 'free') {
+      queryRef = queryRef.where('isFree', '==', true);
+    }
+
+    if (priceFilter === 'paid') {
+      queryRef = queryRef.where('isFree', '==', false);
+    }
+
+    const [templateSnapshot, unlockedIds] = await Promise.all([
+      queryRef.get(),
+      getUnlockedTemplateIds(req.currentUser?.uid),
+    ]);
+
+    let templates = templateSnapshot.docs.map((docSnapshot) =>
+      mapTemplateDocument(docSnapshot, unlockedIds)
+    );
+
+    if (search) {
+      templates = templates.filter((template) =>
+        template.keywords.includes(search) ||
+        template.title.toLowerCase().includes(search) ||
+        template.description.toLowerCase().includes(search)
+      );
+    }
+
+    if (tag) {
+      templates = templates.filter((template) => template.tags.includes(tag));
+    }
+
+    if (sort === 'price-low') {
+      templates.sort((left, right) => left.price - right.price);
+    } else if (sort === 'price-high') {
+      templates.sort((left, right) => right.price - left.price);
+    } else {
+      templates.sort((left, right) => left.title.localeCompare(right.title));
+    }
+
+    res.json({ templates });
+  })
+);
+
+router.get(
+  '/:id',
+  optionalAuthGuard,
+  asyncHandler(async (req, res) => {
+    const [templateSnapshot, unlockedIds] = await Promise.all([
+      adminDb().collection('templates').doc(req.params.id).get(),
+      getUnlockedTemplateIds(req.currentUser?.uid),
+    ]);
+
+    if (!templateSnapshot.exists) {
+      throw new HttpError(404, 'Template not found.');
+    }
 
     res.json({
-      dailyUnlocksUsed: snapshots.size,
-      dailyLimit: 3, // Configurable
+      template: mapTemplateDocument(templateSnapshot, unlockedIds),
     });
   })
 );
 
-// POST /templates/unlock - Securely unlock a template
+router.get(
+  '/:id/download',
+  optionalAuthGuard,
+  asyncHandler(async (req, res) => {
+    const [templateSnapshot, unlockedIds] = await Promise.all([
+      adminDb().collection('templates').doc(req.params.id).get(),
+      getUnlockedTemplateIds(req.currentUser?.uid),
+    ]);
+
+    if (!templateSnapshot.exists) {
+      throw new HttpError(404, 'Template not found.');
+    }
+
+    const template = mapTemplateDocument(templateSnapshot, unlockedIds);
+    if (!template.fileUrl) {
+      throw new HttpError(404, 'Download file is not available.');
+    }
+
+    if (!template.isUnlocked) {
+      throw new HttpError(403, 'Purchase this template to unlock the download.');
+    }
+
+    res.json({
+      templateId: template.id,
+      fileUrl: template.fileUrl,
+    });
+  })
+);
+
 router.post(
   '/unlock',
   authGuard,
   validateBody(unlockSchema),
   asyncHandler(async (req, res) => {
-    const { templateId, templateTitle, isFree, price } = req.body;
-    const db = adminDb();
-    const userId = req.currentUser.uid;
+    const { templateId } = req.validatedBody;
+    const templateSnapshot = await adminDb().collection('templates').doc(templateId).get();
 
-    // Check if already unlocked
-    const existing = await db.collection('templatePurchases')
-      .where('userId', '==', userId)
-      .where('templateId', '==', templateId)
-      .limit(1)
-      .get();
-
-    if (!existing.empty) {
-      return res.json({ success: true, message: 'Already unlocked', alreadyUnlocked: true });
+    if (!templateSnapshot.exists) {
+      throw new HttpError(404, 'Template not found.');
     }
 
-    if (isFree) {
-      // Check daily limit
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+    const template = mapTemplateDocument(templateSnapshot);
 
-      const todayUnlocks = await db.collection('templatePurchases')
-        .where('userId', '==', userId)
-        .where('createdAt', '>=', today.toISOString())
-        .where('type', '==', 'free')
+    if (!template.isFree) {
+      const existingPurchase = await adminDb()
+        .collection('templatePurchases')
+        .doc(`${req.currentUser.uid}_${templateId}`)
         .get();
 
-      if (todayUnlocks.size >= 3) {
-        throw new HttpError(429, 'Daily free template limit reached (3/day). Come back tomorrow!');
+      if (!existingPurchase.exists || !existingPurchase.data()?.paid) {
+        throw new HttpError(402, 'Payment required before download unlock.');
       }
-
-      await db.collection('templatePurchases').add({
-        userId,
-        templateId,
-        templateTitle,
-        price: 0,
-        type: 'free',
-        createdAt: new Date().toISOString(),
-      });
-    } else {
-      // For paid templates, in a real scenario we'd check payment status
-      // For now, we record it (assuming frontend handled payment or user is pro)
-      await db.collection('templatePurchases').add({
-        userId,
-        templateId,
-        templateTitle,
-        price,
-        type: 'paid',
-        status: 'completed',
-        createdAt: new Date().toISOString(),
-      });
     }
 
-    res.json({ success: true, message: 'Template unlocked successfully' });
+    await adminDb()
+      .collection('templatePurchases')
+      .doc(`${req.currentUser.uid}_${templateId}`)
+      .set(
+        {
+          userId: req.currentUser.uid,
+          templateId,
+          paid: true,
+          price: template.isFree ? 0 : template.price,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        { merge: true }
+      );
+
+    res.json({
+      success: true,
+      templateId,
+      isFree: template.isFree,
+    });
   })
 );
 

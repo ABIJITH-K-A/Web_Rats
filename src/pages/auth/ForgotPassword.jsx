@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Mail, ArrowLeft, SendHorizonal } from 'lucide-react';
+import { Mail, SendHorizonal } from 'lucide-react';
+import BackButton from '../../components/ui/BackButton';
 import { Button, Card } from '../../components/ui/Primitives';
 import { useAuth } from '../../context/AuthContext';
 import { Link } from 'react-router-dom';
@@ -51,11 +52,7 @@ const ForgotPassword = () => {
               <p className="text-sm text-light-gray/50">
                 A password reset link has been sent to <span className="text-cyan-primary font-bold">{email}</span>.
               </p>
-              <Link to="join?login=1">
-                <Button variant="outline" className="w-full mt-4">
-                  <ArrowLeft size={16} /> Back to Sign In
-                </Button>
-              </Link>
+              <BackButton to="/join?login=1" label="Back to sign in" className="mt-4 w-full min-w-0" />
             </motion.div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-5">
@@ -83,11 +80,9 @@ const ForgotPassword = () => {
                 {loading ? 'Sending...' : 'Send Reset Link'} <SendHorizonal size={16} className="ml-1" />
               </Button>
 
-              <p className="text-center">
-                <Link to="/join?login=1" className="text-[10px] font-mono uppercase tracking-widest text-light-gray/30 hover:text-cyan-primary transition-colors">
-                  <ArrowLeft className="inline-block mr-1" size={12} /> Back to Sign In
-                </Link>
-              </p>
+              <div className="flex justify-center">
+                <BackButton to="/join?login=1" label="Back to sign in" className="mt-2 min-w-[170px] h-12" />
+              </div>
             </form>
           )}
         </Card>

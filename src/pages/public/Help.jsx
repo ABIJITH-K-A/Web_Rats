@@ -5,9 +5,9 @@ import {
   Mail,
   MessageCircle,
   UserCircle,
-  ChevronDown,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import AccordionToggleIcon from "../../components/ui/AccordionToggleIcon";
 import { Button, Card } from "../../components/ui/Primitives";
 import {
   CLIENT_FAQS,
@@ -23,12 +23,7 @@ const AccordionItem = ({ question, answer, isOpen, onClick }) => (
       className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left"
     >
       <span className="text-base font-semibold text-white">{question}</span>
-      <ChevronDown
-        size={18}
-        className={`shrink-0 text-cyan-primary transition-transform ${
-          isOpen ? "rotate-180" : ""
-        }`}
-      />
+      <AccordionToggleIcon open={isOpen} />
     </button>
     <AnimatePresence initial={false}>
       {isOpen && (

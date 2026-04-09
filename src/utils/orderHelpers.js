@@ -364,20 +364,11 @@ export const getOrderStatusOptions = (role = "admin") => {
     return ["assigned", "in_progress", "delivered_preview"];
   }
 
-  if (normalizedRole === "manager") {
-    return [
-      "pending_assignment",
-      "assigned",
-      "in_progress",
-      "delivered_preview",
-      "revision_requested",
-      "awaiting_final_payment",
-      "completed",
-      "cancelled",
-    ];
+  if (["admin", "owner"].includes(normalizedRole)) {
+    return ORDER_STATUS_FLOW;
   }
 
-  return ORDER_STATUS_FLOW;
+  return [];
 };
 
 export const getWorkerVisibleStatuses = () => [

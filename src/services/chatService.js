@@ -1,258 +1,296 @@
-import { db } from "../config/firebase";
-import { 
-  collection, 
-  addDoc, 
-  query, 
-  where, 
-  orderBy, 
+import {
+  collection,
+  addDoc,
+  query,
+  where,
   onSnapshot,
   serverTimestamp,
-  updateDoc,
   doc,
-  getDocs,
   getDoc,
   setDoc,
   limit,
-  writeBatch
 } from "firebase/firestore";
-import { sanitizeData } from "../utils/sanitize";
-import { apiRequest, isBackendConfigured } from "./apiClient";
+import { auth, db } from "../config/firebase";
+import { apiRequest, getApiBaseUrl, isBackendConfigured } from "./apiClient";
 
-/**
- * Send a message to an order's chat thread
- * Uses Backend API for security, rate limiting and validation.
- */
+const normalizeMessage = (docSnapshot) => ({
+  id: docSnapshot.id,
+  ...docSnapshot.data(),
+});
+
+const sortMessages = (messages = []) =>
+  [...messages].sort((left, right) => {
+    const leftTime =
+      left.createdAt?.toMillis?.() || new Date(left.createdAt || 0).getTime() || 0;
+    const rightTime =
+      right.createdAt?.toMillis?.() || new Date(right.createdAt || 0).getTime() || 0;
+    return leftTime - rightTime;
+  });
+
+const getAuthHeaders = async () => {
+  const currentUser = auth.currentUser;
+  if (!currentUser) {
+    throw new Error("Please sign in to continue.");
+  }
+
+  const token = await currentUser.getIdToken(true);
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
+
 export const sendMessage = async (orderId, messageData) => {
   if (isBackendConfigured()) {
-    try {
-      const response = await apiRequest('/chat/send', {
-        method: 'POST',
-        authMode: 'required',
-        body: {
-          orderId,
-          text: messageData.text,
-          userName: messageData.userName,
-          userRole: messageData.userRole
-        }
-      });
-      return response?.id;
-    } catch (error) {
-      console.warn('Backend chat send failed, falling back to direct Firestore:', error.message);
-    }
-  }
-
-  try {
-    const safeMessageData = sanitizeData(messageData);
-
-    // 1. Add message
-    const messagesRef = collection(db, "chatMessages");
-    const messageRef = await addDoc(messagesRef, {
-      ...safeMessageData,
-      orderId,
-      readBy: [safeMessageData.userId],
-      createdAt: serverTimestamp(),
-    });
-
-    // 2. Update thread metadata (lastMessage, unreadCount)
-    const threadRef = doc(db, "chatThreads", orderId);
-    
-    await updateDoc(threadRef, {
-      lastMessage: {
-        text: safeMessageData.text,
-        createdAt: serverTimestamp(),
-        userId: safeMessageData.userId,
-        userName: safeMessageData.userName,
+    const response = await apiRequest("/chat/send", {
+      method: "POST",
+      authMode: "required",
+      body: {
+        orderId,
+        message: messageData.text || messageData.message || "",
+        fileUrl: messageData.fileUrl || undefined,
+        fileName: messageData.fileName || undefined,
+        type: messageData.type || (messageData.fileUrl ? "file" : "text"),
+        previewOnly: messageData.previewOnly,
+        downloadable: messageData.downloadable,
       },
-      updatedAt: serverTimestamp()
-    }).catch(async () => {
-       // If thread doc doesn't exist, create it
-       await setDoc(threadRef, {
-          orderId,
-          participants: safeMessageData.participants || [],
-          lastMessage: {
-            text: safeMessageData.text,
-            createdAt: serverTimestamp(),
-            userId: safeMessageData.userId,
-            userName: safeMessageData.userName,
-          },
-          updatedAt: serverTimestamp(),
-          createdAt: serverTimestamp()
-       });
     });
 
-    return messageRef.id;
-  } catch (error) {
-    console.error("Error sending message:", error);
-    throw error;
+    return response?.id || null;
   }
-};
 
-/**
- * Listen for new messages in a single thread (Real-time via Firestore)
- */
-export const subscribeToThread = (orderId, callback) => {
-  const q = query(
-    collection(db, "chatMessages"),
-    where("orderId", "==", orderId),
-    orderBy("createdAt", "asc"),
-    limit(100)
+  const messageRef = await addDoc(collection(db, "messages"), {
+    orderId,
+    senderId: messageData.userId,
+    senderRole: messageData.userRole === "client" ? "client" : "worker",
+    senderName: messageData.userName,
+    message: messageData.text || "",
+    fileUrl: messageData.fileUrl || "",
+    fileName: messageData.fileName || "",
+    type: messageData.type || "text",
+    previewOnly: Boolean(messageData.previewOnly),
+    downloadable: Boolean(messageData.downloadable),
+    createdAt: serverTimestamp(),
+  });
+
+  await setDoc(
+    doc(db, "chatThreads", orderId),
+    {
+      orderId,
+      updatedAt: serverTimestamp(),
+      lastMessage: {
+        text: messageData.text || "New message",
+        senderId: messageData.userId,
+        senderRole: messageData.userRole,
+        createdAt: serverTimestamp(),
+      },
+      createdAt: serverTimestamp(),
+    },
+    { merge: true }
   );
 
-  return onSnapshot(q, (snapshot) => {
-    const messages = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data()
-    }));
-    callback(messages);
+  return messageRef.id;
+};
+
+export const subscribeToThread = (orderId, callback) => {
+  const threadQuery = query(
+    collection(db, "messages"),
+    where("orderId", "==", orderId),
+    limit(200)
+  );
+
+  return onSnapshot(
+    threadQuery,
+    (snapshot) => {
+      callback(sortMessages(snapshot.docs.map(normalizeMessage)));
+    },
+    (error) => {
+      console.error("Chat subscription error:", error);
+      callback([]);
+    }
+  );
+};
+
+export const uploadOrderFile = async ({ orderId, file, uploadType, message = "" }) => {
+  if (!isBackendConfigured()) {
+    throw new Error("Backend upload endpoint is required for order files.");
+  }
+
+  const headers = await getAuthHeaders();
+  const formData = new FormData();
+  formData.append("orderId", orderId);
+  formData.append("uploadType", uploadType);
+  formData.append("message", message);
+  formData.append("file", file);
+
+  const response = await fetch(`${getApiBaseUrl()}/upload`, {
+    method: "POST",
+    headers,
+    body: formData,
   });
-};
 
-/**
- * Mark messages as read for a user
- */
-export const markMessagesAsRead = async (orderId, userId) => {
-  try {
-    const messagesQuery = query(
-      collection(db, "chatMessages"),
-      where("orderId", "==", orderId),
-      where("readBy", "not-in", [[userId]])
-    );
-
-    const snapshot = await getDocs(messagesQuery);
-    const batch = writeBatch(db);
-
-    snapshot.docs.forEach((docSnap) => {
-      const data = docSnap.data();
-      if (!data.readBy?.includes(userId)) {
-        batch.update(docSnap.ref, {
-          readBy: [...(data.readBy || []), userId]
-        });
-      }
-    });
-
-    await batch.commit();
-    
-    // Update unread count in thread
-    const threadRef = doc(db, "chatThreads", orderId);
-    await updateDoc(threadRef, {
-      [`unreadCount.${userId}`]: 0
-    });
-
-    return true;
-  } catch (error) {
-    console.error("Error marking messages as read:", error);
-    return false;
+  if (!response.ok) {
+    const payload = await response.json().catch(() => null);
+    throw new Error(payload?.message || "File upload failed.");
   }
+
+  return response.json();
 };
 
-/**
- * Get unread message count for a user
- */
-export const getUnreadMessageCount = async (userId, role) => {
-  try {
-    // Get all orders this user is involved in
-    let ordersQuery;
-    if (role === "client") {
-      ordersQuery = query(collection(db, "orders"), where("userId", "==", userId));
-    } else if (["worker", "manager"].includes(role)) {
-      ordersQuery = query(collection(db, "orders"), where("workers", "array-contains", userId));
-    } else {
-      ordersQuery = query(collection(db, "orders"), limit(20));
-    }
-
-    const ordersSnap = await getDocs(ordersQuery);
-    const orderIds = ordersSnap.docs.map(doc => doc.id);
-
-    // Get unread counts from chatThreads
-    let totalUnread = 0;
-    
-    for (const orderId of orderIds) {
-      const threadSnap = await getDoc(doc(db, "chatThreads", orderId));
-      if (threadSnap.exists()) {
-        const unreadCount = threadSnap.data()?.unreadCount?.[userId] || 0;
-        totalUnread += unreadCount;
-      }
-    }
-
-    return totalUnread;
-  } catch (error) {
-    console.error("Error getting unread count:", error);
-    return 0;
+export const requestRevision = async (orderId, message) => {
+  if (!isBackendConfigured()) {
+    throw new Error("Backend revision endpoint is required.");
   }
+
+  const headers = await getAuthHeaders();
+  const response = await fetch(`${getApiBaseUrl()}/revision/request`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...headers,
+    },
+    body: JSON.stringify({ orderId, message }),
+  });
+
+  const payload = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    const error = new Error(payload?.message || "Could not request a revision.");
+    error.statusCode = response.status;
+    error.requiresPayment = payload?.requiresPayment || false;
+    error.amount = payload?.amount || null;
+    throw error;
+  }
+
+  return payload;
 };
 
-/**
- * Get active threads for a specific user
- */
+export const markMessagesAsRead = async () => true;
+
+export const getUnreadMessageCount = async () => 0;
+
 export const getThreads = (userId, role, callback) => {
   let ordersQuery;
 
   if (role === "client") {
     ordersQuery = query(collection(db, "orders"), where("userId", "==", userId));
-  } else if (["worker", "manager"].includes(role)) {
-    ordersQuery = query(collection(db, "orders"), where("workers", "array-contains", userId)); 
+  } else if (role === "worker") {
+    ordersQuery = query(collection(db, "orders"), where("assignedWorkers", "array-contains", userId));
   } else {
-    ordersQuery = query(collection(db, "orders"), orderBy("updatedAt", "desc"), limit(20));
+    ordersQuery = query(collection(db, "orders"), limit(30));
   }
 
-  return onSnapshot(ordersQuery, async (snapshot) => {
-    const orders = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
-    
-    const threads = await Promise.all(orders.map(async (order) => {
-      const threadSnap = await getDoc(doc(db, "chatThreads", order.id));
-      const threadData = threadSnap.exists() ? threadSnap.data() : null;
-      
-      return {
-        id: order.id,
-        orderId: order.id,
-        serviceTitle: order.serviceTitle?.label || order.serviceTitle || `Order #${order.displayId}`,
-        lastMessage: threadData?.lastMessage || { text: "No messages yet" },
-        unreadCount: threadData?.unreadCount?.[userId] || 0,
-        updatedAt: threadData?.updatedAt || order.updatedAt,
-        status: order.status,
-        displayId: order.displayId
+  return onSnapshot(
+    ordersQuery,
+    (snapshot) => {
+      const runAsync = async () => {
+        try {
+          const orders = snapshot.docs.map((docSnapshot) => ({
+            id: docSnapshot.id,
+            ...docSnapshot.data(),
+          }));
+
+          const threads = await Promise.all(
+            orders.map(async (order) => {
+              const threadSnapshot = await getDoc(doc(db, "chatThreads", order.id));
+              const threadData = threadSnapshot.exists() ? threadSnapshot.data() : null;
+
+              return {
+                id: order.id,
+                orderId: order.id,
+                serviceTitle:
+                  order.serviceTitle?.label ||
+                  order.serviceTitle ||
+                  order.service ||
+                  `Order #${order.displayId || order.id.slice(-6).toUpperCase()}`,
+                lastMessage: threadData?.lastMessage || { text: "No messages yet" },
+                unreadCount: 0,
+                updatedAt: threadData?.updatedAt || order.updatedAt || order.createdAt,
+                status: order.status,
+                displayId: order.displayId,
+              };
+            })
+          );
+
+          threads.sort((left, right) => {
+            const leftTime =
+              left.updatedAt?.toMillis?.() ||
+              new Date(left.updatedAt || 0).getTime() ||
+              0;
+            const rightTime =
+              right.updatedAt?.toMillis?.() ||
+              new Date(right.updatedAt || 0).getTime() ||
+              0;
+            return rightTime - leftTime;
+          });
+
+          callback(threads);
+        } catch (error) {
+          console.error("getThreads error:", error);
+          callback([]);
+        }
       };
-    }));
-    
-    // Sort by last message time
-    threads.sort((a, b) => {
-      const timeA = a.updatedAt?.toMillis?.() || 0;
-      const timeB = b.updatedAt?.toMillis?.() || 0;
-      return timeB - timeA;
-    });
-    
-    callback(threads);
-  });
+
+      runAsync();
+    },
+    (error) => {
+      console.error("getThreads snapshot error:", error);
+      callback([]);
+    }
+  );
 };
 
-/**
- * Initialize chat thread
- */
 export const initializeChatThread = async (orderId, participants) => {
-  try {
-    const threadRef = doc(db, "chatThreads", orderId);
-    const threadSnap = await getDoc(threadRef);
-    
-    if (!threadSnap.exists()) {
-      await setDoc(threadRef, {
-        orderId,
-        participants,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-        lastMessage: null,
-        unreadCount: {}
-      });
-    }
-  } catch (error) {
-    console.error("Error initializing chat thread:", error);
+  const threadRef = doc(db, "chatThreads", orderId);
+  const threadSnapshot = await getDoc(threadRef);
+
+  if (!threadSnapshot.exists()) {
+    await setDoc(threadRef, {
+      orderId,
+      participants,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      lastMessage: null,
+    });
   }
+};
+
+export const getConversationById = async (conversationId) => {
+  const threadSnapshot = await getDoc(doc(db, "chatThreads", conversationId));
+  const orderSnapshot = await getDoc(doc(db, "orders", conversationId));
+
+  if (!orderSnapshot.exists()) {
+    return threadSnapshot.exists() ? { id: threadSnapshot.id, ...threadSnapshot.data() } : null;
+  }
+
+  const order = { id: orderSnapshot.id, ...orderSnapshot.data() };
+  const thread = threadSnapshot.exists() ? threadSnapshot.data() : null;
+
+  return {
+    id: order.id,
+    orderId: order.id,
+    subject:
+      order.serviceTitle?.label ||
+      order.serviceTitle ||
+      order.service ||
+      `Order #${order.displayId || order.id.slice(-6).toUpperCase()}`,
+    serviceTitle:
+      order.serviceTitle?.label ||
+      order.serviceTitle ||
+      order.service,
+    status: order.status,
+    revisionLimit: Number(order.revisionLimit ?? 1),
+    revisionsUsed: Number(order.revisionsUsed ?? 0),
+    paidRevisionCredits: Number(order.paidRevisionCredits ?? 0),
+    ...thread,
+  };
 };
 
 export default {
   sendMessage,
   subscribeToThread,
+  uploadOrderFile,
+  requestRevision,
   getThreads,
   markMessagesAsRead,
   getUnreadMessageCount,
-  initializeChatThread
+  initializeChatThread,
+  getConversationById,
 };

@@ -89,6 +89,23 @@ const EMAIL_TEMPLATES = {
     `,
   }),
 
+  revisionRequested: (data) => ({
+    subject: `Revision Requested - Order ${data.orderId}`,
+    html: `
+      <div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:24px;background:#0d0f11;color:#e0e0e0;border-radius:16px;">
+        <div style="text-align:center;margin-bottom:24px;">
+          <h1 style="color:#67F81D;margin:0;">TN WEB RATS</h1>
+          <p style="color:#888;font-size:12px;">Revision Request</p>
+        </div>
+        <div style="background:#1a1f1a;padding:20px;border-radius:12px;">
+          <p>Revision requested for <strong>${data.service || 'your order'}</strong>.</p>
+          <p style="font-size:13px;color:#aaa;">${data.message || 'Please review the latest feedback in the order chat.'}</p>
+          <p style="margin-top:16px;font-size:12px;color:#888;">Open the dashboard to review the request and continue the delivery.</p>
+        </div>
+      </div>
+    `,
+  }),
+
   emailVerification: (data) => ({
     subject: `Verify Your Email — TN WEB RATS`,
     html: `

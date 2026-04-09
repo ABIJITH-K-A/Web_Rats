@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import {
   AlertCircle,
   Calendar,
@@ -10,7 +10,6 @@ import {
   UserRound,
 } from 'lucide-react';
 import {
-  addDoc,
   collection,
   doc,
   updateDoc,
@@ -19,12 +18,12 @@ import {
   where,
   orderBy
 } from 'firebase/firestore';
+import { useNavigate } from 'react-router-dom';
 import { db } from '../../../config/firebase';
 import { useAuth } from '../../../context/AuthContext';
 import OrderDetailsModal from '../../../components/dashboard/OrderDetailsModal';
 import { logAuditEvent } from '../../../services/auditService';
 import { notifyOrderStatusChanged } from '../../../services/notificationService';
-import { fetchOrdersAssignedToUser } from '../../../services/orderService';
 import {
   buildOrderStatusPatch,
   getCustomerTypeLabel,
@@ -42,6 +41,7 @@ import {
 const FILTERS = getWorkerVisibleStatuses();
 
 const MyOrdersView = () => {
+  const navigate = useNavigate();
   const { user, userProfile } = useAuth();
   const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState([]);
@@ -154,7 +154,7 @@ const MyOrdersView = () => {
             Loading assigned orders...
           </div>
         ) : filteredOrders.length === 0 ? (
-          <div className="col-span-full rounded-[32px] border border-dashed border-white/10 bg-white/[0.02] px-8 py-24 text-center">
+          <div className="col-span-full rounded-[32px] border border-dashed border-white/10 bg-white/2 px-8 py-24 text-center">
             <Package size={56} className="mx-auto mb-5 text-white/12" />
             <div className="text-lg font-black text-white/50">
               No orders in this stage
@@ -292,7 +292,10 @@ const MyOrdersView = () => {
             order={selectedOrder}
             userRole={userProfile?.role}
             onClose={() => setSelectedOrder(null)}
-            onContact={() => {/* handle contact logic */}}
+            onContact={() => {
+              setSelectedOrder(null);
+              navigate(`/messages?id=${selectedOrder.id}`);
+            }}
             onUpdateStatus={(o, s) => handleUpdateStatus(o, s)}
           />
         )}

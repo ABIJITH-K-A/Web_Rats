@@ -18,7 +18,7 @@ const ReportsView = () => {
   const [loading, setLoading] = useState(true);
   const [myReports, setMyReports] = useState([]);
   const [inbox, setInbox] = useState([]);
-  const [reportForm, setReportForm] = useState({ toRole: 'manager', subject: '', details: '' });
+  const [reportForm, setReportForm] = useState({ toRole: 'admin', subject: '', details: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -33,7 +33,7 @@ const ReportsView = () => {
       const snap1 = await getDocs(q1);
       setMyReports(snap1.docs.map(d => ({ id: d.id, ...d.data() })));
       
-      const isApprover = ['owner', 'superadmin', 'admin', 'manager'].includes(userData?.role);
+      const isApprover = ['owner', 'admin'].includes(userData?.role);
       if (isApprover) {
          const q2 = query(collection(db, "reports"), where("toRole", "==", userData.role), orderBy("createdAt", "desc"));
          const snap2 = await getDocs(q2);
@@ -61,7 +61,7 @@ const ReportsView = () => {
         status: "pending",
         createdAt: serverTimestamp()
       });
-      setReportForm({ toRole: 'manager', subject: '', details: '' });
+      setReportForm({ toRole: 'admin', subject: '', details: '' });
       fetchData();
       alert("Report submitted successfully.");
     } catch (e) {
@@ -90,10 +90,9 @@ const ReportsView = () => {
   };
 
   const getTargetRoles = (myRole) => {
-    if (myRole === 'worker') return ['manager', 'admin'];
-    if (myRole === 'manager') return ['admin', 'superadmin'];
-    if (myRole === 'admin') return ['superadmin', 'owner'];
-    return ['superadmin', 'owner'];
+    if (myRole === 'admin') return ['owner'];
+    if (myRole === 'owner') return ['owner'];
+    return ['admin'];
   };
 
   return (
@@ -119,7 +118,7 @@ const ReportsView = () => {
                     value={reportForm.toRole}
                     onChange={(e) => setReportForm({...reportForm, toRole: e.target.value})}
                  >
-                    {getTargetRoles(userData.role).map(r => (
+                    {getTargetRoles(userData?.role).map(r => (
                        <option key={r} value={r}>{r}</option>
                     ))}
                  </select>
@@ -269,7 +268,7 @@ const ReportsView = () => {
          <div>
             <h4 className="text-sm font-bold text-white mb-2 underline underline-offset-4 decoration-cyan-primary/30">Reporting Protocol</h4>
             <p className="text-[10px] font-mono text-white/30 uppercase tracking-[0.15em] leading-relaxed">
-              Reports follow the hierarchy of command. Bug reports should be sent to "admin", while internal team disputes or resource requests should go to "manager". Owners see all super-admin escalations.
+              Reports follow the live hierarchy. Clients and workers escalate to admin, and admins escalate to owner when a case needs ownership-level review.
             </p>
          </div>
       </div>

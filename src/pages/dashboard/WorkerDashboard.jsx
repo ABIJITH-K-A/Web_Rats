@@ -51,8 +51,8 @@ const WorkerOverview = () => {
   const [stats, setStats] = useState({
     activeOrders: 0,
     completedOrders: 0,
-    totalEarnings: 0,
-    pendingAmount: 0,
+    totalEarned: 0,
+    nextPayoutDate: null,
   });
 
   useEffect(() => {
@@ -74,8 +74,8 @@ const WorkerOverview = () => {
         setStats({
           activeOrders: assignedOrders.filter(isOpenOrder).length,
           completedOrders: assignedOrders.filter(isCompletedOrder).length,
-          totalEarnings: Number(wallet?.lifetimeEarnings || wallet?.totalEarnings || 0),
-          pendingAmount: Number(wallet?.pendingAmount || wallet?.pending || 0),
+          totalEarned: Number(wallet?.totalEarned || wallet?.lifetimeEarnings || wallet?.totalEarnings || 0),
+          nextPayoutDate: wallet?.nextPayoutDate || null,
         });
       } catch (error) {
         console.error(error);
@@ -93,11 +93,19 @@ const WorkerOverview = () => {
     };
   }, [user]);
 
+  const nextPayoutLabel = stats.nextPayoutDate
+    ? new Date(stats.nextPayoutDate).toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
+    : "Manual";
+
   const statCards = [
     { label: "Active Orders", value: stats.activeOrders, icon: Briefcase, color: "text-cyan-primary" },
     { label: "Completed", value: stats.completedOrders, icon: CheckCircle, color: "text-green-500" },
-    { label: "Total Earnings", value: formatCurrency(stats.totalEarnings), icon: Wallet, color: "text-purple-500" },
-    { label: "Pending Amount", value: formatCurrency(stats.pendingAmount), icon: Clock, color: "text-yellow-500" },
+    { label: "Total Earned", value: formatCurrency(stats.totalEarned), icon: Wallet, color: "text-purple-500" },
+    { label: "Next Payout", value: nextPayoutLabel, icon: Clock, color: "text-yellow-500" },
   ];
 
   return (
@@ -164,10 +172,10 @@ const WorkerOverview = () => {
             />
             <ActionCard
               icon={Wallet}
-              title="Earnings & Wallet"
-              description="Track pending releases, withdrawable balance, and completed payouts."
+              title="Finance & Payroll"
+              description="Track completed earnings and the next manual payout cycle."
               tone="text-purple-500"
-              meta={formatCurrency(stats.pendingAmount) + " pending release"}
+              meta={nextPayoutLabel === "Manual" ? "Manual payout schedule" : `Next run ${nextPayoutLabel}`}
             />
           </div>
         </div>
@@ -180,7 +188,7 @@ const WorkerOverview = () => {
             <p>Priority jobs should move first whenever they land in your queue.</p>
             <p>Claimed pool orders are now routed directly into your assigned work timeline.</p>
             <p>Update order status only when the real project stage changes so clients stay synced.</p>
-            <p>Pending wallet amounts release after the system hold period before withdrawal.</p>
+            <p>Earnings are added to the ledger only after the order is marked completed.</p>
             <p>Quality score and completed delivery volume both affect future project routing.</p>
           </div>
         </div>

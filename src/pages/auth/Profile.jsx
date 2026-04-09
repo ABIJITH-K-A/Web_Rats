@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import {
   AlertCircle,
   ArrowRight,
@@ -17,6 +17,7 @@ import {
   LifeBuoy,
   LogOut,
   Mail,
+  MessageSquare,
   MessageSquareText,
   Package,
   Phone,
@@ -28,8 +29,11 @@ import {
   Paperclip,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import ChatWidget from "../../components/chat/ChatWidget";
 import OrderDetailsModal from "../../components/dashboard/OrderDetailsModal";
+import AnimatedPaymentButton from "../../components/ui/AnimatedPaymentButton";
+import DeniedActionButton from "../../components/ui/DeniedActionButton";
+import DownloadActionButton from "../../components/ui/DownloadActionButton";
+import SupportSendButton from "../../components/ui/SupportSendButton";
 import {
   addDoc,
   collection,
@@ -50,7 +54,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useDashboard } from "../../context/DashboardContext";
 import { CONTACT_INFO } from "../../data/siteData";
 import { notifySupportRequest } from "../../services/notificationService";
-import { STAFF_ROLES } from "../../utils/systemRules";
+import { STAFF_ROLES, getEligibleReferralDiscount } from "../../utils/systemRules";
 import {
   formatCurrency,
   formatDate,
@@ -65,11 +69,9 @@ import {
   getOrderProgress,
   getOrderStatusBadgeClass,
   getOrderStatusLabel,
-  getOrderTimeline,
   getPaymentStatusBadgeClass,
   getPaymentStatusLabel,
   getPrimaryAssetLink,
-  getRequirementFields,
   isCompletedOrder,
   isOpenOrder,
   normalizePaymentStatus,
@@ -77,6 +79,7 @@ import {
 
 const NAV_ITEMS = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { id: "messages", label: "Messages Center", icon: MessageSquare },
   { id: "orders", label: "My Orders", icon: Package },
   { id: "payments", label: "Payments", icon: CreditCard },
   { id: "profile", label: "Profile", icon: User },
@@ -174,8 +177,8 @@ const Profile = () => {
         try {
           const data = await apiRequest("/notification-settings", { authMode: "required" });
           if (data?.preferences) setNotificationPrefs(data.preferences);
-        } catch (err) {
-          console.error("Failed to fetch notification preferences", err);
+        } catch (e) {
+          console.error("Failed to fetch notification preferences", e);
         }
 
         if (isMounted) {
@@ -235,7 +238,6 @@ const Profile = () => {
     }));
   }, [orders, userProfile]);
 
-  const isClient = !userProfile?.role || userProfile.role === "client";
   const isStaff = STAFF_ROLES.includes(userProfile?.role?.toLowerCase?.());
   const activeOrders = orders.filter(isOpenOrder);
   const completedOrders = orders.filter(isCompletedOrder);
@@ -255,6 +257,10 @@ const Profile = () => {
     (sum, item) => sum + item.summary.pending,
     0
   );
+  const studentReferralDiscount = getEligibleReferralDiscount(userProfile);
+  const studentReferralLabel = studentReferralDiscount
+    ? `${studentReferralDiscount}% Off`
+    : "Not Applied";
   const effectiveCustomerType =
     profileForm.customerType ||
     userProfile?.customerType ||
@@ -356,7 +362,7 @@ const Profile = () => {
 
       setNotifState({ saving: false, error: "", feedback: "Preferences saved." });
       setTimeout(() => setNotifState((s) => ({ ...s, feedback: "" })), 3000);
-    } catch (err) {
+    } catch {
       setNotifState({
         saving: false,
         error: "Failed to save preferences.",
@@ -427,11 +433,7 @@ const Profile = () => {
   };
 
   const openContactThread = (order) => {
-    window.dispatchEvent(
-      new CustomEvent("open-chat", {
-        detail: { activeOrder: { id: order.id, serviceTitle: order.service } }
-      })
-    );
+    navigate(`/messages?id=${order.id}`);
   };
 
   const openPaymentThread = (order, dueNow) => {
@@ -580,8 +582,8 @@ const Profile = () => {
               TNWebRats
             </h1>
             <p className="mt-2 text-sm leading-7 text-light-gray/50">
-              Track orders, payments, profile details, and support in one
-              place.
+              Track orders, payment status, delivery previews, messages, and
+              support in one place.
             </p>
           </div>
 
@@ -594,7 +596,15 @@ const Profile = () => {
                 <button
                   key={item.id}
                   type="button"
-                  onClick={() => setActiveSection(item.id)}
+                  onClick={() => {
+                    if (item.id === "messages") {
+                      navigate("/messages");
+                    } else {
+                      setActiveSection(item.id);
+                      setOrderTab("active");
+                    }
+                    if (window.innerWidth < 1024) setIsSidebarOpen(false);
+                  }}
                   className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left transition-colors ${
                     isActive
                       ? "border border-cyan-primary/20 bg-cyan-primary/10 text-cyan-primary"
@@ -673,7 +683,7 @@ const Profile = () => {
                         initial={{ opacity: 0, y: 10, scale: 0.96 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.96 }}
-                        className="absolute right-0 mt-3 w-[22rem] overflow-hidden rounded-[24px] border border-white/8 bg-[#11141a] shadow-2xl"
+                        className="absolute right-0 mt-3 w-88 overflow-hidden rounded-[24px] border border-white/8 bg-[#11141a] shadow-2xl"
                       >
                         <div className="flex items-center justify-between border-b border-white/8 px-5 py-4">
                           <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary/72">
@@ -699,7 +709,12 @@ const Profile = () => {
                               <button
                                 key={notification.id}
                                 type="button"
-                                onClick={() => markAsRead(notification.id)}
+                                onClick={() => {
+                                  markAsRead(notification.id);
+                                  if (notification.orderId || notification.type === 'message' || notification.type === 'chat') {
+                                    navigate(`/messages?id=${notification.orderId || notification.relatedId}`);
+                                  }
+                                }}
                                 className={`w-full border-b border-white/6 px-5 py-4 text-left transition-colors hover:bg-white/5 ${
                                   notification.read ? "" : "bg-cyan-primary/6"
                                 }`}
@@ -756,7 +771,13 @@ const Profile = () => {
                   <button
                     key={item.id}
                     type="button"
-                    onClick={() => setActiveSection(item.id)}
+                    onClick={() => {
+                      if (item.id === "messages") {
+                        navigate("/messages");
+                      } else {
+                        setActiveSection(item.id);
+                      }
+                    }}
                     className={`flex shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold transition-colors ${
                       isActive
                         ? "border-cyan-primary/20 bg-cyan-primary/10 text-cyan-primary"
@@ -815,7 +836,7 @@ const Profile = () => {
                 >
                   {activeSection === "dashboard" && (
                     <div className="space-y-8">
-                      <div className="grid gap-4 md:grid-cols-3">
+                      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                         <StatsCard
                           label="Active Orders"
                           value={activeOrders.length}
@@ -833,6 +854,12 @@ const Profile = () => {
                           value={formatCurrency(totalPending)}
                           accent="text-amber-300"
                           icon={Wallet}
+                        />
+                        <StatsCard
+                          label="Student Discount"
+                          value={studentReferralLabel}
+                          accent="text-emerald-300"
+                          icon={Ticket}
                         />
                       </div>
 
@@ -949,7 +976,7 @@ const Profile = () => {
 
                           <Card className="border-white/8 bg-[#10141a]">
                             <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary/72">
-                              Payment Snapshot
+                              Account Snapshot
                             </div>
                             <div className="mt-6 space-y-4">
                               <SnapshotRow
@@ -965,6 +992,10 @@ const Profile = () => {
                                 value={getCustomerTypeLabel({
                                   customerType: effectiveCustomerType,
                                 })}
+                              />
+                              <SnapshotRow
+                                label="Student discount"
+                                value={studentReferralLabel}
                               />
                             </div>
                           </Card>
@@ -1270,6 +1301,14 @@ const Profile = () => {
                               })}
                             />
                             <SnapshotRow
+                              label="Student discount"
+                              value={studentReferralLabel}
+                            />
+                            <SnapshotRow
+                              label="Referral code used"
+                              value={userProfile?.usedReferralCode || "None"}
+                            />
+                            <SnapshotRow
                               label="Member since"
                               value={formatDate(userProfile?.createdAt)}
                             />
@@ -1463,11 +1502,16 @@ const Profile = () => {
                                 {notifications.map((notif) => (
                                   <button
                                     key={notif.id}
-                                    onClick={() => markAsRead(notif.id)}
+                                    onClick={() => {
+                                      markAsRead(notif.id);
+                                      if (notif.orderId || notif.type === 'message' || notif.type === 'chat') {
+                                        navigate(`/messages?id=${notif.orderId || notif.relatedId}`);
+                                      }
+                                    }}
                                     className={`group flex items-start gap-6 rounded-[2.5rem] border p-8 text-left transition-all ${
                                       notif.read 
                                         ? "border-white/5 bg-[#10141a]/40 opacity-50 hover:opacity-100 hover:bg-[#10141a]" 
-                                        : "border-cyan-primary/20 bg-cyan-primary/[0.03] hover:bg-cyan-primary/[0.07] shadow-lg shadow-cyan-primary/[0.02]"
+                                        : "border-cyan-primary/20 bg-cyan-primary/3 hover:bg-cyan-primary/7 shadow-lg shadow-cyan-primary/2"
                                     }`}
                                   >
                                     <div className={`mt-1 flex h-14 w-14 shrink-0 items-center justify-center rounded-[1.25rem] border transition-all duration-300 ${
@@ -1542,13 +1586,18 @@ const Profile = () => {
                             />
                           </label>
 
-                          <Button
+                          <SupportSendButton
                             type="submit"
                             disabled={supportState.sending}
-                            className="w-full"
-                          >
-                            {supportState.sending ? "Sending..." : "Send Message"}
-                          </Button>
+                            status={
+                              supportState.sending
+                                ? "sending"
+                                : supportState.feedback
+                                  ? "sent"
+                                  : "idle"
+                            }
+                            className="mt-2"
+                          />
                         </form>
 
                         {supportState.feedback && (
@@ -1648,7 +1697,7 @@ const Profile = () => {
           />
         )}
       </AnimatePresence>
-      <ChatWidget />
+
     </div>
   );
 };
@@ -1792,14 +1841,15 @@ const OrderCard = ({
 
         {isCompleted ? (
           <>
-            <Button
-              variant="outline"
-              onClick={onDownload}
-              disabled={!assetLink}
-              className={!assetLink ? "opacity-50" : ""}
-            >
-              <Download size={16} /> Download Files
-            </Button>
+            {assetLink ? (
+              <DownloadActionButton
+                onClick={onDownload}
+                label="Download Files"
+                compactOnSmallScreens
+              />
+            ) : (
+              <DeniedActionButton label="Files Locked" className="justify-center" />
+            )}
             <Button
               variant="outline"
               onClick={onReview}
@@ -2040,13 +2090,15 @@ const QRPaymentModal = ({ state, setState, onSubmit }) => {
           )}
         </div>
 
-        <Button 
+        <AnimatedPaymentButton
           onClick={onSubmit}
-          disabled={!state.utr.trim() || state.submitting}
+          disabled={!state.utr.trim()}
+          processing={state.submitting}
+          idleIcon={ShieldCheck}
+          idleLabel="Settle via QR Pay"
+          processingLabel="Verifying payment..."
           className="w-full py-6 text-lg"
-        >
-          {state.submitting ? "Verifying..." : "Settle via QR Pay"}
-        </Button>
+        />
 
         <p className="mt-6 text-[10px] text-light-gray/20 font-mono uppercase tracking-widest">
           Payments are verified by admin within 2-4 hours.

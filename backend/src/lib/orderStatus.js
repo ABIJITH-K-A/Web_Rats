@@ -57,20 +57,11 @@ export const getAllowedStatusUpdates = (role = 'client') => {
     return ['assigned', 'in_progress', 'delivered_preview'];
   }
 
-  if (normalizedRole === 'manager') {
-    return [
-      'pending_assignment',
-      'assigned',
-      'in_progress',
-      'delivered_preview',
-      'revision_requested',
-      'awaiting_final_payment',
-      'completed',
-      'cancelled',
-    ];
+  if (['admin', 'owner'].includes(normalizedRole)) {
+    return Object.keys(ORDER_STATUS_LABELS);
   }
 
-  return Object.keys(ORDER_STATUS_LABELS);
+  return [];
 };
 
 export const buildOrderStatusPatch = (nextStatus) => {

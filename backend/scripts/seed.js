@@ -17,25 +17,11 @@ const DEMO_USERS = [
     role: 'worker'
   },
   {
-    uid: 'demo-manager-1',
-    email: 'manager@demo.com',
-    password: 'password123',
-    displayName: 'Demo Manager',
-    role: 'manager'
-  },
-  {
     uid: 'demo-admin-1',
     email: 'admin@demo.com',
     password: 'password123',
     displayName: 'Demo Admin',
     role: 'admin'
-  },
-  {
-    uid: 'demo-superadmin-1',
-    email: 'superadmin@demo.com',
-    password: 'password123',
-    displayName: 'Demo SuperAdmin',
-    role: 'superadmin'
   },
   {
     uid: 'demo-owner-1',
@@ -83,8 +69,9 @@ const DEMO_ORDERS = [
     orderStatus: 'In Progress',
     statusKey: 'in_progress',
     assignmentStatus: 'assigned',
-    workers: ['demo-worker-1'],
-    managers: ['demo-manager-1'],
+    assignedWorkers: ['demo-worker-1'],
+    workerAssigned: 'demo-worker-1',
+    assignedTo: 'demo-worker-1',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   },
@@ -124,8 +111,7 @@ const DEMO_ORDERS = [
     orderStatus: 'Pending Assignment',
     statusKey: 'pending_assignment',
     assignmentStatus: 'unassigned',
-    workers: [],
-    managers: [],
+    assignedWorkers: [],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   }

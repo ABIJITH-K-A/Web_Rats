@@ -1,119 +1,142 @@
-import { Search, Check } from "lucide-react";
-import { categories } from "../../data/seedTemplates";
+import { Search } from "lucide-react";
+import { TEMPLATE_CATEGORIES, TEMPLATE_ITEMS } from "../../data/templateData";
+
+const keywordOptions = Array.from(
+  new Set(
+    TEMPLATE_ITEMS.flatMap((template) => template.tags || [])
+      .map((tag) => String(tag).toLowerCase())
+      .slice(0, 8)
+  )
+);
 
 export default function FilterSidebar({
-  search,
-  setSearch,
-  selectedCategories,
-  setSelectedCategories,
-  priceFilter,
-  setPriceFilter,
-  sortBy,
-  setSortBy,
+  filters,
+  setFilters,
+  onRequestClose,
 }) {
-  const toggleCategory = (category) => {
-    setSelectedCategories((prev) =>
-      prev.includes(category)
-        ? prev.filter((c) => c !== category)
-        : [...prev, category]
-    );
+  const selectedCategory = filters.categories?.[0] || "all";
+  const updateFilters = (updater, shouldClose = false) => {
+    setFilters(updater);
+    if (shouldClose) {
+      onRequestClose?.();
+    }
   };
 
   return (
-    <div className="w-full space-y-6 p-4">
-      {/* Search */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-gray-700">Search</label>
+    <div className="space-y-6">
+      <div>
+        <label className="mb-2 block text-[10px] font-mono uppercase tracking-[0.18em] text-white/28">
+          Search
+        </label>
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/20" />
           <input
             type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search templates..."
-            className="w-full rounded-lg border border-gray-200 bg-white pl-10 pr-4 py-2 text-sm focus:border-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400"
+            value={filters.search}
+            onChange={(event) =>
+              updateFilters(
+                (current) => ({ ...current, search: event.target.value }),
+                false
+              )
+            }
+            placeholder="react, landing, portfolio"
+            className="w-full rounded-2xl border border-white/10 bg-black/30 py-3 pl-10 pr-4 text-sm text-white outline-none transition focus:border-cyan-primary/50"
           />
         </div>
       </div>
 
-      {/* Categories */}
-      <div className="space-y-3">
-        <label className="text-sm font-medium text-gray-700">Categories</label>
+      <div>
+        <label className="mb-3 block text-[10px] font-mono uppercase tracking-[0.18em] text-white/28">
+          Collection
+        </label>
         <div className="space-y-2">
-          {categories.map((category) => (
-            <label
-              key={category}
-              className="flex cursor-pointer items-center gap-3 rounded-md p-2 hover:bg-gray-50"
+          {TEMPLATE_CATEGORIES.map((category) => (
+            <button
+              key={category.id}
+              type="button"
+              onClick={() =>
+                updateFilters(
+                  (current) => ({
+                    ...current,
+                    categories: category.id === "all" ? [] : [category.id],
+                  }),
+                  true
+                )
+              }
+              className={`w-full rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition ${
+                selectedCategory === category.id
+                  ? "border-cyan-primary/30 bg-cyan-primary/10 text-cyan-primary"
+                  : "border-white/8 bg-white/[0.03] text-white/58 hover:border-white/16 hover:text-white"
+              }`}
             >
-              <div
-                className={`flex h-4 w-4 items-center justify-center rounded border ${
-                  selectedCategories.includes(category)
-                    ? "border-gray-800 bg-gray-800"
-                    : "border-gray-300"
-                }`}
-              >
-                {selectedCategories.includes(category) && (
-                  <Check className="h-3 w-3 text-white" />
-                )}
-              </div>
-              <input
-                type="checkbox"
-                checked={selectedCategories.includes(category)}
-                onChange={() => toggleCategory(category)}
-                className="sr-only"
-              />
-              <span className="text-sm text-gray-600">{category}</span>
-            </label>
+              {category.label}
+            </button>
           ))}
         </div>
       </div>
 
-      {/* Price Filter */}
-      <div className="space-y-3">
-        <label className="text-sm font-medium text-gray-700">Price</label>
-        <div className="space-y-2">
+      <div>
+        <label className="mb-3 block text-[10px] font-mono uppercase tracking-[0.18em] text-white/28">
+          Keyword
+        </label>
+        <div className="flex flex-wrap gap-2">
+          {keywordOptions.map((keyword) => {
+            const active = filters.tag === keyword;
+            return (
+              <button
+                key={keyword}
+                type="button"
+                onClick={() =>
+                  updateFilters(
+                    (current) => ({
+                      ...current,
+                      tag: active ? "" : keyword,
+                    }),
+                    true
+                  )
+                }
+                className={`rounded-full border px-3 py-1.5 text-[11px] font-semibold transition ${
+                  active
+                    ? "border-cyan-primary/30 bg-cyan-primary/10 text-cyan-primary"
+                    : "border-white/8 bg-white/[0.03] text-white/50 hover:border-white/14 hover:text-white"
+                }`}
+              >
+                {keyword}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div>
+        <label className="mb-3 block text-[10px] font-mono uppercase tracking-[0.18em] text-white/28">
+          Price
+        </label>
+        <div className="grid grid-cols-3 gap-2">
           {[
             { value: "all", label: "All" },
             { value: "free", label: "Free" },
             { value: "paid", label: "Paid" },
           ].map((option) => (
-            <label
+            <button
               key={option.value}
-              className="flex cursor-pointer items-center gap-3 rounded-md p-2 hover:bg-gray-50"
+              type="button"
+              onClick={() =>
+                updateFilters(
+                  (current) => ({ ...current, price: option.value }),
+                  true
+                )
+              }
+              className={`rounded-2xl border px-3 py-3 text-[11px] font-semibold transition ${
+                filters.price === option.value
+                  ? "border-cyan-primary/30 bg-cyan-primary/10 text-cyan-primary"
+                  : "border-white/8 bg-white/[0.03] text-white/50 hover:border-white/14 hover:text-white"
+              }`}
             >
-              <div
-                className={`h-4 w-4 rounded-full border ${
-                  priceFilter === option.value
-                    ? "border-4 border-gray-800"
-                    : "border-gray-300"
-                }`}
-              />
-              <input
-                type="radio"
-                name="price"
-                value={option.value}
-                checked={priceFilter === option.value}
-                onChange={() => setPriceFilter(option.value)}
-                className="sr-only"
-              />
-              <span className="text-sm text-gray-600">{option.label}</span>
-            </label>
+              {option.label}
+            </button>
           ))}
         </div>
-      </div>
-
-      {/* Sort */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-gray-700">Sort By</label>
-        <select
-          value={sortBy}
-          onChange={(e) => setSortBy(e.target.value)}
-          className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400"
-        >
-          <option value="popular">Popular</option>
-          <option value="newest">Newest</option>
-          <option value="price-low">Price: Low to High</option>
-        </select>
       </div>
     </div>
   );
