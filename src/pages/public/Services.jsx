@@ -103,7 +103,7 @@ const Services = () => {
                     to={`/book?category=${category.id}`}
                     className="mt-auto block pt-8"
                   >
-                    <Button className="w-full">
+                    <Button variant="cardCta" className="w-full">
                       {category.cta} <ArrowRight size={16} />
                     </Button>
                   </Link>

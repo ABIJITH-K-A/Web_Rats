@@ -16,6 +16,9 @@ export default function TemplateCard({ template }) {
             src={image}
             alt={template.title}
             className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+            width="320"
+            height="200"
+            loading="lazy"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#0D0F0D] via-transparent to-transparent" />
           <div className="absolute left-4 top-4 flex items-center gap-2">

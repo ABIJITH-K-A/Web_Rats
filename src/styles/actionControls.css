@@ -187,8 +187,283 @@
   }
 }
 
+@keyframes tn-galaxy-rotate-nebula {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes tn-galaxy-star-drift {
+  0% {
+    transform: scale(1);
+  }
+
+  100% {
+    transform: scale(1.12) translate(-2%, -2%);
+  }
+}
+
+@keyframes tn-card-cta-pulse {
+  0%,
+  100% {
+    opacity: 0.62;
+    transform: scale(0.98);
+  }
+
+  50% {
+    opacity: 0.98;
+    transform: scale(1.02);
+  }
+}
+
 .tn-pay-btn {
   position: relative;
+}
+
+.tn-card-cta-btn {
+  position: relative;
+  isolation: isolate;
+  overflow: visible;
+  border: none;
+  border-radius: 0.95rem;
+  background: transparent;
+  cursor: pointer;
+}
+
+.tn-card-cta-btn__glow {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: 0.95rem;
+  background: linear-gradient(
+    120deg,
+    rgba(103, 248, 29, 0.8) 0%,
+    rgba(98, 203, 44, 0.86) 52%,
+    rgba(255, 255, 255, 0.72) 100%
+  );
+  filter: blur(16px);
+  opacity: 0.62;
+  transition:
+    opacity 0.22s ease,
+    transform 0.22s ease,
+    filter 0.22s ease;
+  animation: tn-card-cta-pulse 4.8s ease-in-out infinite;
+}
+
+.tn-card-cta-btn__content {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  border-radius: 0.95rem;
+  background: #0d1218;
+  padding: 0.85rem 1.7rem;
+  color: #fff;
+  font-weight: 700;
+  transition:
+    transform 0.2s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 10px 24px rgba(0, 0, 0, 0.22);
+}
+
+.tn-card-cta-btn__content svg {
+  transition:
+    transform 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.tn-card-cta-btn:hover .tn-card-cta-btn__glow {
+  opacity: 1;
+  transform: scale(1.02);
+  filter: blur(18px);
+}
+
+.tn-card-cta-btn:hover .tn-card-cta-btn__content {
+  background: #121922;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 18px 28px rgba(79, 181, 37, 0.18);
+}
+
+.tn-card-cta-btn:hover .tn-card-cta-btn__content svg {
+  transform: translateX(3px);
+}
+
+.tn-card-cta-btn:active .tn-card-cta-btn__content {
+  transform: translateY(1px) scale(0.985);
+}
+
+.tn-galaxy-btn {
+  --tn-galaxy-bg: #0c1013;
+  --tn-galaxy-primary: rgb(var(--rgb-cyan-primary));
+  --tn-galaxy-secondary: rgb(var(--rgb-teal-primary));
+  --tn-galaxy-highlight: rgba(255, 255, 255, 0.95);
+
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: none;
+  border-radius: 1rem;
+  background: var(--tn-galaxy-bg);
+  padding: 0.95rem 2rem;
+  cursor: pointer;
+  box-shadow:
+    0 0.65em 1.8em -0.7em rgba(103, 248, 29, 0.22),
+    0 0 0 1px rgba(255, 255, 255, 0.06);
+  transition:
+    transform 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    box-shadow 0.3s ease;
+}
+
+.tn-galaxy-btn:focus-visible {
+  outline: 2px solid rgba(103, 248, 29, 0.8);
+  outline-offset: 4px;
+}
+
+.tn-galaxy-btn:active {
+  transform: scale(0.97);
+}
+
+.tn-galaxy-btn::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  z-index: 0;
+  border-radius: inherit;
+  background: conic-gradient(
+    from 0deg,
+    rgba(12, 16, 19, 0.95) 0deg,
+    var(--tn-galaxy-primary) 62deg,
+    var(--tn-galaxy-secondary) 128deg,
+    rgba(12, 16, 19, 0.95) 182deg,
+    var(--tn-galaxy-highlight) 246deg,
+    var(--tn-galaxy-primary) 308deg,
+    rgba(12, 16, 19, 0.95) 360deg
+  );
+  filter: blur(9px);
+  opacity: 0.76;
+  animation: tn-galaxy-rotate-nebula 4.2s linear infinite;
+  transition:
+    opacity 0.3s ease,
+    filter 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.tn-galaxy-btn::after {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  z-index: 1;
+  border-radius: calc(1rem - 1px);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 38%),
+    rgba(12, 16, 19, 0.96);
+  transition:
+    background 0.26s ease,
+    box-shadow 0.26s ease;
+}
+
+.tn-galaxy-btn:hover {
+  box-shadow:
+    0 1em 2.6em -0.72em rgba(103, 248, 29, 0.32),
+    0 0 34px rgba(98, 203, 44, 0.16),
+    0 0 18px rgba(255, 255, 255, 0.08);
+}
+
+.tn-galaxy-btn:hover::before {
+  opacity: 1;
+  filter: blur(11px);
+  animation-duration: 2.3s;
+}
+
+.tn-galaxy-btn:active::after {
+  background: linear-gradient(
+    135deg,
+    rgba(103, 248, 29, 0.98) 0%,
+    rgba(98, 203, 44, 0.98) 52%,
+    rgba(255, 255, 255, 0.94) 100%
+  );
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+}
+
+.tn-galaxy-btn:active .tn-galaxy-btn__content {
+  color: #090a0e;
+}
+
+.tn-galaxy-btn__content {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75em;
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.tn-galaxy-btn__content svg {
+  width: 1.2em;
+  height: 1.2em;
+  flex-shrink: 0;
+  transition:
+    transform 0.3s ease,
+    color 0.22s ease;
+}
+
+.tn-galaxy-btn:hover .tn-galaxy-btn__content svg {
+  transform: translateX(0.24em) rotate(-10deg);
+}
+
+.tn-galaxy-btn__glow {
+  position: absolute;
+  inset: -28%;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 20% 24%, rgba(103, 248, 29, 0.28), transparent 34%),
+    radial-gradient(circle at 82% 22%, rgba(98, 203, 44, 0.24), transparent 36%),
+    radial-gradient(circle at 52% 88%, rgba(255, 255, 255, 0.12), transparent 28%);
+  filter: blur(28px);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.tn-galaxy-btn:hover .tn-galaxy-btn__glow {
+  opacity: 1;
+}
+
+.tn-galaxy-btn__stars {
+  position: absolute;
+  inset: 2px;
+  z-index: 2;
+  pointer-events: none;
+  border-radius: calc(1rem - 2px);
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.95) 1px, transparent 1.6px),
+    radial-gradient(circle at 80% 70%, rgba(255, 255, 255, 0.92) 1px, transparent 1.5px),
+    radial-gradient(circle at 40% 80%, rgba(255, 255, 255, 0.85) 0.6px, transparent 1.1px);
+  background-size: 120% 120%;
+  opacity: 0.24;
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
+}
+
+.tn-galaxy-btn:hover .tn-galaxy-btn__stars {
+  opacity: 0.78;
+  animation: tn-galaxy-star-drift 5s linear infinite alternate;
 }
 
 .tn-pay-icon-stack {
@@ -450,9 +725,96 @@
   animation: tn-denied-shake 0.22s linear 1;
 }
 
+.tn-logout-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 45px;
+  height: 45px;
+  overflow: hidden;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ff5f57 0%, #e53f4f 100%);
+  box-shadow:
+    0 14px 28px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  transition:
+    width 0.3s ease,
+    border-radius 0.3s ease,
+    transform 0.18s ease,
+    box-shadow 0.22s ease;
+}
+
+.tn-logout-btn:hover {
+  width: 128px;
+  border-radius: 999px;
+  box-shadow:
+    0 18px 34px rgba(0, 0, 0, 0.24),
+    0 0 26px rgba(255, 95, 87, 0.18);
+}
+
+.tn-logout-btn:active {
+  transform: translate(2px, 2px);
+}
+
+.tn-logout-btn__sign {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  transition:
+    width 0.3s ease,
+    padding-left 0.3s ease;
+}
+
+.tn-logout-btn__sign svg {
+  width: 17px;
+  height: 17px;
+  color: white;
+}
+
+.tn-logout-btn__text {
+  position: absolute;
+  right: 0;
+  width: 0;
+  opacity: 0;
+  color: white;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  transition:
+    opacity 0.3s ease,
+    width 0.3s ease,
+    padding-right 0.3s ease;
+}
+
+.tn-logout-btn:hover .tn-logout-btn__sign {
+  width: 30%;
+  padding-left: 18px;
+}
+
+.tn-logout-btn:hover .tn-logout-btn__text {
+  width: 70%;
+  opacity: 1;
+  padding-right: 10px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .tn-pay-btn:hover .tn-pay-icon,
   .tn-pay-btn[data-processing="true"] .tn-pay-icon,
+  .tn-card-cta-btn__glow,
+  .tn-galaxy-btn,
+  .tn-galaxy-btn::before,
+  .tn-galaxy-btn::after,
+  .tn-galaxy-btn__content svg,
+  .tn-galaxy-btn__glow,
+  .tn-galaxy-btn__stars,
+  .tn-logout-btn,
+  .tn-logout-btn__sign,
+  .tn-logout-btn__text,
   .tn-send-btn *,
   .tn-denied-btn {
     animation: none !important;

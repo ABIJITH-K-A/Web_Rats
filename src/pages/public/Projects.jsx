@@ -138,6 +138,9 @@ const Projects = () => {
                     src={project.image}
                     alt={project.title}
                     className="h-64 w-full object-cover"
+                    width="400"
+                    height="256"
+                    loading="lazy"
                   />
                   <div className="flex flex-1 flex-col p-7">
                     <div className="flex items-start justify-between gap-4">
@@ -193,6 +196,9 @@ const Projects = () => {
                   src={item.image}
                   alt={item.title}
                   className="h-60 w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  width="400"
+                  height="240"
+                  loading="lazy"
                 />
                 <div className="p-5">
                   <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary/72">

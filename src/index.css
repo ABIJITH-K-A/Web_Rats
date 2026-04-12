@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&display=optional");
 @import "tailwindcss";
 @import "./styles/theme.css";
 @import "./styles/actionControls.css";
@@ -95,6 +95,36 @@
   [class*="bg-secondary-dark/"],
   [class*="bg-white/"] {
     backdrop-filter: blur(16px);
+  }
+
+  /* Gradient outline for cards and divs */
+  .gradient-outline {
+    position: relative;
+    background: var(--color-secondary-dark);
+    border-radius: 1rem;
+  }
+
+  .gradient-outline::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    padding: 1px;
+    border-radius: 1rem;
+    background: linear-gradient(
+      135deg,
+      var(--color-cyan-primary) 0%,
+      var(--color-teal-primary) 50%,
+      var(--color-cyan-primary) 100%
+    );
+    -webkit-mask: 
+      linear-gradient(#fff 0 0) content-box, 
+      linear-gradient(#fff 0 0);
+    mask: 
+      linear-gradient(#fff 0 0) content-box, 
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
   }
 }
 

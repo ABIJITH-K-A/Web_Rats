@@ -305,7 +305,7 @@ const BookService = () => {
       const referralSnapshot = await getDoc(doc(db, "referralCodes", normalizedCode));
 
       if (!referralSnapshot.exists()) {
-        setReferralError("Referral code not found. Check the code and try again.");
+        setReferralError("Invalid Referral code. Check the code and try again.");
         return;
       }
 
@@ -328,7 +328,7 @@ const BookService = () => {
         })
       );
       setReferralFeedback(
-        `${discountPercent}% student referral discount applied to this order.`
+        `${discountPercent}% student referral discount applied.`
       );
     } catch (error) {
       console.error("Referral validation failed:", error);
@@ -638,7 +638,7 @@ const BookService = () => {
               Your project request is locked in.
             </h1>
             <p className="mx-auto mt-5 max-w-xl text-lg leading-8 text-light-gray/68">
-              We saved the booking, opened the WhatsApp summary, and generated a
+              We saved the booking and generated a
               new order reference for follow-up.
             </p>
             <div className="mx-auto mt-8 w-fit rounded-2xl border border-cyan-primary/18 bg-cyan-primary/8 px-6 py-4 font-mono text-lg tracking-[0.18em] text-cyan-primary">
@@ -825,7 +825,7 @@ const BookService = () => {
                       Priority delivery
                     </h2>
                     <p className="mt-2 text-sm leading-6 text-light-gray/68">
-                      Get your project handled faster. Extra fee: +20% (min ₹99)
+                      Get your project handled faster. Extra fee: +10% (min ₹10)
                     </p>
                   </div>
 
@@ -893,7 +893,7 @@ const BookService = () => {
             <BackButton onClick={() => handleBack(3)} label="Back to plan" />
 
             <div className="text-[11px] font-mono uppercase tracking-[0.22em] text-cyan-primary/72">
-              Step 4 - Your details and requirements
+               Your details and requirements
             </div>
 
             {reorderDraft && (
@@ -954,9 +954,7 @@ const BookService = () => {
                     Apply up to 40% off
                   </h2>
                   <p className="mt-3 max-w-2xl text-sm leading-7 text-light-gray/64">
-                    We validate the code before payment and store the discount on
-                    the order. That keeps the final amount simple for the client
-                    and easy for the admin team to audit later.
+                    The student code is only provided to students.
                   </p>
 
                   <div className="mt-6 flex flex-col gap-3 sm:flex-row">
@@ -1217,7 +1215,7 @@ const BookService = () => {
         <Step>
           <div className="space-y-8">
             <div className="text-[11px] font-mono uppercase tracking-[0.22em] text-cyan-primary/72">
-              Step 5 - Secure your order
+             Secure your order
             </div>
 
             <div className="grid gap-8 lg:grid-cols-[1fr_400px]">

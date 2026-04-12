@@ -112,18 +112,15 @@ export const fetchOrdersAssignedToUser = async (userId) => {
       [
       query(
         collection(db, "orders"),
-        where("assignedWorkers", "array-contains", userId),
-        orderBy("createdAt", "desc")
+        where("assignedWorkers", "array-contains", userId)
       ),
       query(
         collection(db, "orders"),
-        where("workerAssigned", "==", userId),
-        orderBy("createdAt", "desc")
+        where("workerAssigned", "==", userId)
       ),
       query(
         collection(db, "orders"),
-        where("assignedTo", "==", userId),
-        orderBy("createdAt", "desc")
+        where("assignedTo", "==", userId)
       ),
     ].map((orderQuery) => getDocs(orderQuery).catch(() => null))
   );

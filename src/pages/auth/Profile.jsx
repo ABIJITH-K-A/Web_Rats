@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   AlertCircle,
   ArrowRight,
@@ -15,7 +15,6 @@ import {
   FileText,
   LayoutDashboard,
   LifeBuoy,
-  LogOut,
   Mail,
   MessageSquare,
   MessageSquareText,
@@ -23,6 +22,7 @@ import {
   Phone,
   ShieldCheck,
   Star,
+  Ticket,
   User,
   Wallet,
   X,
@@ -33,6 +33,7 @@ import OrderDetailsModal from "../../components/dashboard/OrderDetailsModal";
 import AnimatedPaymentButton from "../../components/ui/AnimatedPaymentButton";
 import DeniedActionButton from "../../components/ui/DeniedActionButton";
 import DownloadActionButton from "../../components/ui/DownloadActionButton";
+import LogoutButton from "../../components/ui/LogoutButton";
 import SupportSendButton from "../../components/ui/SupportSendButton";
 import {
   addDoc,
@@ -752,13 +753,7 @@ const Profile = () => {
                   New Order
                 </Button>
 
-                <Button
-                  variant="outline"
-                  className="border-red-500/40 text-red-300 hover:border-red-400 hover:text-red-200"
-                  onClick={handleLogout}
-                >
-                  <LogOut size={16} /> Logout
-                </Button>
+                <LogoutButton onClick={handleLogout} className="shrink-0" />
               </div>
             </div>
 

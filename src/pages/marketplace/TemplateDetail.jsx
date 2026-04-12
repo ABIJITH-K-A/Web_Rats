@@ -99,6 +99,9 @@ export default function TemplateDetail() {
                 src={selectedImage}
                 alt={template.title}
                 className="h-full max-h-[620px] w-full object-cover"
+                width="800"
+                height="620"
+                loading="eager"
               />
             </div>
 
@@ -115,7 +118,7 @@ export default function TemplateDetail() {
                         : "border-white/8 opacity-70 hover:opacity-100"
                     }`}
                   >
-                    <img src={image} alt={`${template.title} preview ${index + 1}`} className="aspect-[4/3] w-full object-cover" />
+                    <img src={image} alt={`${template.title} preview ${index + 1}`} className="aspect-[4/3] w-full object-cover" width="200" height="150" loading="lazy" />
                   </button>
                 ))}
               </div>

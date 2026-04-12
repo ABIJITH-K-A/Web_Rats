@@ -36,7 +36,10 @@ const readErrorPayload = async (response) => {
  * @param {'optional' | 'required'} authMode Indicates if a missing user should throw a local auth error 
  * @returns {Promise<Object>} The header object `{ Authorization: "Bearer ..." }` or `{}`
  */
-const getAuthorizationHeader = async (authMode = 'optional') => {
+const getAuthorizationHeader = async (
+  authMode = 'optional',
+  { forceRefresh = false } = {}
+) => {
   const currentUser = auth.currentUser;
 
   if (!currentUser) {
@@ -49,8 +52,48 @@ const getAuthorizationHeader = async (authMode = 'optional') => {
     return {};
   }
 
-  const token = await currentUser.getIdToken(true); // Force refresh to avoid expired tokens
-  return token ? { Authorization: `Bearer ${token}` } : {};
+  try {
+    // Use Firebase's cached token by default and only force-refresh after a
+    // backend 401. Refreshing on every request causes noisy auth/network
+    // failures whenever the securetoken endpoint blips.
+    const token = await currentUser.getIdToken(forceRefresh);
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  } catch (error) {
+    if (error?.code === 'auth/network-request-failed') {
+      throw createApiError(
+        'Could not verify your session right now. Please check your internet connection and try again.',
+        {
+          code: 'auth_network_failed',
+          originalError: error,
+        }
+      );
+    }
+
+    throw error;
+  }
+};
+
+const performRequest = async (
+  path,
+  {
+    method = 'GET',
+    body,
+    authMode = 'optional',
+    headers = {},
+    forceRefresh = false,
+  } = {}
+) => {
+  const authHeaders = await getAuthorizationHeader(authMode, { forceRefresh });
+
+  return fetch(`${API_BASE_URL}${path}`, {
+    method,
+    headers: {
+      ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
+      ...authHeaders,
+      ...headers,
+    },
+    ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+  });
 };
 
 /**
@@ -85,16 +128,22 @@ export const apiRequest = async (
   }
 
   try {
-    const authHeaders = await getAuthorizationHeader(authMode);
-    const response = await fetch(`${API_BASE_URL}${path}`, {
+    let response = await performRequest(path, {
       method,
-      headers: {
-        ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
-        ...authHeaders,
-        ...headers,
-      },
-      ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+      body,
+      authMode,
+      headers,
     });
+
+    if (response.status === 401 && authMode === 'required' && auth.currentUser) {
+      response = await performRequest(path, {
+        method,
+        body,
+        authMode,
+        headers,
+        forceRefresh: true,
+      });
+    }
 
     if (!response.ok) {
       const backendMessage = await readErrorPayload(response);
@@ -111,7 +160,11 @@ export const apiRequest = async (
 
     return response.json();
   } catch (error) {
-    if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+    if (
+      error.name === 'TypeError' &&
+      typeof error.message === 'string' &&
+      error.message.includes('Failed to fetch')
+    ) {
       throw createApiError('Could not connect to the server. Please check your internet connection and try again.', {
         code: 'connection_refused',
       });

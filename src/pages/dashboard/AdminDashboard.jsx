@@ -292,10 +292,6 @@ const OverviewTab = () => {
             <h4 className="text-lg font-black text-white italic">
               Booking Flow <span className="text-cyan-primary">Synced</span>
             </h4>
-            <p className="mt-3 text-[10px] font-mono uppercase tracking-[0.15em] leading-relaxed text-white/30">
-              The dashboard now reads the same priority, customer type, deadline,
-              and status data created by the booking stepper.
-            </p>
           </div>
         </div>
       </div>

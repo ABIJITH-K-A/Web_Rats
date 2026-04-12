@@ -2,6 +2,8 @@ import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "../config/firebase";
 import { apiRequest, isBackendConfigured } from "./apiClient";
 
+let walletBackendEnabled = true;
+
 const buildFinanceShape = (payload = {}) => {
   const totalEarned = Number(payload.totalEarned || 0);
 
@@ -34,6 +36,14 @@ const getLocalLedgerSummary = async (userId) => {
   });
 };
 
+const shouldUseLocalFinanceFallback = (error) =>
+  error?.statusCode === 401 ||
+  error?.statusCode === 403 ||
+  error?.code === "auth_network_failed" ||
+  error?.code === "connection_refused" ||
+  String(error?.message || "").toLowerCase().includes("log in") ||
+  String(error?.message || "").toLowerCase().includes("sign in");
+
 export const getWalletOverview = async (userId) => {
   if (!userId) {
     return {
@@ -42,15 +52,23 @@ export const getWalletOverview = async (userId) => {
     };
   }
 
-  if (isBackendConfigured()) {
-    const response = await apiRequest("/finance/worker", {
-      authMode: "required",
-    });
+  if (isBackendConfigured() && walletBackendEnabled) {
+    try {
+      const response = await apiRequest("/finance/worker", {
+        authMode: "required",
+      });
 
-    return {
-      wallet: buildFinanceShape(response || {}),
-      withdrawals: [],
-    };
+      return {
+        wallet: buildFinanceShape(response || {}),
+        withdrawals: [],
+      };
+    } catch (error) {
+      if (!shouldUseLocalFinanceFallback(error)) {
+        throw error;
+      }
+
+      walletBackendEnabled = false;
+    }
   }
 
   return {

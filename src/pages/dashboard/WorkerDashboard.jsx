@@ -151,34 +151,6 @@ const WorkerOverview = () => {
       </div>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-        <div className="overflow-hidden rounded-[2.5rem] border border-white/8 bg-[#121417] p-8 shadow-2xl">
-          <h3 className="mb-6 flex items-center gap-3 text-xs font-mono uppercase tracking-widest text-cyan-primary">
-            <Bell size={16} /> Quick Actions
-          </h3>
-          <div className="space-y-4">
-            <ActionCard
-              icon={List}
-              title="Browse Order Pool"
-              description="Claim fresh unassigned work directly from the live pool."
-              tone="text-cyan-primary"
-              meta={`${stats.activeOrders} active in your queue`}
-            />
-            <ActionCard
-              icon={Box}
-              title="My Active Orders"
-              description="Move assigned work through progress stages without losing status accuracy."
-              tone="text-green-500"
-              meta={`${stats.completedOrders} completed so far`}
-            />
-            <ActionCard
-              icon={Wallet}
-              title="Finance & Payroll"
-              description="Track completed earnings and the next manual payout cycle."
-              tone="text-purple-500"
-              meta={nextPayoutLabel === "Manual" ? "Manual payout schedule" : `Next run ${nextPayoutLabel}`}
-            />
-          </div>
-        </div>
 
         <div className="overflow-hidden rounded-[2.5rem] border border-white/8 bg-[#121417] p-8 shadow-2xl">
           <h3 className="mb-6 flex items-center gap-3 text-xs font-mono uppercase tracking-widest text-cyan-primary">

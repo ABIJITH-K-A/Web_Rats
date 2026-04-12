@@ -18,7 +18,6 @@ const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const { user, role } = useAuth();
   const location = useLocation();
-  const isHomePage = location.pathname === "/";
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 16);
@@ -38,25 +37,20 @@ const Navbar = () => {
     return "/profile";
   };
 
-  const navWidthClass = scrolled
-    ? "w-[94%] max-w-[1380px] rounded-[28px] max-lg:w-[calc(100%-1rem)] max-lg:rounded-[24px]"
-    : isHomePage
-      ? "w-full rounded-none"
-      : "w-[80%] max-w-[1200px] rounded-[28px] max-lg:w-[calc(100%-1rem)] max-lg:rounded-[24px]";
+  const navWidthClass = "w-full rounded-none";
 
   const navSurfaceClass = scrolled
-    ? "border-white/8 bg-[#08090C]/92 py-3 shadow-lg backdrop-blur-2xl"
-    : isHomePage
-      ? "border-x-0 border-t-0 border-white/6 bg-[#08090C]/48 py-5 shadow-none backdrop-blur-xl"
-      : "border-white/8 bg-[#08090C]/72 py-4 shadow-none backdrop-blur-xl";
+    ? "border-white/8 bg-[#08090C]/85 py-4 shadow-lg backdrop-blur-xl"
+    : "border-transparent bg-transparent py-5 shadow-none backdrop-blur-none";
 
   return (
     <div className="fixed inset-x-0 top-0 z-50 flex justify-center">
       <nav
         className={`border transition-[width,border-radius,background-color,border-color,padding,box-shadow,backdrop-filter] duration-300 ${navWidthClass} ${navSurfaceClass}`}
       >
-        <div className="mx-auto flex items-center justify-between px-6">
-          <Link to="/" className="flex items-center gap-3">
+        <div className="mx-auto grid grid-cols-3 items-center px-6">
+          {/* Logo - Left */}
+          <Link to="/" className="flex items-center gap-3 justify-self-start">
             <div className="h-11 w-11 overflow-hidden rounded-full border border-white/12 bg-[#08090C]/80">
               <img
                 src="/Images/Icons/WebRatTransparentLight.png"
@@ -74,7 +68,8 @@ const Navbar = () => {
             </div>
           </Link>
 
-          <div className="hidden items-center gap-8 lg:flex">
+          {/* Nav Links - Center */}
+          <div className="hidden items-center justify-center gap-8 lg:flex">
             {navLinks.map((link) => {
               const active = location.pathname === link.path;
               return (
@@ -89,7 +84,10 @@ const Navbar = () => {
                 </Link>
               );
             })}
+          </div>
 
+          {/* Auth Buttons - Right */}
+          <div className="hidden items-center justify-self-end gap-2 lg:flex">
             {user ? (
               <Link
                 to={getDashboardPath()}
@@ -100,7 +98,7 @@ const Navbar = () => {
                 </span>
               </Link>
             ) : (
-              <div className="flex items-center gap-2">
+              <>
                 <Link
                   to="/join?tab=register"
                   className="rounded-full border border-cyan-primary/50 px-4 py-2 text-sm font-semibold text-cyan-primary transition-all hover:bg-cyan-primary/10"
@@ -113,13 +111,14 @@ const Navbar = () => {
                 >
                   Sign In
                 </Link>
-              </div>
+              </>
             )}
           </div>
 
+          {/* Mobile Menu Button */}
           <button
             type="button"
-            className="text-cyan-primary lg:hidden"
+            className="text-cyan-primary lg:hidden justify-self-end"
             onClick={() => setIsOpen((current) => !current)}
             aria-label="Toggle navigation"
           >

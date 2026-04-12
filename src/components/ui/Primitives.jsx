@@ -1,23 +1,54 @@
+import { Children, isValidElement } from 'react';
 import { motion } from 'framer-motion';
 
 const Button = ({ children, variant = 'primary', className = '', ...props }) => {
+  const isGalaxy = variant === 'galaxy';
+  const isCardCta = variant === 'cardCta';
+  const isStartProject = variant === 'startProject';
   const variants = {
     primary: 'bg-primary-dark border border-cyan-primary/80 text-cyan-primary btn-dark-hover active:scale-95',
     outline: 'bg-black/25 border border-cyan-primary/55 text-cyan-primary btn-dark-outline-hover active:scale-95',
     ghost: 'text-light-gray hover:text-cyan-primary active:scale-95',
+    galaxy: 'tn-galaxy-btn min-h-[58px] px-8 py-4 text-white',
+    cardCta: 'tn-card-cta-btn text-white rounded-[0.95rem]',
+    startProject: 'tn-start-btn min-h-[3.1rem] text-white',
   };
+  const childNodes = Children.toArray(children);
+  const lastChild = childNodes[childNodes.length - 1];
+  const startProjectIcon = isStartProject && isValidElement(lastChild) ? childNodes.pop() : null;
+  const startProjectText = childNodes.length > 0 ? childNodes : children;
 
   return (
     <motion.button
-      whileHover={{ y: -3, boxShadow: '0 0 20px rgba(103, 248, 29, 0.4)' }}
+      whileHover={isGalaxy || isCardCta || isStartProject ? { y: -2 } : { y: -3, boxShadow: '0 0 20px rgba(103, 248, 29, 0.4)' }}
       whileTap={{ scale: 0.98 }}
       transition={{ type: 'tween', duration: 0.14, ease: 'easeOut' }}
-      className={`relative isolate overflow-hidden px-8 py-3 rounded-full font-bold transition-all duration-150 flex items-center justify-center gap-2 ${variants[variant]} ${className}`}
+      className={`relative isolate overflow-hidden font-bold transition-all duration-150 flex items-center justify-center gap-2 ${isGalaxy || isCardCta || isStartProject ? '' : 'px-8 py-3 rounded-full'} ${variants[variant]} ${className}`}
       {...props}
     >
-      <span className="relative z-[1] flex items-center justify-center gap-2">
-        {children}
-      </span>
+      {isGalaxy ? (
+        <>
+          <span className="tn-galaxy-btn__glow" />
+          <span className="tn-galaxy-btn__stars" />
+          <span className="tn-galaxy-btn__content">{children}</span>
+        </>
+      ) : isCardCta ? (
+        <>
+          <span className="tn-card-cta-btn__glow" />
+          <span className="tn-card-cta-btn__content">{children}</span>
+        </>
+      ) : isStartProject ? (
+        <>
+          <span className="tn-start-btn__text">{startProjectText}</span>
+          <span className="tn-start-btn__icon">
+            {startProjectIcon}
+          </span>
+        </>
+      ) : (
+        <span className="relative z-[1] flex items-center justify-center gap-2">
+          {children}
+        </span>
+      )}
     </motion.button>
   );
 };

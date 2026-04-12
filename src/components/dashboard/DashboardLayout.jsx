@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { 
   Menu, X, Home, List, Users, Ticket, Star, Wallet, 
   Bug, Box, CheckSquare, DollarSign, Briefcase, Key, AlertCircle,
-  LogOut, ExternalLink, Bell, Clock, Search, TrendingUp, Package,
+  ExternalLink, Bell, Clock, Search, TrendingUp, Package,
   ArrowRightLeft, User, MessageSquare
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -16,6 +16,7 @@ import {
 } from '../../utils/systemRules';
 import { formatDateTime } from '../../utils/orderHelpers';
 import ErrorBoundary from '../ui/ErrorBoundary';
+import LogoutButton from '../ui/LogoutButton';
 
 const DashboardLayout = ({ children }) => {
   const { user, userProfile, logout } = useAuth();
@@ -190,12 +191,9 @@ const DashboardLayout = ({ children }) => {
           >
             <ArrowRightLeft size={14} /> Open Client Workspace
           </button>
-          <button 
-            onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg border border-red-500/20 text-red-500 text-xs font-bold hover:bg-red-500/10 transition-colors"
-          >
-            <LogOut size={14} /> Sign Out
-          </button>
+          <div className="flex justify-center pt-1">
+            <LogoutButton onClick={handleLogout} label="Sign Out" />
+          </div>
         </div>
       </aside>
 

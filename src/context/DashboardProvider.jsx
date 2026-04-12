@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useAuth } from "./AuthContext";
 import { normalizeRole } from "../utils/systemRules";
 import {
@@ -9,11 +9,43 @@ import { DashboardContext } from "./DashboardContext";
 
 const NOTIFICATION_REFRESH_MS = 30000;
 
+const getErrorText = (value) => String(value || '').toLowerCase();
+
+const isNotificationAuthError = (error) => {
+  const message = getErrorText(error?.message);
+  const originalMessage = getErrorText(error?.originalMessage);
+
+  return (
+    error?.code === 'missing_auth' ||
+    error?.statusCode === 401 ||
+    error?.statusCode === 403 ||
+    message.includes('sign in') ||
+    message.includes('log in') ||
+    originalMessage.includes('missing bearer token') ||
+    originalMessage.includes('invalid or expired auth token') ||
+    originalMessage.includes('session expired')
+  );
+};
+
+const isNotificationNetworkError = (error) => {
+  const message = getErrorText(error?.message);
+  const originalErrorMessage = getErrorText(error?.originalError?.message);
+
+  return (
+    error?.code === 'auth_network_failed' ||
+    error?.code === 'connection_refused' ||
+    message.includes('internet connection') ||
+    message.includes('network error') ||
+    originalErrorMessage.includes('network-request-failed')
+  );
+};
+
 export const DashboardProvider = ({ children }) => {
   const { user, userProfile } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const intervalRef = useRef(null);
 
   useEffect(() => {
     if (!user) {
@@ -36,22 +68,35 @@ export const DashboardProvider = ({ children }) => {
         setNotifications(nextNotifications);
         setUnreadCount(nextNotifications.filter((item) => !item.read).length);
       } catch (error) {
-        // Silently ignore auth errors - user session may have expired
-        if (error.code === 'missing_auth' || error.message?.includes('sign in')) {
+        if (!isMounted) return;
+
+        if (isNotificationAuthError(error)) {
+          if (intervalRef.current) {
+            window.clearInterval(intervalRef.current);
+            intervalRef.current = null;
+          }
           setNotifications([]);
           setUnreadCount(0);
           return;
         }
+
+        if (isNotificationNetworkError(error)) {
+          return;
+        }
+
         console.error("Notification fetch error:", error);
       }
     };
 
     loadNotifications();
-    const interval = window.setInterval(loadNotifications, NOTIFICATION_REFRESH_MS);
+    intervalRef.current = window.setInterval(loadNotifications, NOTIFICATION_REFRESH_MS);
 
     return () => {
       isMounted = false;
-      window.clearInterval(interval);
+      if (intervalRef.current) {
+        window.clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
     };
   }, [user, userProfile]);
 

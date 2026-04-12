@@ -9,17 +9,18 @@ const SiteBg = () => {
     >
       <div className="absolute inset-0 scale-[1.06] opacity-80">
         <Galaxy
-          density={1}
-          glowIntensity={0.16}
+          density={0.5}
+          glowIntensity={0.12}
           saturation={0.18}
           hueShift={215}
-          twinkleIntensity={0.5}
-          rotationSpeed={0.045}
+          twinkleIntensity={0.3}
+          rotationSpeed={0.02}
           repulsionStrength={1.8}
-          starSpeed={0.45}
-          speed={0.5}
+          starSpeed={0.3}
+          speed={0.3}
           mouseInteraction={false}
           mouseRepulsion={false}
+          disableAnimation={false}
           transparent
         />
       </div>

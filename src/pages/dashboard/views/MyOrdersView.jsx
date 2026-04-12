@@ -15,8 +15,7 @@ import {
   updateDoc,
   onSnapshot,
   query,
-  where,
-  orderBy
+  where
 } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../../../config/firebase';
@@ -36,6 +35,7 @@ import {
   getOrderStatusLabel,
   getWorkerVisibleStatuses,
   normalizeOrderStatus,
+  sortRecordsByCreatedAtDesc,
 } from '../../../utils/orderHelpers';
 
 const FILTERS = getWorkerVisibleStatuses();
@@ -53,12 +53,15 @@ const MyOrdersView = () => {
 
     const q = query(
       collection(db, 'orders'), 
-      where('assignedWorkers', 'array-contains', user.uid),
-      orderBy('createdAt', 'desc')
+      where('assignedWorkers', 'array-contains', user.uid)
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      setOrders(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      setOrders(
+        sortRecordsByCreatedAtDesc(
+          snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+        )
+      );
       setLoading(false);
     }, (err) => {
       console.error("MyOrders snapshot error:", err);

@@ -115,12 +115,12 @@ const Home = () => {
 
             <div className="mt-20 flex flex-wrap justify-center gap-8">
               <Link to="/services">
-                <Button>
+                <Button variant="galaxy" className="min-w-[224px]">
                   Explore Our Services <ArrowRight size={18} />
                 </Button>
               </Link>
               <Link to="/projects">
-                <Button variant="outline">See Our Projects <ArrowRight size={18} /></Button>
+                <Button variant="galaxy" className="min-w-[224px]">See Our Projects <ArrowRight size={18} /></Button>
               </Link>
             </div>
           </motion.div>
