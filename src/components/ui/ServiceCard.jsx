@@ -19,12 +19,15 @@ const ServiceCard = ({ service }) => {
           src={service.image}
           alt={service.name}
           className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+          width="320"
+          height="224"
+          loading="lazy"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
-        <div className="absolute left-5 top-5 rounded-full border border-cyan-primary/25 bg-black/55 px-3 py-1 text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary">
+        <div className="absolute left-5 top-5 rounded-full border border-cyan-primary/25 bg-black/55 px-3 py-1 text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary opacity-100 transition-opacity duration-300 group-hover:opacity-0">
           {service.categoryShortName}
         </div>
-        <div className="absolute right-5 top-5 rounded-full border border-white/10 bg-black/55 px-3 py-1 text-[10px] font-mono uppercase tracking-[0.18em] text-white/75">
+        <div className="absolute right-5 top-5 rounded-full border border-white/10 bg-black/55 px-3 py-1 text-[10px] font-mono uppercase tracking-[0.18em] text-white/75 opacity-100 transition-opacity duration-300 group-hover:opacity-0">
           From {formatPrice(service.startingPrice)}
         </div>
       </div>
@@ -60,7 +63,7 @@ const ServiceCard = ({ service }) => {
             to={`/book?category=${service.categoryId}&service=${service.id}`}
             className="flex-1"
           >
-            <Button className="w-full">
+            <Button variant="cardCta" className="w-full">
               Book Now <ArrowRight size={16} />
             </Button>
           </Link>

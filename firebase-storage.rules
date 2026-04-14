@@ -29,7 +29,7 @@ service firebase.storage {
     }
 
     function isAdminLikeRole() {
-      return request.auth.token.role in ['admin', 'manager', 'owner', 'super_admin'];
+      return request.auth.token.role in ['admin', 'owner'];
     }
 
     // Valid file types for production

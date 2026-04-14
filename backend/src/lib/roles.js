@@ -1,9 +1,7 @@
 export const ROLE_HIERARCHY = [
   'client',
   'worker',
-  'manager',
   'admin',
-  'superadmin',
   'owner',
 ];
 
@@ -22,10 +20,10 @@ export const hasRoleAccess = (role, allowedRoles = []) =>
   allowedRoles.map(normalizeRole).includes(normalizeRole(role));
 
 export const isAdminLikeRole = (role) =>
-  ['admin', 'superadmin', 'owner'].includes(normalizeRole(role));
+  ['admin', 'owner'].includes(normalizeRole(role));
 
-export const isManagerLikeRole = (role) =>
-  ['manager', 'admin', 'superadmin', 'owner'].includes(normalizeRole(role));
+export const isAdminOrOwner = (role) =>
+  ['admin', 'owner'].includes(normalizeRole(role));
 
 export default {
   ROLE_HIERARCHY,
@@ -33,5 +31,5 @@ export default {
   normalizeRole,
   hasRoleAccess,
   isAdminLikeRole,
-  isManagerLikeRole,
+  isAdminOrOwner,
 };

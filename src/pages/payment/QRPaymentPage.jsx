@@ -19,7 +19,7 @@ export default function QRPaymentPage({ orderId, amount, userDetails = {} }) {
       try {
         // Create Cashfree order and get payment session
         const { data } = await axios.post(
-          `${import.meta.env.VITE_API_BASE_URL}/api/payments/create-order`,
+          `${import.meta.env.VITE_API_BASE_URL}/payment/create-order`,
           { amount, orderId, userDetails }
         );
         

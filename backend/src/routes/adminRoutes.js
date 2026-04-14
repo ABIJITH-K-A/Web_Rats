@@ -26,7 +26,7 @@ const sortByCreatedAtDesc = (records = []) =>
 router.get(
   '/orders',
   authGuard,
-  roleGuard(['admin', 'superadmin', 'owner']),
+  roleGuard(['admin', 'owner']),
   asyncHandler(async (req, res) => {
     const snapshot = await adminDb().collection('orders').limit(150).get();
     res.json({
@@ -38,7 +38,7 @@ router.get(
 router.post(
   '/approve-withdrawal',
   authGuard,
-  roleGuard(['admin', 'superadmin', 'owner']),
+  roleGuard(['admin', 'owner']),
   validateBody(approveWithdrawalSchema),
   asyncHandler(async (req, res) => {
     const { withdrawalId, action } = req.validatedBody;

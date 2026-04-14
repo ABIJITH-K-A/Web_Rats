@@ -43,12 +43,10 @@ const attachCurrentUser = async (req, decodedToken) => {
     }
   }
 
-  // Check token age (8 hours max)
-  const EIGHT_HOURS_SEC = 8 * 60 * 60;
-  const currentTimeSec = Math.floor(Date.now() / 1000);
-  if (decodedToken.auth_time && (currentTimeSec - decodedToken.auth_time > EIGHT_HOURS_SEC)) {
-    throw new HttpError(401, 'Session expired. Please log in again.');
-  }
+  // Firebase already expires ID tokens and the client handles its own idle
+  // timeout. Enforcing a second global auth_time cutoff here causes normal
+  // long-lived sessions (like notification polling) to fail with 401s even
+  // when Firebase can still refresh the session safely.
 
   // Check account status
   if (profile.status === 'suspended' || profile.status === 'fired') {

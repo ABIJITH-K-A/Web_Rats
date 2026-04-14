@@ -16,20 +16,27 @@ import {
 } from '../utils/systemRules';
 import { apiRequest, isBackendConfigured } from './apiClient';
 
-export const fetchNotificationsForUser = async (user, role) => {
-  if (!user?.uid) return [];
+let notificationBackendEnabled = true;
 
-  if (isBackendConfigured()) {
-    const response = await apiRequest(`/notifications/${user.uid}`, {
-      authMode: 'required',
-    });
+const sortNotificationsByCreatedAtDesc = (records = []) =>
+  [...records].sort((left, right) => {
+    const leftTime = left?.createdAt?.toDate?.()?.getTime?.() || new Date(left?.createdAt || 0).getTime() || 0;
+    const rightTime = right?.createdAt?.toDate?.()?.getTime?.() || new Date(right?.createdAt || 0).getTime() || 0;
+    return rightTime - leftTime;
+  });
 
-    return response?.notifications || [];
-  }
+const shouldUseFirestoreFallback = (error) =>
+  error?.statusCode === 401 ||
+  error?.statusCode === 403 ||
+  error?.code === 'auth_network_failed' ||
+  error?.code === 'connection_refused' ||
+  String(error?.message || '').toLowerCase().includes('log in') ||
+  String(error?.message || '').toLowerCase().includes('sign in');
 
+const fetchNotificationsFromFirestore = async (user, role) => {
   const normalizedRole = normalizeRole(role);
 
-  if (['admin', 'owner', 'superadmin'].includes(normalizedRole)) {
+  if (['admin', 'owner'].includes(normalizedRole)) {
     const snapshot = await getDocs(
       query(collection(db, 'notifications'), orderBy('createdAt', 'desc'), limit(30))
     );
@@ -45,32 +52,62 @@ export const fetchNotificationsForUser = async (user, role) => {
     query(
       collection(db, 'notifications'),
       where('recipientId', 'in', recipientIds),
-      orderBy('createdAt', 'desc'),
-      limit(30)
+      limit(50)
     )
   );
 
-  // Already sorted by Firestore orderBy, no need for client-side sort
-  return snapshot.docs.map((docSnapshot) => ({
-    id: docSnapshot.id,
-    ...docSnapshot.data(),
-  }));
+  return sortNotificationsByCreatedAtDesc(
+    snapshot.docs.map((docSnapshot) => ({
+      id: docSnapshot.id,
+      ...docSnapshot.data(),
+    }))
+  ).slice(0, 30);
+};
+
+export const fetchNotificationsForUser = async (user, role) => {
+  if (!user?.uid) return [];
+
+  if (isBackendConfigured() && notificationBackendEnabled) {
+    try {
+      const response = await apiRequest(`/notifications/${user.uid}`, {
+        authMode: 'required',
+      });
+
+      return response?.notifications || [];
+    } catch (error) {
+      if (!shouldUseFirestoreFallback(error)) {
+        throw error;
+      }
+
+      notificationBackendEnabled = false;
+    }
+  }
+
+  return fetchNotificationsFromFirestore(user, role);
 };
 
 export const markNotificationRead = async (notificationId) => {
   if (!notificationId) return null;
 
-  if (isBackendConfigured()) {
-    const response = await apiRequest('/notifications/read', {
-      method: 'PATCH',
-      authMode: 'required',
-      body: {
-        notificationId,
-        read: true,
-      },
-    });
+  if (isBackendConfigured() && notificationBackendEnabled) {
+    try {
+      const response = await apiRequest('/notifications/read', {
+        method: 'PATCH',
+        authMode: 'required',
+        body: {
+          notificationId,
+          read: true,
+        },
+      });
 
-    return response?.notification || null;
+      return response?.notification || null;
+    } catch (error) {
+      if (!shouldUseFirestoreFallback(error)) {
+        throw error;
+      }
+
+      notificationBackendEnabled = false;
+    }
   }
 
   await updateDoc(doc(db, 'notifications', notificationId), {

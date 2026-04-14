@@ -22,8 +22,6 @@ const InviteKeysView = () => {
   const [copyStatus, setCopyStatus] = useState({});
 
   useEffect(() => {
-    // Default role based on hierarchy
-    if (userProfile?.role === 'manager') setSelectedRole('worker');
     fetchKeys();
   }, [userProfile?.role]);
 
@@ -110,11 +108,11 @@ const InviteKeysView = () => {
     setTimeout(() => setCopyStatus({ ...copyStatus, [id]: false }), 2000);
   };
 
-  const roles = userProfile?.role === 'owner' || userProfile?.role === 'superadmin' 
-    ? ['superadmin', 'admin', 'manager', 'worker']
+  const roles = userProfile?.role === 'owner'
+    ? ['admin', 'worker']
     : userProfile?.role === 'admin' 
-      ? ['manager', 'worker']
-      : ['worker'];
+      ? ['worker']
+      : [];
 
   return (
     <div className="space-y-10 animate-in fade-in duration-500">

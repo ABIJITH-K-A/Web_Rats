@@ -1,158 +1,201 @@
+import { FieldValue } from 'firebase-admin/firestore';
 import { Router } from 'express';
+import { z } from 'zod';
 import { adminDb } from '../config/firebaseAdmin.js';
 import { asyncHandler } from '../lib/asyncHandler.js';
 import { HttpError } from '../lib/httpError.js';
+import { serializeDocument } from '../lib/serialize.js';
 import { authGuard } from '../middleware/authGuard.js';
-import { FieldValue } from 'firebase-admin/firestore';
-import { isAdminLikeRole } from '../lib/roles.js';
+import { validateBody } from '../middleware/validate.js';
+import { getAssignedWorkerIds, getOrderStatusLabel } from '../lib/orderStatus.js';
+import { isAdminLikeRole, normalizeValue } from '../lib/roles.js';
 
 const router = Router();
 
-// Checks if user can access this chat
-const canAccessChat = (order, uid, role, escalated) => {
-  const isClient = order.userId === uid;
-  const isWorker = [
-    order.assignedTo,
-    order.workerAssigned,
-    ...(order.assignedWorkers || [])
-  ].includes(uid);
-  const isHigherRole = isAdminLikeRole(role);
+const sendMessageSchema = z.object({
+  orderId: z.string().trim().min(1).max(128),
+  message: z.string().trim().max(4000).optional().default(''),
+  fileUrl: z.string().trim().url().optional(),
+  type: z.enum(['text', 'file', 'delivery', 'revision']).optional().default('text'),
+  fileName: z.string().trim().max(255).optional(),
+  previewOnly: z.boolean().optional(),
+  downloadable: z.boolean().optional(),
+});
 
-  if (isClient || isWorker) return true;
-  if (isHigherRole && escalated) return true;
-  return false;
+const canAccessChat = (order, currentUser) => {
+  const assignedWorkerIds = getAssignedWorkerIds(order);
+  const clientIds = [order.userId, order.customerId].filter(Boolean);
+
+  if (clientIds.includes(currentUser.uid)) {
+    return true;
+  }
+
+  if (assignedWorkerIds.includes(currentUser.uid)) {
+    return true;
+  }
+
+  return isAdminLikeRole(currentUser.role);
 };
 
-// GET /api/chat/:orderId — get chat metadata + recent messages
+const getSenderRole = (role) =>
+  normalizeValue(role) === 'client' ? 'client' : 'worker';
+
+const buildLastMessageText = ({ type, message, fileName }) => {
+  if (message) {
+    return message;
+  }
+
+  if (type === 'delivery') {
+    return 'Work uploaded for review';
+  }
+
+  if (type === 'revision') {
+    return 'Revision requested';
+  }
+
+  if (fileName) {
+    return `File shared: ${fileName}`;
+  }
+
+  return 'New message';
+};
+
 router.get(
   '/:orderId',
   authGuard,
   asyncHandler(async (req, res) => {
-    const { orderId } = req.params;
-    const { uid, role } = req.currentUser;
+    const orderSnapshot = await adminDb().collection('orders').doc(req.params.orderId).get();
 
-    const orderSnap = await adminDb().collection('orders').doc(orderId).get();
-    if (!orderSnap.exists) throw new HttpError(404, 'Order not found.');
+    if (!orderSnapshot.exists) {
+      throw new HttpError(404, 'Order not found.');
+    }
 
-    const order = orderSnap.data();
-    const chatRef = adminDb().collection('chatThreads').doc(orderId);
-    const chatSnap = await chatRef.get();
-
-    if (!canAccessChat(order, uid, role, chatSnap.data()?.escalated)) {
+    const order = { id: orderSnapshot.id, ...orderSnapshot.data() };
+    if (!canAccessChat(order, req.currentUser)) {
       throw new HttpError(403, 'You do not have access to this chat.');
     }
 
-    // Fetch recent messages from top-level chatMessages collection
-    const messagesSnap = await adminDb().collection('chatMessages')
-      .where('orderId', '==', orderId)
-      .orderBy('createdAt', 'desc')
-      .limit(50)
-      .get();
-
-    const messages = messagesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const [threadSnapshot, messageSnapshot] = await Promise.all([
+      adminDb().collection('chatThreads').doc(req.params.orderId).get(),
+      adminDb()
+        .collection('messages')
+        .where('orderId', '==', req.params.orderId)
+        .orderBy('createdAt', 'asc')
+        .limit(200)
+        .get(),
+    ]);
 
     res.json({
-      thread: chatSnap.exists ? chatSnap.data() : null,
-      messages: messages.reverse(), // Reverse to get ascending order for UI
-      orderId,
+      order: {
+        id: orderSnapshot.id,
+        status: getOrderStatusLabel(order.statusKey || order.status),
+      },
+      thread: threadSnapshot.exists ? serializeDocument(threadSnapshot) : null,
+      messages: messageSnapshot.docs.map((docSnapshot) => serializeDocument(docSnapshot)),
     });
   })
 );
 
-// POST /api/chat/:orderId/init — initialize chat when order is assigned
 router.post(
   '/:orderId/init',
   authGuard,
   asyncHandler(async (req, res) => {
-    const { orderId } = req.params;
+    const orderSnapshot = await adminDb().collection('orders').doc(req.params.orderId).get();
 
-    const orderSnap = await adminDb().collection('orders').doc(orderId).get();
-    if (!orderSnap.exists) throw new HttpError(404, 'Order not found.');
+    if (!orderSnapshot.exists) {
+      throw new HttpError(404, 'Order not found.');
+    }
 
-    const order = orderSnap.data();
-    const chatRef = adminDb().collection('chatThreads').doc(orderId);
-    const chatSnap = await chatRef.get();
+    const order = { id: orderSnapshot.id, ...orderSnapshot.data() };
+    if (!canAccessChat(order, req.currentUser)) {
+      throw new HttpError(403, 'You do not have access to this chat.');
+    }
 
-    if (chatSnap.exists) return res.json({ exists: true });
+    const threadRef = adminDb().collection('chatThreads').doc(req.params.orderId);
+    const threadSnapshot = await threadRef.get();
 
-    await chatRef.set({
-      orderId,
-      clientId: order.userId,
-      workerId: order.assignedTo || order.workerAssigned || null,
-      escalated: false,
-      escalationReason: null,
-      escalatedAt: null,
-      resolvedAt: null,
-      unreadCount: {},
+    if (threadSnapshot.exists) {
+      res.json({ exists: true });
+      return;
+    }
+
+    await threadRef.set({
+      orderId: req.params.orderId,
+      clientId: order.customerId || order.userId || null,
+      workerIds: getAssignedWorkerIds(order),
       lastMessage: null,
-      updatedAt: FieldValue.serverTimestamp(),
       createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
     });
 
     res.status(201).json({ created: true });
   })
 );
 
-/**
- * POST /api/chat/send
- * Validates and writes chat messages to Firestore, updating thread metadata.
- */
 router.post(
   '/send',
   authGuard,
+  validateBody(sendMessageSchema),
   asyncHandler(async (req, res) => {
-    const { orderId, text, userName } = req.body;
-    const { uid, role } = req.currentUser;
-    
-    if (!orderId || !text) {
-      throw new HttpError(400, 'orderId and text are required');
+    const { orderId, message, fileUrl, type, fileName, previewOnly, downloadable } = req.validatedBody;
+    const { uid, role, profile, email } = req.currentUser;
+
+    if (!message && !fileUrl) {
+      throw new HttpError(400, 'Message text or fileUrl is required.');
     }
 
-    const db = adminDb();
-
-    // 1. Verify access
-    const orderDoc = await db.collection('orders').doc(orderId).get();
-    
-    if (!orderDoc.exists) {
-      throw new HttpError(404, 'Order not found');
+    const orderSnapshot = await adminDb().collection('orders').doc(orderId).get();
+    if (!orderSnapshot.exists) {
+      throw new HttpError(404, 'Order not found.');
     }
 
-    const order = orderDoc.data();
-    const isOwner = order.userId === uid;
-    const isStaff = ['admin', 'manager', 'worker', 'owner', 'superadmin'].includes(role);
-    
-    if (!isOwner && !isStaff) {
-      throw new HttpError(403, 'Forbidden to chat in this order');
+    const order = { id: orderSnapshot.id, ...orderSnapshot.data() };
+    if (!canAccessChat(order, req.currentUser)) {
+      throw new HttpError(403, 'You do not have access to this chat.');
     }
 
-    // 2. Write message to Firestore 
-    const newMsg = {
+    const senderRole = getSenderRole(role);
+    const senderName = profile?.name || email || 'Team Member';
+    const messagePayload = {
       orderId,
-      text,
-      userId: uid,
-      userName,
-      userRole: role,
-      createdAt: FieldValue.serverTimestamp()
+      senderId: uid,
+      senderRole,
+      senderName,
+      message: message || '',
+      fileUrl: fileUrl || '',
+      type,
+      ...(fileName ? { fileName } : {}),
+      ...(typeof previewOnly === 'boolean' ? { previewOnly } : {}),
+      ...(typeof downloadable === 'boolean' ? { downloadable } : {}),
+      createdAt: FieldValue.serverTimestamp(),
     };
 
-    const docRef = await db.collection('chatMessages').add(newMsg);
+    const messageRef = await adminDb().collection('messages').add(messagePayload);
 
-    // 3. Update thread metadata
-    const threadRef = db.collection('chatThreads').doc(orderId);
-    
-    const updateData = {
-      orderId,
-      lastMessage: {
-        text,
-        userId: uid,
-        createdAt: FieldValue.serverTimestamp()
-      },
-      updatedAt: FieldValue.serverTimestamp()
-    };
+    await adminDb()
+      .collection('chatThreads')
+      .doc(orderId)
+      .set(
+        {
+          orderId,
+          clientId: order.customerId || order.userId || null,
+          workerIds: getAssignedWorkerIds(order),
+          lastMessage: {
+            text: buildLastMessageText({ type, message, fileName }),
+            senderId: uid,
+            senderRole,
+            createdAt: FieldValue.serverTimestamp(),
+          },
+          updatedAt: FieldValue.serverTimestamp(),
+          createdAt: FieldValue.serverTimestamp(),
+        },
+        { merge: true }
+      );
 
-    await threadRef.set(updateData, { merge: true });
-
-    res.status(201).json({ message: 'Sent', id: docRef.id });
+    res.status(201).json({
+      id: messageRef.id,
+      message: 'Sent',
+    });
   })
 );
 

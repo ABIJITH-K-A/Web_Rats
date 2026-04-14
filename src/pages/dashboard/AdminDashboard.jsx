@@ -31,7 +31,6 @@ import WalletView from './views/WalletView';
 import ReportsView from './views/ReportsView';
 import SamplesView from './views/SamplesView';
 import PayrollView from './views/PayrollView';
-import TeamPayView from './views/TeamPayView';
 import ApprovalsView from './views/ApprovalsView';
 import MyOrdersView from './views/MyOrdersView';
 import InviteKeysView from './views/InviteKeysView';
@@ -60,7 +59,6 @@ const AdminDashboard = () => (
           {currentView === 'reports' && <ReportsView />}
           {currentView === 'samples' && <SamplesView />}
           {currentView === 'payroll' && <PayrollView />}
-          {currentView === 'teampay' && <TeamPayView />}
           {currentView === 'approvals' && <ApprovalsView />}
           {currentView === 'orderpool' && <OrderPoolView />}
           {currentView === 'invitekeys' && <InviteKeysView />}
@@ -133,7 +131,7 @@ const OverviewTab = () => {
             </span>
           </h1>
           <p className="mt-1 text-[10px] font-mono uppercase tracking-widest text-white/20">
-            A live summary of the current order queue and team load
+            One operational view for orders, referrals, delivery flow, and team load
           </p>
         </div>
 
@@ -150,6 +148,10 @@ const OverviewTab = () => {
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat, index) => {
           const Icon = stat.icon;
+          const displayValue =
+            typeof stat.value === "string"
+              ? stat.value.replace(/[^\x00-\x7F]+/g, "Rs ")
+              : stat.value;
 
           return (
             <motion.div
@@ -167,7 +169,7 @@ const OverviewTab = () => {
                   <TrendingUp size={12} /> live
                 </div>
               </div>
-              <div className="text-3xl font-black text-white">{stat.value}</div>
+              <div className="text-3xl font-black text-white">{displayValue}</div>
               <div className="mt-1 text-[10px] font-mono uppercase tracking-widest text-white/28">
                 {stat.label}
               </div>
@@ -270,8 +272,8 @@ const OverviewTab = () => {
               {[
                 'Priority orders should be assigned first.',
                 'Returning customers now use a 50 percent upfront split.',
-                'Deadlines from the booking page are surfaced directly in the queue.',
-                'Completed orders should trigger client notification updates.',
+                'Student referral pricing is stored directly on the order.',
+                'Delivery uploads stay preview-only until final approval or payment.',
               ].map((message, index) => (
                 <div key={message} className="flex gap-4">
                   <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-cyan-primary" />
@@ -290,10 +292,6 @@ const OverviewTab = () => {
             <h4 className="text-lg font-black text-white italic">
               Booking Flow <span className="text-cyan-primary">Synced</span>
             </h4>
-            <p className="mt-3 text-[10px] font-mono uppercase tracking-[0.15em] leading-relaxed text-white/30">
-              The dashboard now reads the same priority, customer type, deadline,
-              and status data created by the booking stepper.
-            </p>
           </div>
         </div>
       </div>

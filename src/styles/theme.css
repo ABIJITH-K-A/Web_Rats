@@ -1,12 +1,12 @@
 :root {
-  --color-primary-dark: #262B25;
+  --color-primary-dark: #090A0E;
   --color-secondary-dark: #000000;
   --color-light-gray: #FFFFFF;
   --color-cyan-primary: #67F81D;
   --color-teal-primary: #62CB2C;
 
   /* RGB equivalents for transparency use */
-  --rgb-primary-dark: 38, 43, 37;
+  --rgb-primary-dark: 9, 10, 14;
   --rgb-secondary-dark: 0, 0, 0;
   --rgb-light-gray: 255, 255, 255;
   --rgb-cyan-primary: 103, 248, 29;

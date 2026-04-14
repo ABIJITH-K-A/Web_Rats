@@ -258,16 +258,16 @@ const AnalyticsView = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-[#121417] border border-white/5 p-8 rounded-[2.5rem] shadow-2xl h-[400px]">
+        <div className="bg-[#121417] border border-white/5 p-8 rounded-[2.5rem] shadow-2xl h-[400px] min-h-[300px]">
           <h3 className="text-xs font-mono uppercase tracking-widest text-cyan-primary mb-8 flex items-center gap-3">
             <TrendingUp size={16} /> Revenue Intake
           </h3>
           {data.revenue.length === 0 ? (
-            <div className="flex h-[80%] items-center justify-center text-[10px] font-mono uppercase tracking-[0.2em] text-white/20">
+            <div className="flex h-[80%] min-h-[240px] items-center justify-center text-[10px] font-mono uppercase tracking-[0.2em] text-white/20">
               Payment activity will appear here once orders start clearing
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height="80%">
+            <ResponsiveContainer width="100%" height="80%" minHeight={240}>
               <AreaChart data={data.revenue}>
                 <defs>
                   <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
@@ -315,16 +315,16 @@ const AnalyticsView = () => {
           )}
         </div>
 
-        <div className="bg-[#121417] border border-white/5 p-8 rounded-[2.5rem] shadow-2xl h-[400px]">
+        <div className="bg-[#121417] border border-white/5 p-8 rounded-[2.5rem] shadow-2xl h-[400px] min-h-[300px]">
           <h3 className="text-xs font-mono uppercase tracking-widest text-cyan-primary mb-8 flex items-center gap-3">
             <Activity size={16} /> Service Dominance
           </h3>
           {data.services.length === 0 ? (
-            <div className="flex h-[80%] items-center justify-center text-[10px] font-mono uppercase tracking-[0.2em] text-white/20">
+            <div className="flex h-[80%] min-h-[240px] items-center justify-center text-[10px] font-mono uppercase tracking-[0.2em] text-white/20">
               Service distribution unlocks after the first booking batch
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height="80%">
+            <ResponsiveContainer width="100%" height="80%" minHeight={240}>
               <PieChart>
                 <Pie
                   data={data.services}
@@ -353,11 +353,11 @@ const AnalyticsView = () => {
           )}
         </div>
 
-        <div className="lg:col-span-2 bg-[#121417] border border-white/5 p-8 rounded-[2.5rem] shadow-2xl h-[400px]">
+        <div className="lg:col-span-2 bg-[#121417] border border-white/5 p-8 rounded-[2.5rem] shadow-2xl h-[400px] min-h-[300px]">
           <h3 className="text-xs font-mono uppercase tracking-widest text-cyan-primary mb-8 flex items-center gap-3">
             <Package size={16} /> Order Pipeline
           </h3>
-          <ResponsiveContainer width="100%" height="80%">
+          <ResponsiveContainer width="100%" height="80%" minHeight={240}>
             <BarChart data={data.performance}>
               <CartesianGrid
                 strokeDasharray="3 3"

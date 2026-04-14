@@ -10,12 +10,12 @@ import {
   getAssignedWorkerIds,
   getOrderStatusLabel,
 } from '../lib/orderStatus.js';
-import { isAdminLikeRole, isManagerLikeRole, normalizeValue } from '../lib/roles.js';
+import { isAdminLikeRole, normalizeValue } from '../lib/roles.js';
 import { serializeDocument } from '../lib/serialize.js';
 import { authGuard, optionalAuthGuard } from '../middleware/authGuard.js';
 import { validateBody } from '../middleware/validate.js';
-import { creditWorkerForOrder, creditStaffBonuses } from '../services/financialService.js';
 import { dispatchNotification } from '../services/notificationDispatcher.js';
+import { processOrderCompletion } from '../services/earningsService.js';
 
 const router = Router();
 
@@ -44,7 +44,12 @@ const createOrderSchema = z.object({
   price: numberField,
   basePrice: numberField,
   priorityFee: numberField.optional().default(0),
+  subtotalPrice: numberField.optional().default(0),
   totalPrice: numberField,
+  referralDiscountPercent: numberField.optional().default(0),
+  referralDiscountAmount: numberField.optional().default(0),
+  usedReferralCode: z.string().trim().max(120).nullable().optional().default(null),
+  referredBy: z.string().trim().max(128).nullable().optional().default(null),
   advancePayment: numberField,
   advancePaid: numberField.optional().default(0),
   remainingPayment: numberField,
@@ -66,6 +71,9 @@ const createOrderSchema = z.object({
   orderStatus: z.string().trim().max(80).optional().default('Pending Assignment'),
   statusKey: z.string().trim().max(80).optional().default('pending_assignment'),
   assignmentStatus: z.string().trim().max(80).optional().default('unassigned'),
+  revisionLimit: z.preprocess((value) => Number(value ?? 1), z.number().int().min(0)).optional().default(1),
+  revisionsUsed: z.preprocess((value) => Number(value ?? 0), z.number().int().min(0)).optional().default(0),
+  paidRevisionCredits: z.preprocess((value) => Number(value ?? 0), z.number().int().min(0)).optional().default(0),
 });
 
 const updateStatusSchema = z.object({
@@ -87,7 +95,7 @@ const sortByCreatedAtDesc = (records = []) =>
   });
 
 const canViewOrder = (currentUser, order) => {
-  if (isManagerLikeRole(currentUser.role)) {
+  if (isAdminLikeRole(currentUser.role)) {
     return true;
   }
 
@@ -120,6 +128,10 @@ router.post(
       orderStatus: payload.orderStatus || 'Pending Assignment',
       statusKey: payload.statusKey || 'pending_assignment',
       assignmentStatus: payload.assignmentStatus || 'unassigned',
+      revisionLimit: payload.revisionLimit ?? 1,
+      revisionsUsed: payload.revisionsUsed ?? 0,
+      paidRevisionCredits: payload.paidRevisionCredits ?? 0,
+      earningsProcessed: false,
       createdAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
     };
@@ -172,7 +184,7 @@ router.get(
     const targetUid = req.params.uid;
     const currentUser = req.currentUser;
 
-    if (currentUser.uid !== targetUid && !isManagerLikeRole(currentUser.role)) {
+    if (currentUser.uid !== targetUid && !isAdminLikeRole(currentUser.role)) {
       throw new HttpError(403, 'You do not have access to this order list.');
     }
 
@@ -227,13 +239,11 @@ router.patch(
     const updatedSnapshot = await orderRef.get();
     const updatedOrder = { id: updatedSnapshot.id, ...updatedSnapshot.data() };
 
-    // Financial Credit Logic
     if (nextStatus === 'completed') {
       try {
-        await creditWorkerForOrder(orderId);
-        await creditStaffBonuses(orderId);
+        await processOrderCompletion({ id: orderId });
       } catch (err) {
-        console.error('Failed to credit staff for order:', err);
+        console.error('Failed to write ledger entries for order completion:', err);
       }
     }
 
@@ -261,8 +271,8 @@ router.post(
   asyncHandler(async (req, res) => {
     const currentUser = req.currentUser;
 
-    if (!isManagerLikeRole(currentUser.role)) {
-      throw new HttpError(403, 'Only manager-level users can assign workers.');
+    if (!isAdminLikeRole(currentUser.role)) {
+      throw new HttpError(403, 'Only admin and owner users can assign workers.');
     }
 
     const { orderId, workerId, workerName } = req.validatedBody;

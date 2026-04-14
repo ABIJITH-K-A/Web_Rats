@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { Copy, CheckCircle2, QrCode, Info, ExternalLink } from "lucide-react";
-import { Button, Card } from "../ui/Primitives";
+import { Card } from "../ui/Primitives";
+import AnimatedPaymentButton from "../ui/AnimatedPaymentButton";
 import { CONTACT_INFO } from "../../data/siteData";
 
 /**
@@ -117,13 +118,15 @@ const QRPaymentStep = ({
         </p>
 
         <div className="flex flex-col gap-3">
-          <Button 
+          <AnimatedPaymentButton
             className="w-full py-6 text-base"
-            disabled={utr.length < 12 || isSubmitting}
+            disabled={utr.length < 12}
+            processing={isSubmitting}
             onClick={() => onUtrSubmit(utr)}
-          >
-            {isSubmitting ? "Processing..." : "Confirm & Place Order"}
-          </Button>
+            idleIcon={CheckCircle2}
+            idleLabel="Confirm & Place Order"
+            processingLabel="Submitting payment..."
+          />
 
           {/* Developer Bypass Button */}
           <button

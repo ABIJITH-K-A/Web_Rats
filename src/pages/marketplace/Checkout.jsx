@@ -1,227 +1,219 @@
-import { useState, useEffect } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
-import { useTemplates } from "../../hooks/useTemplates";
-import { ArrowLeft, CreditCard, CheckCircle, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { CheckCircle2, ExternalLink, ShieldCheck } from "lucide-react";
+import { useParams } from "react-router-dom";
 import { toast } from "sonner";
+import AnimatedPaymentButton from "../../components/ui/AnimatedPaymentButton";
+import BackButton from "../../components/ui/BackButton";
+import DownloadActionButton from "../../components/ui/DownloadActionButton";
+import { useAuth } from "../../context/AuthContext";
+import { useTemplates } from "../../hooks/useTemplates";
+import { apiRequest } from "../../services/apiClient";
+import { getEligibleReferralDiscount } from "../../utils/systemRules";
+
+const formatPrice = (price, isFree) =>
+  isFree ? "Free" : `Rs ${Number(price || 0).toLocaleString("en-IN")}`;
 
 export default function Checkout() {
   const { id } = useParams();
-  const navigate = useNavigate();
-  const { getTemplateById } = useTemplates();
+  const { userProfile } = useAuth();
+  const { getTemplateById, getTemplateDownload, unlockFreeTemplate } = useTemplates();
   const [template, setTemplate] = useState(null);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
-  const [cardNumber, setCardNumber] = useState("");
-  const [expiry, setExpiry] = useState("");
-  const [cvc, setCvc] = useState("");
+  const [paymentRequestId, setPaymentRequestId] = useState("");
 
   useEffect(() => {
     const loadTemplate = async () => {
+      setLoading(true);
       try {
-        setLoading(true);
-        const data = await getTemplateById(id);
-        if (data) {
-          setTemplate(data);
-        }
-      } catch (err) {
-        console.error("Error loading template:", err);
+        const response = await getTemplateById(id);
+        setTemplate(response);
+      } catch (error) {
+        console.error("Failed to load template:", error);
+        setTemplate(null);
       } finally {
         setLoading(false);
       }
     };
 
     loadTemplate();
-  }, [id, getTemplateById]);
+  }, [getTemplateById, id]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const studentReferralDiscount = getEligibleReferralDiscount(userProfile);
+  const discountAmount =
+    template && !template.isFree
+      ? Math.round(Number(template.price || 0) * (studentReferralDiscount / 100))
+      : 0;
+  const finalTemplatePrice =
+    template && !template.isFree
+      ? Math.max(Number(template.price || 0) - discountAmount, 0)
+      : Number(template?.price || 0);
+
+  const handleContinue = async () => {
+    if (!template) return;
+
     setProcessing(true);
+    try {
+      if (template.isUnlocked) {
+        const fileUrl = await getTemplateDownload(template.id);
+        if (fileUrl) {
+          window.open(fileUrl, "_blank", "noopener,noreferrer");
+        }
+        return;
+      }
 
-    // Simulate payment processing
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+      if (template.isFree) {
+        await unlockFreeTemplate(template.id);
+        const fileUrl = await getTemplateDownload(template.id);
+        if (fileUrl) {
+          window.open(fileUrl, "_blank", "noopener,noreferrer");
+        }
+        toast.success("Free template unlocked");
+        return;
+      }
 
-    setProcessing(false);
-    toast.success(
-      template?.isFree
-        ? "Template downloaded successfully!"
-        : "Payment successful! Template is now yours."
-    );
+      const response = await apiRequest("/payment/create-intent", {
+        method: "POST",
+        authMode: "required",
+        body: {
+          kind: "template",
+          referenceId: template.id,
+        },
+      });
 
-    // Redirect to marketplace after success
-    setTimeout(() => {
-      navigate("/marketplace");
-    }, 2000);
+      setPaymentRequestId(response?.requestId || "");
+
+      if (!response?.paymentSessionId) {
+        throw new Error("Payment session could not be created.");
+      }
+
+      window.location.href = `https://payments.cashfree.com/checkout?session_id=${response.paymentSessionId}`;
+    } catch (error) {
+      toast.error(error.message || "Could not start the payment flow.");
+    } finally {
+      setProcessing(false);
+    }
   };
 
   if (loading) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-gray-50">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-gray-900" />
-      </div>
-    );
+    return <div className="min-h-screen bg-[#0D0F0D]" />;
   }
 
   if (!template) {
     return (
-      <div className="flex h-screen flex-col items-center justify-center bg-gray-50">
-        <p className="text-lg font-medium text-gray-900">Template not found</p>
-        <Link
-          to="/marketplace"
-          className="mt-4 text-gray-600 hover:text-gray-900"
-        >
-          Back to Marketplace
-        </Link>
-      </div>
+      <section className="flex min-h-screen items-center justify-center bg-[#0D0F0D] px-6 text-center text-white">
+        <div>
+          <h1 className="text-3xl font-black">Template not found</h1>
+          <BackButton
+            to="/templates"
+            label="Back to catalog"
+            className="mt-4"
+          />
+        </div>
+      </section>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <nav className="border-b border-gray-200 bg-white">
-        <div className="mx-auto max-w-3xl px-4 py-4">
-          <Link
-            to={`/template/${id}`}
-            className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Template
-          </Link>
-        </div>
-      </nav>
+    <section className="min-h-screen bg-[#0D0F0D] px-6 py-10 text-white lg:px-10">
+      <div className="mx-auto max-w-5xl">
+        <BackButton
+          to={`/template/${template.id}`}
+          label="Back to template"
+        />
 
-      {/* Checkout Content */}
-      <div className="mx-auto max-w-3xl px-4 py-8">
-        <h1 className="mb-8 text-2xl font-bold text-gray-900">Checkout</h1>
+        <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_380px]">
+          <div className="overflow-hidden rounded-[2.5rem] border border-white/8 bg-[#121417]">
+            <img
+              src={template.images?.[0] || "/Images/Project_Preview/Project_Preview_1.png"}
+              alt={template.title}
+              className="h-full max-h-[560px] w-full object-cover"
+            />
+          </div>
 
-        <div className="grid gap-8 md:grid-cols-2">
-          {/* Order Summary */}
-          <div className="h-fit rounded-xl bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-lg font-semibold text-gray-900">
-              Order Summary
-            </h2>
-            <div className="mb-4 overflow-hidden rounded-lg bg-gray-100">
-              <img
-                src={template.imageUrl}
-                alt={template.title}
-                className="h-40 w-full object-cover"
-              />
+          <aside className="rounded-[2.5rem] border border-white/8 bg-[#121417] p-8 shadow-[0_30px_80px_rgba(0,0,0,0.3)]">
+            <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-cyan-primary/72">
+              Checkout
             </div>
-            <h3 className="font-medium text-gray-900">{template.title}</h3>
-            <p className="mb-4 text-sm text-gray-600">{template.category}</p>
-            <div className="border-t border-gray-200 pt-4">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Total</span>
-                <span className="text-xl font-bold text-gray-900">
-                  {template.isFree ? "Free" : `$${template.price}`}
+            <h1 className="mt-3 text-3xl font-black text-white">{template.title}</h1>
+            <p className="mt-3 text-sm leading-7 text-white/56">{template.description}</p>
+
+            <div className="mt-8 rounded-[2rem] border border-white/8 bg-black/20 p-5">
+              <div className="flex items-center justify-between text-sm text-white/60">
+                <span>Template price</span>
+                <span className="text-lg font-black text-cyan-primary">
+                  {formatPrice(template.price, template.isFree)}
                 </span>
               </div>
-            </div>
-          </div>
-
-          {/* Payment Form */}
-          <div className="rounded-xl bg-white p-6 shadow-sm">
-            <h2 className="mb-6 text-lg font-semibold text-gray-900">
-              Payment Details
-            </h2>
-
-            {template.isFree ? (
-              <div className="mb-6 rounded-lg bg-green-50 p-4">
-                <div className="flex items-center gap-3">
-                  <CheckCircle className="h-5 w-5 text-green-600" />
-                  <p className="text-green-800">
-                    This template is free! Click below to download.
-                  </p>
+              {!template.isFree && (
+                <div className="mt-4 flex items-center justify-between text-sm text-white/60">
+                  <span>Student referral</span>
+                  <span className={studentReferralDiscount ? "font-semibold text-emerald-300" : ""}>
+                    {studentReferralDiscount
+                      ? `- ${formatPrice(discountAmount, false)}`
+                      : "Not applied"}
+                  </span>
                 </div>
+              )}
+              {!template.isFree && (
+                <div className="mt-4 flex items-center justify-between text-sm text-white/60">
+                  <span>Amount to pay</span>
+                  <span className="text-lg font-black text-white">
+                    {formatPrice(finalTemplatePrice, false)}
+                  </span>
+                </div>
+              )}
+              <div className="mt-4 flex items-center justify-between text-sm text-white/60">
+                <span>Unlock model</span>
+                <span>{template.isFree ? "Instant access" : "Cashfree payment"}</span>
               </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700">
-                    Card Number
-                  </label>
-                  <div className="relative">
-                    <CreditCard className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="text"
-                      value={cardNumber}
-                      onChange={(e) => setCardNumber(e.target.value)}
-                      placeholder="4242 4242 4242 4242"
-                      className="w-full rounded-lg border border-gray-300 bg-white pl-10 pr-4 py-2.5 text-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
-                    />
-                  </div>
-                </div>
+              <div className="mt-4 flex items-center gap-2 rounded-2xl border border-emerald-400/15 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-300">
+                <ShieldCheck size={16} />
+                Download unlocks only after successful payment confirmation.
+              </div>
+            </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700">
-                      Expiry Date
-                    </label>
-                    <input
-                      type="text"
-                      value={expiry}
-                      onChange={(e) => setExpiry(e.target.value)}
-                      placeholder="MM/YY"
-                      className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700">
-                      CVC
-                    </label>
-                    <input
-                      type="text"
-                      value={cvc}
-                      onChange={(e) => setCvc(e.target.value)}
-                      placeholder="123"
-                      className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
-                    />
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={processing}
-                  className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-gray-900 px-6 py-3 font-medium text-white transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-70"
-                >
-                  {processing ? (
-                    <>
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                      Processing...
-                    </>
-                  ) : (
-                    <>Pay ${template.price}</>
-                  )}
-                </button>
-
-                <p className="text-center text-xs text-gray-500">
-                  This is a mock payment. No real charges will be made.
-                </p>
-              </form>
-            )}
-
-            {template.isFree && (
-              <button
-                onClick={handleSubmit}
+            {template.isUnlocked || template.isFree ? (
+              <DownloadActionButton
+                onClick={handleContinue}
                 disabled={processing}
-                className="flex w-full items-center justify-center gap-2 rounded-lg bg-green-600 px-6 py-3 font-medium text-white transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-70"
-              >
-                {processing ? (
-                  <>
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle className="h-5 w-5" />
-                    Download Free
-                  </>
-                )}
-              </button>
+                label={template.isUnlocked ? "Open Download" : "Free Download"}
+                compactOnSmallScreens
+                desktopExpandedFull
+                className="mt-8 lg:w-full"
+              />
+            ) : (
+              <AnimatedPaymentButton
+                type="button"
+                onClick={handleContinue}
+                processing={processing}
+                idleIcon={CheckCircle2}
+                idleLabel="Continue to Payment"
+                processingLabel="Starting payment..."
+                className="mt-8 w-full"
+              />
             )}
-          </div>
+
+            {!template.isFree && (
+              <div className="mt-4 rounded-2xl border border-white/8 bg-white/[0.03] p-4 text-sm text-white/48">
+                You will be redirected to the existing Cashfree checkout page for QR or UPI payment. After payment success, reopen the template page and the download button will unlock.
+                {studentReferralDiscount ? (
+                  <span className="mt-2 block text-emerald-300">
+                    Student referral discount applied: {studentReferralDiscount}% off.
+                  </span>
+                ) : null}
+              </div>
+            )}
+
+            {paymentRequestId && (
+              <div className="mt-4 flex items-center gap-2 rounded-2xl border border-cyan-primary/15 bg-cyan-primary/10 px-4 py-3 text-sm text-cyan-primary">
+                <ExternalLink size={16} />
+                Payment request created: {paymentRequestId}
+              </div>
+            )}
+          </aside>
         </div>
       </div>
-    </div>
+    </section>
   );
 }

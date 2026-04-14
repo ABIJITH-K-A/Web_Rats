@@ -103,7 +103,7 @@ router.get(
     const { uid, role } = req.currentUser;
     let query = adminDb().collection('tickets');
 
-    if (!['admin', 'manager', 'owner', 'super_admin'].includes(role)) {
+    if (!['admin', 'owner'].includes(role)) {
       query = query.where('createdBy', '==', uid);
     }
 
@@ -129,7 +129,7 @@ router.post(
 
     const ticket = ticketSnap.data();
     const isCreator = ticket.createdBy === uid;
-    const isStaff = ['admin', 'manager', 'owner', 'super_admin'].includes(role);
+    const isStaff = ['admin', 'owner'].includes(role);
 
     if (!isCreator && !isStaff) throw new HttpError(403, 'Unauthorized.');
 
@@ -152,7 +152,7 @@ router.post(
 router.patch(
   '/resolve',
   authGuard,
-  roleGuard(['admin', 'manager', 'owner', 'super_admin']),
+  roleGuard(['admin', 'owner']),
   validateBody(resolveTicketSchema),
   asyncHandler(async (req, res) => {
     const { ticketId, resolution } = req.validatedBody;

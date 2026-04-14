@@ -18,8 +18,11 @@ const Services = () => {
             Our Services
           </div>
           <h1 className="mx-auto max-w-5xl text-5xl font-black leading-[1.05] text-white md:text-6xl">
-            Affordable digital solutions for students, creators, and small
-            businesses.
+            Affordable{" "}
+            <span className="text-gradient-brand inline-block">
+              digital solutions
+            </span>{" "}
+            for students, creators, and small businesses.
           </h1>
           <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-light-gray/70">
             We keep our focus sharp and our output sharper. Here is exactly what
@@ -100,7 +103,7 @@ const Services = () => {
                     to={`/book?category=${category.id}`}
                     className="mt-auto block pt-8"
                   >
-                    <Button className="w-full">
+                    <Button variant="cardCta" className="w-full">
                       {category.cta} <ArrowRight size={16} />
                     </Button>
                   </Link>

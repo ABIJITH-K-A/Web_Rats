@@ -24,8 +24,10 @@ const About = () => {
               About TNWebRats
             </div>
             <h1 className="text-5xl font-black leading-[1.05] text-white md:text-6xl">
-              Two developers. Two designers. One shared drive to build things
-              that actually matter.
+              Two developers. Two designers. One shared drive to{" "}
+              <span className="text-gradient-brand inline-block">
+                build things that actually matter.
+              </span>
             </h1>
             <p className="mt-6 max-w-3xl text-lg leading-8 text-light-gray/68">
               TNWebRats started as a simple conversation between two friends who

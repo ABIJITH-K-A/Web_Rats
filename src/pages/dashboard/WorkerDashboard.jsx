@@ -51,8 +51,8 @@ const WorkerOverview = () => {
   const [stats, setStats] = useState({
     activeOrders: 0,
     completedOrders: 0,
-    totalEarnings: 0,
-    pendingAmount: 0,
+    totalEarned: 0,
+    nextPayoutDate: null,
   });
 
   useEffect(() => {
@@ -74,8 +74,8 @@ const WorkerOverview = () => {
         setStats({
           activeOrders: assignedOrders.filter(isOpenOrder).length,
           completedOrders: assignedOrders.filter(isCompletedOrder).length,
-          totalEarnings: Number(wallet?.lifetimeEarnings || wallet?.totalEarnings || 0),
-          pendingAmount: Number(wallet?.pendingAmount || wallet?.pending || 0),
+          totalEarned: Number(wallet?.totalEarned || wallet?.lifetimeEarnings || wallet?.totalEarnings || 0),
+          nextPayoutDate: wallet?.nextPayoutDate || null,
         });
       } catch (error) {
         console.error(error);
@@ -93,11 +93,19 @@ const WorkerOverview = () => {
     };
   }, [user]);
 
+  const nextPayoutLabel = stats.nextPayoutDate
+    ? new Date(stats.nextPayoutDate).toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
+    : "Manual";
+
   const statCards = [
     { label: "Active Orders", value: stats.activeOrders, icon: Briefcase, color: "text-cyan-primary" },
     { label: "Completed", value: stats.completedOrders, icon: CheckCircle, color: "text-green-500" },
-    { label: "Total Earnings", value: formatCurrency(stats.totalEarnings), icon: Wallet, color: "text-purple-500" },
-    { label: "Pending Amount", value: formatCurrency(stats.pendingAmount), icon: Clock, color: "text-yellow-500" },
+    { label: "Total Earned", value: formatCurrency(stats.totalEarned), icon: Wallet, color: "text-purple-500" },
+    { label: "Next Payout", value: nextPayoutLabel, icon: Clock, color: "text-yellow-500" },
   ];
 
   return (
@@ -143,34 +151,6 @@ const WorkerOverview = () => {
       </div>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-        <div className="overflow-hidden rounded-[2.5rem] border border-white/8 bg-[#121417] p-8 shadow-2xl">
-          <h3 className="mb-6 flex items-center gap-3 text-xs font-mono uppercase tracking-widest text-cyan-primary">
-            <Bell size={16} /> Quick Actions
-          </h3>
-          <div className="space-y-4">
-            <ActionCard
-              icon={List}
-              title="Browse Order Pool"
-              description="Claim fresh unassigned work directly from the live pool."
-              tone="text-cyan-primary"
-              meta={`${stats.activeOrders} active in your queue`}
-            />
-            <ActionCard
-              icon={Box}
-              title="My Active Orders"
-              description="Move assigned work through progress stages without losing status accuracy."
-              tone="text-green-500"
-              meta={`${stats.completedOrders} completed so far`}
-            />
-            <ActionCard
-              icon={Wallet}
-              title="Earnings & Wallet"
-              description="Track pending releases, withdrawable balance, and completed payouts."
-              tone="text-purple-500"
-              meta={formatCurrency(stats.pendingAmount) + " pending release"}
-            />
-          </div>
-        </div>
 
         <div className="overflow-hidden rounded-[2.5rem] border border-white/8 bg-[#121417] p-8 shadow-2xl">
           <h3 className="mb-6 flex items-center gap-3 text-xs font-mono uppercase tracking-widest text-cyan-primary">
@@ -180,7 +160,7 @@ const WorkerOverview = () => {
             <p>Priority jobs should move first whenever they land in your queue.</p>
             <p>Claimed pool orders are now routed directly into your assigned work timeline.</p>
             <p>Update order status only when the real project stage changes so clients stay synced.</p>
-            <p>Pending wallet amounts release after the system hold period before withdrawal.</p>
+            <p>Earnings are added to the ledger only after the order is marked completed.</p>
             <p>Quality score and completed delivery volume both affect future project routing.</p>
           </div>
         </div>

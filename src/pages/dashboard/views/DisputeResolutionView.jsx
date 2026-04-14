@@ -58,7 +58,7 @@ const DisputeResolutionView = () => {
               return dispute.raisedBy === user.uid;
             }
 
-            if (['worker', 'manager'].includes(role)) {
+            if (role === 'worker') {
               const assignedIds = [
                 dispute.assignedTo,
                 dispute.workerAssigned,
@@ -181,11 +181,11 @@ const DisputeResolutionView = () => {
         recipientIds: [
           selectedDispute.raisedBy,
           ...getAssignedParticipantIds(selectedDispute),
-          ...(['owner', 'superadmin', 'admin'].includes(userProfile?.role)
-            ? []
-            : ['admin']),
-        ],
-      });
+            ...(['owner', 'admin'].includes(userProfile?.role)
+              ? []
+              : ['admin']),
+          ],
+        });
       setNewMessage('');
     } catch (err) {
       console.error('Send message error:', err);
@@ -248,7 +248,7 @@ const DisputeResolutionView = () => {
     }
   };
 
-  const isAdmin = ['owner', 'superadmin', 'admin'].includes(userProfile?.role);
+  const isAdmin = ['owner', 'admin'].includes(userProfile?.role);
 
   return (
     <div className="space-y-8">

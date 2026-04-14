@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, CheckCircle2 } from "lucide-react";
+import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
+import BackButton from "../../components/ui/BackButton";
 import ServiceCard from "../../components/ui/ServiceCard";
 import { Button, Card } from "../../components/ui/Primitives";
 import {
@@ -22,11 +23,7 @@ const ServiceDetail = () => {
         <p className="mx-auto mt-4 max-w-xl text-lg text-light-gray/65">
           The service you opened is not part of the current public catalog.
         </p>
-        <Link to="/services" className="mt-8 inline-block">
-          <Button variant="outline">
-            <ArrowLeft size={16} /> Back To Services
-          </Button>
-        </Link>
+        <BackButton to="/services" label="Back to services" className="mt-8" />
       </div>
     );
   }
@@ -40,11 +37,7 @@ const ServiceDetail = () => {
     <div className="flex flex-col py-20">
       <section className="pb-14">
         <div className="container mx-auto px-6">
-          <Link to="/services" className="mb-8 inline-flex">
-            <Button variant="ghost">
-              <ArrowLeft size={16} /> Back To Services
-            </Button>
-          </Link>
+          <BackButton to="/services" label="Back to services" className="mb-8" />
 
           <div className="grid gap-10 lg:grid-cols-[0.95fr_1.05fr]">
             <motion.div

@@ -30,7 +30,12 @@ export const fetchWithRetry = async (url, options, retries = 3) => {
 };
 
 // ── Create Cashfree Order ──────────────────────────────────────
-export const createGatewayOrder = async ({ amount, orderId, userDetails = {} }) => {
+export const createGatewayOrder = async ({
+  amount,
+  orderId,
+  userDetails = {},
+  orderTags = {},
+}) => {
   if (!env.cashfreeAppId || !env.cashfreeSecretKey) {
     throw new HttpError(500, 'Cashfree credentials are not configured.');
   }
@@ -53,10 +58,11 @@ export const createGatewayOrder = async ({ amount, orderId, userDetails = {} }) 
       customer_phone: userDetails.phone || '9999999999',
     },
     order_meta: {
-      notify_url: `${env.backendUrl}/api/payments/webhook`,
+      notify_url: `${env.backendUrl}/payment/webhook`,
     },
     order_tags: {
       orderId,
+      ...orderTags,
     },
   };
 

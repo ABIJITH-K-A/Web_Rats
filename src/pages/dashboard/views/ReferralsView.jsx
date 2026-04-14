@@ -25,7 +25,7 @@ const ReferralsView = () => {
   });
   const [formFeedback, setFormDataFeedback] = useState({ type: '', msg: '' });
 
-  const isOwner = currentUserData?.role === 'owner' || currentUserData?.role === 'superadmin';
+  const isOwner = currentUserData?.role === 'owner';
 
   useEffect(() => {
     fetchCodes();
@@ -120,9 +120,7 @@ const ReferralsView = () => {
   const getRoleColor = (role) => {
     switch(role) {
       case 'owner': return 'text-red-500 bg-red-500/10 border-red-500/20';
-      case 'superadmin': return 'text-purple-500 bg-purple-500/10 border-purple-500/20';
       case 'admin': return 'text-blue-500 bg-blue-500/10 border-blue-500/20';
-      case 'manager': return 'text-teal-500 bg-teal-500/10 border-teal-500/20';
       case 'worker': return 'text-cyan-primary bg-cyan-primary/10 border-cyan-primary/20';
       default: return 'text-white/40 bg-white/5 border-white/10';
     }
@@ -291,7 +289,7 @@ const ReferralsView = () => {
             <div>
                <h4 className="text-sm font-bold text-white mb-2 underline underline-offset-4 decoration-cyan-primary/30">Referral Protocol</h4>
                <p className="text-[10px] font-mono text-white/30 uppercase tracking-widest leading-relaxed">
-                 Tokens are automatically generated for staff. Worker/Manager codes give 5-10% off. Admin/Super codes give 15-20% off. Owners can manually override tiers and assign custom benefit rates to any member.
+                 Tokens are automatically generated for live staff roles only. Worker codes default to 5 percent, admin codes to 15 percent, and owner codes to 25 percent. Owners can still override the discount when a manual campaign needs a different rate.
                </p>
             </div>
          </div>

@@ -1,15 +1,17 @@
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { Sparkles } from "lucide-react";
 import MarketplaceLayout from "../../components/marketplace/MarketplaceLayout";
 import TemplateCard from "../../components/marketplace/TemplateCard";
 import { useTemplates } from "../../hooks/useTemplates";
-import { Sparkles } from "lucide-react";
 
 export default function Index() {
   const [searchParams] = useSearchParams();
+  const initialQuery = searchParams.get("q") || "";
   const [filters, setFilters] = useState({
-    search: searchParams.get("q") || "",
+    search: initialQuery,
     categories: [],
+    tag: "",
     price: "all",
     sort: "popular",
   });
@@ -20,56 +22,71 @@ export default function Index() {
     fetchTemplates(filters);
   }, [filters, fetchTemplates]);
 
+  const resultsLabel = useMemo(() => {
+    if (loading) return "Syncing catalog";
+    return `${templates.length} templates`;
+  }, [loading, templates.length]);
+
   return (
     <MarketplaceLayout filters={filters} setFilters={setFilters}>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">
+      <div className="space-y-8">
+        <section className="overflow-hidden rounded-[2.5rem] border border-white/8 bg-[radial-gradient(circle_at_top_left,rgba(6,182,212,0.18),transparent_35%),linear-gradient(180deg,rgba(18,20,23,0.98),rgba(13,15,13,0.98))] p-8 shadow-[0_40px_90px_rgba(0,0,0,0.32)]">
+          <div className="max-w-3xl">
+            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-primary/20 bg-cyan-primary/10 px-4 py-1.5 text-[10px] font-mono uppercase tracking-[0.22em] text-cyan-primary">
+              <Sparkles size={12} />
               Template Marketplace
+            </div>
+            <h1 className="mt-5 text-4xl font-black text-white md:text-5xl">
+              Ready-to-sell assets built in the TN Web Rats style.
             </h1>
-            <p className="text-gray-600">
-              Premium templates for your next project
+            <p className="mt-4 max-w-2xl text-base leading-8 text-white/56">
+              Search by keyword, filter by category, preview the pack, then buy once and unlock the download permanently.
             </p>
           </div>
-          <div className="flex items-center gap-2 text-sm text-gray-500">
-            <Sparkles className="h-4 w-4" />
-            <span>{templates.length} templates</span>
+        </section>
+
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-white/26">
+              Catalog Status
+            </div>
+            <div className="mt-1 text-2xl font-black text-white">{resultsLabel}</div>
+          </div>
+          <div className="rounded-full border border-white/8 bg-white/[0.03] px-4 py-2 text-sm text-white/48">
+            Search matches keywords, tags, and template titles.
           </div>
         </div>
 
-        {/* Loading State */}
         {loading && (
-          <div className="flex h-64 items-center justify-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-gray-900" />
+          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <div
+                key={index}
+                className="h-[360px] animate-pulse rounded-[2rem] border border-white/6 bg-white/[0.03]"
+              />
+            ))}
           </div>
         )}
 
-        {/* Error State */}
-        {error && (
-          <div className="rounded-lg border border-red-200 bg-red-50 p-4">
-            <p className="text-red-600">Error loading templates: {error}</p>
+        {!loading && error && (
+          <div className="rounded-[2rem] border border-red-500/20 bg-red-500/10 px-6 py-5 text-sm text-red-300">
+            {error}
           </div>
         )}
 
-        {/* Template Grid */}
-        {!loading && !error && (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {!loading && !error && templates.length > 0 && (
+          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
             {templates.map((template) => (
               <TemplateCard key={template.id} template={template} />
             ))}
           </div>
         )}
 
-        {/* Empty State */}
         {!loading && !error && templates.length === 0 && (
-          <div className="flex h-64 flex-col items-center justify-center text-center">
-            <p className="text-lg font-medium text-gray-900">
-              No templates found
-            </p>
-            <p className="text-gray-600">
-              Try adjusting your filters or search query
+          <div className="rounded-[2rem] border border-white/8 bg-[#121417] px-8 py-16 text-center">
+            <div className="text-2xl font-black text-white">No templates matched</div>
+            <p className="mt-3 text-sm text-white/48">
+              Try a broader keyword or remove one of the filters from the sidebar.
             </p>
           </div>
         )}

@@ -123,7 +123,7 @@ const ApprovalsView = () => {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
           <h2 className="text-2xl font-black text-white italic">Protocol <span className="text-cyan-primary not-italic font-mono uppercase text-sm tracking-[0.2em] ml-2">Approvals</span></h2>
-          <p className="text-[10px] font-mono text-white/20 uppercase tracking-widest mt-1">Review manager requests and verify manual payments</p>
+          <p className="text-[10px] font-mono text-white/20 uppercase tracking-widest mt-1">Review assignment exceptions and verify manual payments</p>
         </div>
       </div>
 

@@ -5,12 +5,23 @@ const API_BASE_URL = String(import.meta.env.VITE_API_BASE_URL || 'http://127.0.0
   .trim()
   .replace(/\/$/, '');
 
+/**
+ * Creates a structured local error to surface seamlessly to the UI.
+ * @param {string} message User-facing error message
+ * @param {Object} details Additional metadata about the crash
+ * @returns {Error} Formatted error object
+ */
 const createApiError = (message, details = {}) => {
   const error = new Error(message);
   Object.assign(error, details);
   return error;
 };
 
+/**
+ * Attempts to extract a structured backend error payload from the response object
+ * @param {Response} response API fetch response
+ * @returns {Promise<string|null>} The parsed message if available
+ */
 const readErrorPayload = async (response) => {
   try {
     const payload = await response.json();
@@ -20,7 +31,15 @@ const readErrorPayload = async (response) => {
   }
 };
 
-const getAuthorizationHeader = async (authMode = 'optional') => {
+/**
+ * Generates the HTTP Authorization headers using Firebase Auth ID tokens.
+ * @param {'optional' | 'required'} authMode Indicates if a missing user should throw a local auth error 
+ * @returns {Promise<Object>} The header object `{ Authorization: "Bearer ..." }` or `{}`
+ */
+const getAuthorizationHeader = async (
+  authMode = 'optional',
+  { forceRefresh = false } = {}
+) => {
   const currentUser = auth.currentUser;
 
   if (!currentUser) {
@@ -33,14 +52,66 @@ const getAuthorizationHeader = async (authMode = 'optional') => {
     return {};
   }
 
-  const token = await currentUser.getIdToken(true); // Force refresh to avoid expired tokens
-  return token ? { Authorization: `Bearer ${token}` } : {};
+  try {
+    // Use Firebase's cached token by default and only force-refresh after a
+    // backend 401. Refreshing on every request causes noisy auth/network
+    // failures whenever the securetoken endpoint blips.
+    const token = await currentUser.getIdToken(forceRefresh);
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  } catch (error) {
+    if (error?.code === 'auth/network-request-failed') {
+      throw createApiError(
+        'Could not verify your session right now. Please check your internet connection and try again.',
+        {
+          code: 'auth_network_failed',
+          originalError: error,
+        }
+      );
+    }
+
+    throw error;
+  }
 };
 
+const performRequest = async (
+  path,
+  {
+    method = 'GET',
+    body,
+    authMode = 'optional',
+    headers = {},
+    forceRefresh = false,
+  } = {}
+) => {
+  const authHeaders = await getAuthorizationHeader(authMode, { forceRefresh });
+
+  return fetch(`${API_BASE_URL}${path}`, {
+    method,
+    headers: {
+      ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
+      ...authHeaders,
+      ...headers,
+    },
+    ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+  });
+};
+
+/**
+ * @returns {boolean} True if the custom backend API is mapped and valid
+ */
 export const isBackendConfigured = () => Boolean(API_BASE_URL);
 
+/**
+ * @returns {string} The base URL for the Node/Cloudflare custom backend
+ */
 export const getApiBaseUrl = () => API_BASE_URL;
 
+/**
+ * Executes an HTTP fetch against the custom backend API securely
+ * @param {string} path The relative backend endpoint (e.g., `/orders/create`)
+ * @param {Object} options Configuration block including `method`, `body`, `authMode`
+ * @returns {Promise<Object|null>} JSON payload or null response
+ */
 export const apiRequest = async (
   path,
   {
@@ -51,22 +122,28 @@ export const apiRequest = async (
   } = {}
 ) => {
   if (!API_BASE_URL) {
-    throw createApiError('Backend API is not configured.', {
+    throw createApiError('Backend API is not configured. Please use Firebase native fallback.', {
       code: 'missing_api_base_url',
     });
   }
 
   try {
-    const authHeaders = await getAuthorizationHeader(authMode);
-    const response = await fetch(`${API_BASE_URL}${path}`, {
+    let response = await performRequest(path, {
       method,
-      headers: {
-        ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
-        ...authHeaders,
-        ...headers,
-      },
-      ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+      body,
+      authMode,
+      headers,
     });
+
+    if (response.status === 401 && authMode === 'required' && auth.currentUser) {
+      response = await performRequest(path, {
+        method,
+        body,
+        authMode,
+        headers,
+        forceRefresh: true,
+      });
+    }
 
     if (!response.ok) {
       const backendMessage = await readErrorPayload(response);
@@ -83,7 +160,11 @@ export const apiRequest = async (
 
     return response.json();
   } catch (error) {
-    if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+    if (
+      error.name === 'TypeError' &&
+      typeof error.message === 'string' &&
+      error.message.includes('Failed to fetch')
+    ) {
       throw createApiError('Could not connect to the server. Please check your internet connection and try again.', {
         code: 'connection_refused',
       });

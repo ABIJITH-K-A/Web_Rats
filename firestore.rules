@@ -12,8 +12,6 @@ service cloud.firestore {
       return request.auth.uid == userId;
     }
 
-    // FIX BUG 4: Use 'superadmin' NOT 'super_admin'
-    // All role strings must match systemRules.js ROLE_HIERARCHY exactly
     function getUserRole() {
       return request.auth.token.role;
     }
@@ -23,19 +21,14 @@ service cloud.firestore {
     }
 
     function getRoleRank() {
-      // Returns numeric rank matching ROLE_HIERARCHY index
-      return getUserRole() == 'owner'      ? 5 :
-             getUserRole() == 'superadmin' ? 4 :  // FIX: was 'super_admin'
-             getUserRole() == 'admin'      ? 3 :
-             getUserRole() == 'manager'    ? 2 :
+      return getUserRole() == 'owner'      ? 3 :
+             getUserRole() == 'admin'      ? 2 :
              getUserRole() == 'worker'     ? 1 : 0;
     }
 
     function getTargetRoleRank(targetRole) {
-      return targetRole == 'owner'      ? 5 :
-             targetRole == 'superadmin' ? 4 :
-             targetRole == 'admin'      ? 3 :
-             targetRole == 'manager'    ? 2 :
+      return targetRole == 'owner'      ? 3 :
+             targetRole == 'admin'      ? 2 :
              targetRole == 'worker'     ? 1 : 0;
     }
 
@@ -43,21 +36,18 @@ service cloud.firestore {
       return hasRole('owner');
     }
 
-    // FIX BUG 4: was 'super_admin', now 'superadmin'
     function isAdmin() {
-      return hasRole('admin') || hasRole('superadmin') || hasRole('owner');
+      return hasRole('admin') || hasRole('owner');
     }
 
     function isAdminLikeRole() {
-      return hasRole('admin') || hasRole('superadmin') || hasRole('owner') || hasRole('manager');
+      return hasRole('admin') || hasRole('owner');
     }
 
     function isStaff() {
-      return hasRole('admin') || hasRole('superadmin') || hasRole('owner') ||
-             hasRole('manager') || hasRole('worker');
+      return hasRole('admin') || hasRole('owner') || hasRole('worker');
     }
 
-    // FIX BUG 3: Actor rank must be strictly greater than target's role rank
     function canManageUserRole(targetRole) {
       return getRoleRank() > getTargetRoleRank(targetRole);
     }

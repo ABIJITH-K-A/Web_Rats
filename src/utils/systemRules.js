@@ -1,9 +1,7 @@
 export const ROLE_HIERARCHY = [
   "client",
   "worker",
-  "manager",
   "admin",
-  "superadmin",
   "owner",
 ];
 
@@ -12,39 +10,46 @@ export const STAFF_ROLES = ROLE_HIERARCHY.filter((role) => role !== "client");
 export const ROLE_REFERRAL_CONFIG = {
   client: { code: "CLI", pct: 0 },
   worker: { code: "WRK", pct: 5 },
-  manager: { code: "MGR", pct: 10 },
   admin: { code: "ADM", pct: 15 },
-  superadmin: { code: "SA", pct: 20 },
   owner: { code: "OWR", pct: 25 },
 };
 
+export const MAX_STUDENT_REFERRAL_DISCOUNT = 40;
+
 export const ROLE_PERMISSIONS = {
-  owner: ["full_access"],
-  superadmin: ["all_except_owner_controls"],
-  admin: ["manage_orders", "assign_workers", "approve_withdrawals"],
-  manager: ["assign_tasks", "monitor_workers"],
-  worker: ["accept_orders", "update_status", "view_wallet"],
-  client: ["create_order", "pay", "request_revision"],
+  client: ["create_order", "chat", "request_revision", "pay"],
+  worker: ["accept_work", "upload_delivery", "chat", "receive_revision"],
+  admin: ["view_all_orders", "assign_work", "manage_users", "view_earnings", "handle_payroll"],
+  owner: [
+    "view_all_orders",
+    "assign_work",
+    "manage_users",
+    "view_earnings",
+    "handle_payroll",
+    "manage_admins",
+    "view_full_system_analytics",
+    "override_system_rules",
+    "view_financial_overview",
+  ],
 };
 
 export const DASHBOARD_VIEW_RULES = {
   overview: STAFF_ROLES,
-  analytics: ["owner", "superadmin", "admin"],
-  orders: ["owner", "superadmin", "admin", "manager"],
-  orderpool: ["worker", "manager"],
-  users: ["owner", "superadmin", "admin"],
-  referrals: ["owner", "superadmin", "admin"],
+  analytics: ["owner"],
+  orders: ["owner", "admin"],
+  orderpool: ["worker"],
+  users: ["owner", "admin"],
+  referrals: ["owner", "admin"],
   reviews: STAFF_ROLES,
   wallet: STAFF_ROLES,
   reports: STAFF_ROLES,
   samples: STAFF_ROLES,
-  demodata: ["owner", "superadmin", "admin"],
-  payroll: ["owner", "superadmin", "admin"],
-  teampay: ["manager"],
-  approvals: ["owner", "superadmin", "admin"],
-  myorders: ["worker", "manager"],
-  invitekeys: ["owner", "superadmin", "admin", "manager"],
-  earnings: ["worker", "manager"],
+  demodata: ["owner", "admin"],
+  payroll: ["owner", "admin"],
+  approvals: ["owner", "admin"],
+  myorders: ["worker"],
+  invitekeys: ["owner", "admin"],
+  earnings: ["worker"],
   disputes: STAFF_ROLES,
 };
 
@@ -165,8 +170,8 @@ export const PAYMENT_STATUS_ALIASES = {
 };
 
 export const FINANCIAL_RULES = {
-  workerPercent: 80,
-  companyPercent: 20,
+  workerPercent: 90,
+  companyPercent: 10,
   referralWorkerPercent: 82,
   referralCompanyPercent: 18,
   minimumWithdrawal: 100,
@@ -223,13 +228,10 @@ export const canGenerateInviteForRole = (actorRole, targetRole) => {
   const target = normalizeRole(targetRole);
 
   if (target === "client") return false;
-  if (actor === "owner" || actor === "superadmin") {
-    return ["superadmin", "admin", "manager", "worker"].includes(target);
+  if (actor === "owner") {
+    return ["admin", "worker"].includes(target);
   }
   if (actor === "admin") {
-    return ["manager", "worker"].includes(target);
-  }
-  if (actor === "manager") {
     return target === "worker";
   }
 
@@ -246,6 +248,24 @@ export const canAccessDashboardView = (role, viewId) =>
 
 export const getReferralTier = (role) =>
   ROLE_REFERRAL_CONFIG[normalizeRole(role)] || ROLE_REFERRAL_CONFIG.client;
+
+export const clampReferralDiscountPercent = (discountPercent) => {
+  const normalized = Number(discountPercent || 0);
+
+  if (!Number.isFinite(normalized) || normalized <= 0) {
+    return 0;
+  }
+
+  return Math.min(MAX_STUDENT_REFERRAL_DISCOUNT, Math.round(normalized));
+};
+
+export const getEligibleReferralDiscount = (profile = {}) => {
+  if (!profile?.usedReferralCode) {
+    return 0;
+  }
+
+  return clampReferralDiscountPercent(profile.discountPercent);
+};
 
 export const makeReferralCode = (role) => {
   const tier = getReferralTier(role);

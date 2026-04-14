@@ -1,5 +1,6 @@
 import React, { useState, Children, useRef, useLayoutEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import BackButton from './BackButton';
 
 export default function Stepper({
   children,
@@ -97,18 +98,12 @@ export default function Stepper({
           <div className={`px-8 pb-8 ${footerClassName}`}>
             <div className={`mt-10 flex ${currentStep !== 1 ? 'justify-between' : 'justify-end'} gap-4`}>
               {currentStep !== 1 && (
-                <button
-                  type="button"
+                <BackButton
                   onClick={handleBack}
-                  className={`px-6 py-2 rounded-full font-mono text-xs uppercase tracking-widest transition-all duration-300 ${
-                    currentStep === 1
-                      ? 'pointer-events-none opacity-20 text-light-gray'
-                      : 'text-light-gray/40 hover:text-cyan-primary border border-white/5 hover:border-cyan-primary/30'
-                  }`}
+                  label={backButtonText}
+                  className="min-w-[160px] h-12"
                   {...backButtonProps}
-                >
-                  {backButtonText}
-                </button>
+                />
               )}
               <button
                 type="button"

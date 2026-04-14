@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import { 
   MessageSquare, 
   X, 
@@ -10,6 +10,8 @@ import {
   Clock
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { storage } from "../../config/firebase";
 import { subscribeToThread, sendMessage } from "../../services/chatService";
 
 const ChatThread = ({ order, onClose }) => {
@@ -17,7 +19,9 @@ const ChatThread = ({ order, onClose }) => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const messagesEndRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (!order?.id) return;
@@ -60,11 +64,36 @@ const ChatThread = ({ order, onClose }) => {
     }
   };
 
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file || !user || !order?.id) return;
+
+    setIsUploading(true);
+    try {
+      const fileRef = ref(storage, `chat_files/${order.id}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`);
+      await uploadBytes(fileRef, file);
+      const url = await getDownloadURL(fileRef);
+
+      await sendMessage(order.id, {
+        text: `Attached file: ${file.name}`,
+        fileUrl: url,
+        fileName: file.name,
+        userId: user.uid,
+        userName: userProfile?.name || userProfile?.displayName || user.email || "Unknown User",
+        userRole: userProfile?.role || "client"
+      });
+    } catch (error) {
+      console.error("Failed to upload file:", error);
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
   const getRoleBadge = (role) => {
     const roles = {
       client: { bg: "bg-white/10", text: "text-white/70", icon: User },
       worker: { bg: "bg-cyan-primary/20", text: "text-cyan-primary", icon: Shield },
-      manager: { bg: "bg-purple-500/20", text: "text-purple-400", icon: Shield },
       admin: { bg: "bg-red-500/20", text: "text-red-400", icon: Shield },
       owner: { bg: "bg-yellow-500/20", text: "text-yellow-400", icon: Shield },
     };
@@ -107,8 +136,13 @@ const ChatThread = ({ order, onClose }) => {
           </div>
         ) : (
           messages.map((msg, idx) => {
-            const isMe = msg.userId === user?.uid;
-            const showHeader = idx === 0 || messages[idx - 1].userId !== msg.userId;
+            const senderId = msg.senderId || msg.userId;
+            const senderRole = msg.senderRole || msg.userRole;
+            const senderName = msg.senderName || msg.userName;
+            const isMe = senderId === user?.uid;
+            const showHeader =
+              idx === 0 ||
+              (messages[idx - 1].senderId || messages[idx - 1].userId) !== senderId;
 
             return (
               <div
@@ -118,9 +152,9 @@ const ChatThread = ({ order, onClose }) => {
                 {showHeader && (
                   <div className={`mb-1 flex items-center gap-2 ${isMe ? "flex-row-reverse" : ""}`}>
                     <span className="text-xs font-semibold text-light-gray/80">
-                      {isMe ? "You" : msg.userName}
+                      {isMe ? "You" : senderName}
                     </span>
-                    {!isMe && getRoleBadge(msg.userRole)}
+                    {!isMe && getRoleBadge(senderRole)}
                   </div>
                 )}
                 
@@ -131,7 +165,12 @@ const ChatThread = ({ order, onClose }) => {
                       : "rounded-tl-sm bg-white/10 text-white"
                   }`}
                 >
-                  <p className="whitespace-pre-wrap break-words">{msg.text}</p>
+                  <p className="whitespace-pre-wrap wrap-break-word">{msg.text || msg.message}</p>
+                  {msg.fileUrl && (
+                    <a href={msg.fileUrl} target="_blank" rel="noreferrer" className="mt-1 flex items-center gap-1 text-xs font-bold underline decoration-cyan-primary/50 hover:decoration-cyan-primary transition-colors">
+                      <Paperclip size={12} /> Download {msg.fileName || "File"}
+                    </a>
+                  )}
                   
                   <div
                     className={`mt-1 flex items-center gap-1 text-[10px] ${
@@ -157,10 +196,22 @@ const ChatThread = ({ order, onClose }) => {
           onSubmit={handleSend}
           className="flex items-end gap-2 rounded-2xl border border-white/10 bg-[#151921] p-2"
         >
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileUpload}
+            className="hidden"
+          />
           <button
             type="button"
-            className="rounded-full p-2 text-light-gray/40 transition-colors hover:bg-white/10 hover:text-white"
-            title="Attach file (coming soon)"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isUploading}
+            className={`rounded-full p-2 transition-colors ${
+              isUploading 
+                ? 'text-cyan-primary animate-pulse' 
+                : 'text-light-gray/40 hover:bg-white/10 hover:text-white'
+            }`}
+            title="Attach file"
           >
             <Paperclip size={18} />
           </button>

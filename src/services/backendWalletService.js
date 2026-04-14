@@ -1,66 +1,79 @@
-import {
-  collection,
-  getDocs,
-  query,
-  where,
-} from 'firebase/firestore';
-import { db } from '../config/firebase';
-import {
-  getWallet as getWalletFromFirestore,
-  requestWithdrawal as requestWithdrawalFromFirestore,
-} from './financialService';
-import { apiRequest, isBackendConfigured } from './apiClient';
+import { collection, getDocs, query, where } from "firebase/firestore";
+import { db } from "../config/firebase";
+import { apiRequest, isBackendConfigured } from "./apiClient";
 
-const sortByRequestedAtDesc = (records = []) =>
-  [...records].sort((left, right) => {
-    const leftTime =
-      (typeof left?.requestedAt?.toDate === 'function'
-        ? left.requestedAt.toDate()
-        : new Date(left?.requestedAt || 0)
-      )?.getTime?.() || 0;
-    const rightTime =
-      (typeof right?.requestedAt?.toDate === 'function'
-        ? right.requestedAt.toDate()
-        : new Date(right?.requestedAt || 0)
-      )?.getTime?.() || 0;
+let walletBackendEnabled = true;
 
-    return rightTime - leftTime;
+const buildFinanceShape = (payload = {}) => {
+  const totalEarned = Number(payload.totalEarned || 0);
+
+  return {
+    totalEarned,
+    nextPayoutDate: payload.nextPayoutDate || null,
+    lifetimeEarnings: totalEarned,
+    totalEarnings: totalEarned,
+    pendingAmount: 0,
+    pending: 0,
+    withdrawableAmount: 0,
+    withdrawable: 0,
+  };
+};
+
+const getLocalLedgerSummary = async (userId) => {
+  const snapshot = await getDocs(
+    query(collection(db, "ledgerEntries"), where("userId", "==", userId))
+  ).catch(() => null);
+
+  const totalEarned =
+    snapshot?.docs.reduce((sum, docSnapshot) => {
+      const entry = docSnapshot.data();
+      return sum + Number(entry.amount || 0);
+    }, 0) || 0;
+
+  return buildFinanceShape({
+    totalEarned,
+    nextPayoutDate: null,
   });
+};
+
+const shouldUseLocalFinanceFallback = (error) =>
+  error?.statusCode === 401 ||
+  error?.statusCode === 403 ||
+  error?.code === "auth_network_failed" ||
+  error?.code === "connection_refused" ||
+  String(error?.message || "").toLowerCase().includes("log in") ||
+  String(error?.message || "").toLowerCase().includes("sign in");
 
 export const getWalletOverview = async (userId) => {
   if (!userId) {
     return {
-      wallet: null,
+      wallet: buildFinanceShape(),
       withdrawals: [],
     };
   }
 
-  if (isBackendConfigured()) {
-    const response = await apiRequest(`/wallet/${userId}`, {
-      authMode: 'required',
-    });
+  if (isBackendConfigured() && walletBackendEnabled) {
+    try {
+      const response = await apiRequest("/finance/worker", {
+        authMode: "required",
+      });
 
-    return {
-      wallet: response?.wallet || null,
-      withdrawals: response?.withdrawals || [],
-    };
+      return {
+        wallet: buildFinanceShape(response || {}),
+        withdrawals: [],
+      };
+    } catch (error) {
+      if (!shouldUseLocalFinanceFallback(error)) {
+        throw error;
+      }
+
+      walletBackendEnabled = false;
+    }
   }
 
-  const [wallet, withdrawalSnapshot] = await Promise.all([
-    getWalletFromFirestore(userId),
-    getDocs(
-      query(collection(db, 'withdrawals'), where('userId', '==', userId))
-    ).catch(() => null),
-  ]);
-
   return {
-    wallet,
-    withdrawals: sortByRequestedAtDesc(
-      withdrawalSnapshot?.docs.map((docSnapshot) => ({
-        id: docSnapshot.id,
-        ...docSnapshot.data(),
-      })) || []
-    ).slice(0, 20),
+    wallet: await getLocalLedgerSummary(userId),
+    withdrawals: [],
   };
 };
 
@@ -69,26 +82,8 @@ export const getWallet = async (userId) => {
   return overview.wallet;
 };
 
-export const requestWalletWithdrawal = async (amount, method, details = {}) => {
-  if (isBackendConfigured()) {
-    const response = await apiRequest('/wallet/withdraw', {
-      method: 'POST',
-      authMode: 'required',
-      body: {
-        amount,
-        method,
-        details,
-      },
-    });
-
-    return response?.withdrawalId || null;
-  }
-
-  if (!details?.userId) {
-    throw new Error('Missing local user id for fallback withdrawal flow.');
-  }
-
-  return requestWithdrawalFromFirestore(details.userId, amount, method, details);
+export const requestWalletWithdrawal = async () => {
+  throw new Error("Payouts are handled manually by admin payroll. No withdrawal request is required.");
 };
 
 export default {
