@@ -89,6 +89,7 @@ export const AuthProvider = ({ children }) => {
     setSessionExpired(true);
     try {
       await signOut(auth);
+      window.location.href = '/';
     } catch (error) {
       console.error("Session timeout logout error:", error);
     }
