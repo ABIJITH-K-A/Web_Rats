@@ -72,7 +72,7 @@ const Help = () => {
               title: "Email support",
               icon: Mail,
               text: "Best for detailed scope, quotes, and anything that needs written back-and-forth.",
-              href: `mailto:${CONTACT_INFO.email}?subject=TNWebRats Support`,
+              href: `mailto:${CONTACT_INFO.email}?subject=Rynix Support`,
               action: "Email Us",
               external: true,
             },
@@ -81,7 +81,7 @@ const Help = () => {
               icon: MessageCircle,
               text: "Best for quick follow-up, manual clarifications, and fast service triage.",
               href: `https://wa.me/${CONTACT_INFO.whatsappNumber}?text=${encodeURIComponent(
-                "Hi TNWebRats, I need help with a service or booking."
+                "Hi Rynix, I need help with a service or booking."
               )}`,
               action: "Chat On WhatsApp",
               external: true,

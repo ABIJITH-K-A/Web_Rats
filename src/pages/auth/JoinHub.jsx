@@ -245,7 +245,7 @@ const JoinHub = () => {
       {/* Hero */}
       <div className="text-center mb-10">
         <div className="inline-block px-4 py-1 rounded-full border border-cyan-primary/20 bg-cyan-primary/5 text-cyan-primary text-[10px] font-mono uppercase tracking-widest mb-4">
-          <Bolt className="inline-block mr-1" size={10} /> TN WEB RATS Portal
+          <Bolt className="inline-block mr-1" size={10} /> RYNIX Portal
         </div>
         <h1 className="text-4xl md:text-5xl font-black mb-3">
           {tab === 'staff' ? 'Join the ' : tab === 'login' ? 'Welcome ' : 'Create Your '}
@@ -440,7 +440,7 @@ const JoinHub = () => {
                 </div>
 
                 <Field label="Email" icon={Mail}>
-                  <input required type="email" className={inputCls()} placeholder="you@tnwebrats.com"
+                  <input required type="email" className={inputCls()} placeholder="you@rynix.com"
                     value={staffData.email} onChange={e => setStaffData({ ...staffData, email: e.target.value })} />
                 </Field>
 

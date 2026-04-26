@@ -21,7 +21,7 @@ const About = () => {
             transition={{ duration: 0.6 }}
           >
             <div className="mb-6 inline-flex rounded-full border border-cyan-primary/20 bg-cyan-primary/8 px-4 py-2 text-[10px] font-mono uppercase tracking-[0.24em] text-cyan-primary">
-              About TNWebRats
+              About Rynix
             </div>
             <h1 className="text-5xl font-black leading-[1.05] text-white md:text-6xl">
               Two developers. Two designers. One shared drive to{" "}
@@ -30,7 +30,7 @@ const About = () => {
               </span>
             </h1>
             <p className="mt-6 max-w-3xl text-lg leading-8 text-light-gray/68">
-              TNWebRats started as a simple conversation between two friends who
+              Rynix started as a simple conversation between two friends who
               realised they were already doing the work - building things,
               designing things, solving problems - so it made sense to make it
               official.
@@ -113,7 +113,7 @@ const About = () => {
                 Closing Note
               </div>
               <h2 className="mt-4 text-3xl font-black text-white">
-                TNWebRats is not just a service - it is a creative duo that
+                Rynix is not just a service - it is a creative duo that
                 genuinely loves the work.
               </h2>
               <p className="mt-5 text-base leading-8 text-light-gray/68">

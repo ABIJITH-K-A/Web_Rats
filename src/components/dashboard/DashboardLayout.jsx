@@ -125,7 +125,7 @@ const DashboardLayout = ({ children }) => {
           <Link to="/" className="flex items-center gap-3">
             <img src="./Images/Icons/WebRatTransparentLight.png" alt="TN WR" className="w-8 h-8" />
             <div>
-              <div className="text-sm font-black text-white leading-tight">TN WEB RATS</div>
+              <div className="text-sm font-black text-white leading-tight">RYNIX</div>
               <div className="text-[9px] font-mono text-cyan-primary uppercase tracking-widest">{role} Portal</div>
               <div className="mt-1 max-w-[180px] text-[10px] leading-4 text-white/32">
                 {portalMeta.description}

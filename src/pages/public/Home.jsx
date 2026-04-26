@@ -138,7 +138,7 @@ const Home = () => {
 
       <section className="py-28">
         <div className="container mx-auto px-6">
-          <SectionHeading subtitle="TNWebRats is a two-person creative powerhouse built on skill, hustle, and a shared obsession with work that actually feels considered.">
+          <SectionHeading subtitle="Rynix is a two-person creative powerhouse built on skill, hustle, and a shared obsession with work that actually feels considered.">
             Who We <span className="text-white">Are</span>
           </SectionHeading>
 
@@ -178,8 +178,8 @@ const Home = () => {
 
       <section className="bg-secondary-dark/35 py-28">
         <div className="container mx-auto px-6">
-          <SectionHeading subtitle="What sets TNWebRats apart is not size. It is the amount of care packed into every handoff.">
-            Why Choose <span className="text-white">TNWebRats</span>
+          <SectionHeading subtitle="What sets Rynix apart is not size. It is the amount of care packed into every handoff.">
+            Why Choose <span className="text-white">Rynix</span>
           </SectionHeading>
 
           <div className="grid gap-6 lg:grid-cols-3">

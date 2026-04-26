@@ -54,13 +54,13 @@ const Navbar = () => {
             <div className="h-11 w-11 overflow-hidden rounded-full border border-white/12 bg-[#08090C]/80">
               <img
                 src="/Images/Icons/WebRatTransparentLight.png"
-                alt="TNWebRats"
+                alt="Rynix"
                 className="h-full w-full object-cover"
               />
             </div>
             <div>
               <div className="text-lg font-black tracking-tight text-cyan-primary">
-                TN WEB RATS
+                RYNIX
               </div>
               <div className="text-[9px] font-mono uppercase tracking-[0.18em] text-light-gray/38">
                 We Build Your Ideas

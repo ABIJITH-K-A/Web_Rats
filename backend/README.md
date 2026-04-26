@@ -1,6 +1,6 @@
 # Backend Service
 
-This folder contains the first server-side MVP slice for TN WEB RATS.
+This folder contains the first server-side MVP slice for RYNIX.
 
 ## Current Scope
 

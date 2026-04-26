@@ -4,7 +4,7 @@ import { db } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
 
 // Key storage in IndexedDB
-const KEY_STORE = 'tnwebrats_keys';
+const KEY_STORE = 'rynix_keys';
 
 const getDB = () => new Promise((resolve, reject) => {
   const req = indexedDB.open(KEY_STORE, 1);

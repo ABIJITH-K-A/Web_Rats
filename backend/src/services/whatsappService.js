@@ -12,13 +12,13 @@ const getClient = () => {
 
 const WHATSAPP_TEMPLATES = {
   orderConfirmation: (data) =>
-    `🎉 *Order Confirmed!*\n\nHi ${data.customerName}, your order *${data.orderId}* for *${data.service}* has been placed successfully.\n\nAmount: ₹${data.amount}\nPlan: ${data.plan || "Standard"}\n\nTrack your order at: ${env.frontendUrl || "https://tnwebrats.com"}/profile`,
+    `🎉 *Order Confirmed!*\n\nHi ${data.customerName}, your order *${data.orderId}* for *${data.service}* has been placed successfully.\n\nAmount: ₹${data.amount}\nPlan: ${data.plan || "Standard"}\n\nTrack your order at: ${env.frontendUrl || "https://rynix.com"}/profile`,
 
   statusUpdate: (data) =>
     `📋 *Order Update*\n\nHi ${data.customerName}, your order *${data.orderId}* status has been updated to: *${data.status}*\n\nCheck your dashboard for details.`,
 
   deliveryReady: (data) =>
-    `✅ *Order Complete!*\n\nHi ${data.customerName}, your order *${data.orderId}* (${data.service}) is now complete and ready for review!\n\nLogin to download your deliverables: ${env.frontendUrl || "https://tnwebrats.com"}/profile`,
+    `✅ *Order Complete!*\n\nHi ${data.customerName}, your order *${data.orderId}* (${data.service}) is now complete and ready for review!\n\nLogin to download your deliverables: ${env.frontendUrl || "https://rynix.com"}/profile`,
 
   paymentReminder: (data) =>
     `💰 *Payment Reminder*\n\nHi ${data.customerName}, a payment of *₹${data.amount}* is pending for order *${data.orderId}*.\n\nPlease complete the payment to avoid delivery delays.`,

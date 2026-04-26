@@ -1,4 +1,4 @@
-# TNWebRats Platform Roadmap
+# Rynix Platform Roadmap
 
 This document tracks the implementation plan for the remaining high-priority features.
 

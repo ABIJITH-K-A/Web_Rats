@@ -15,7 +15,7 @@ const EMAIL_TEMPLATES = {
     html: `
       <div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:24px;background:#0d0f11;color:#e0e0e0;border-radius:16px;">
         <div style="text-align:center;margin-bottom:24px;">
-          <h1 style="color:#67F81D;margin:0;">TN WEB RATS</h1>
+          <h1 style="color:#67F81D;margin:0;">RYNIX</h1>
           <p style="color:#888;font-size:12px;margin:4px 0 0;">Order Confirmation</p>
         </div>
         <div style="background:#1a1f1a;padding:20px;border-radius:12px;margin-bottom:16px;">
@@ -28,7 +28,7 @@ const EMAIL_TEMPLATES = {
           <tr><td style="padding:6px 0;color:#888;">Amount</td><td style="padding:6px 0;text-align:right;color:#67F81D;font-weight:700;">₹${data.amount}</td></tr>
         </table>
         <p style="font-size:11px;color:#555;margin-top:24px;text-align:center;">
-          You can track your order status from your <a href="${env.frontendUrl || "https://tnwebrats.com"}/profile" style="color:#67F81D;">dashboard</a>.
+          You can track your order status from your <a href="${env.frontendUrl || "https://rynix.com"}/profile" style="color:#67F81D;">dashboard</a>.
         </p>
       </div>
     `,
@@ -39,7 +39,7 @@ const EMAIL_TEMPLATES = {
     html: `
       <div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:24px;background:#0d0f11;color:#e0e0e0;border-radius:16px;">
         <div style="text-align:center;margin-bottom:24px;">
-          <h1 style="color:#67F81D;margin:0;">TN WEB RATS</h1>
+          <h1 style="color:#67F81D;margin:0;">RYNIX</h1>
           <p style="color:#888;font-size:12px;">Order Update</p>
         </div>
         <div style="background:#1a1f1a;padding:20px;border-radius:12px;">
@@ -60,7 +60,7 @@ const EMAIL_TEMPLATES = {
     html: `
       <div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:24px;background:#0d0f11;color:#e0e0e0;border-radius:16px;">
         <div style="text-align:center;margin-bottom:24px;">
-          <h1 style="color:#67F81D;margin:0;">TN WEB RATS</h1>
+          <h1 style="color:#67F81D;margin:0;">RYNIX</h1>
           <p style="color:#888;font-size:12px;">Payment Reminder</p>
         </div>
         <div style="background:#1a1f1a;padding:20px;border-radius:12px;">
@@ -77,13 +77,13 @@ const EMAIL_TEMPLATES = {
     html: `
       <div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:24px;background:#0d0f11;color:#e0e0e0;border-radius:16px;">
         <div style="text-align:center;margin-bottom:24px;">
-          <h1 style="color:#67F81D;margin:0;">TN WEB RATS</h1>
+          <h1 style="color:#67F81D;margin:0;">RYNIX</h1>
           <p style="color:#888;font-size:12px;">Delivery Complete</p>
         </div>
         <div style="background:#1a1f1a;padding:20px;border-radius:12px;">
           <p>Hi ${data.customerName},</p>
           <p>Great news! Your order <strong>${data.orderId}</strong> (${data.service}) is now complete and ready for review.</p>
-          <p>Log into your <a href="${env.frontendUrl || "https://tnwebrats.com"}/profile" style="color:#67F81D;">dashboard</a> to download your deliverables and leave a review.</p>
+          <p>Log into your <a href="${env.frontendUrl || "https://rynix.com"}/profile" style="color:#67F81D;">dashboard</a> to download your deliverables and leave a review.</p>
         </div>
       </div>
     `,
@@ -94,7 +94,7 @@ const EMAIL_TEMPLATES = {
     html: `
       <div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:24px;background:#0d0f11;color:#e0e0e0;border-radius:16px;">
         <div style="text-align:center;margin-bottom:24px;">
-          <h1 style="color:#67F81D;margin:0;">TN WEB RATS</h1>
+          <h1 style="color:#67F81D;margin:0;">RYNIX</h1>
           <p style="color:#888;font-size:12px;">Revision Request</p>
         </div>
         <div style="background:#1a1f1a;padding:20px;border-radius:12px;">
@@ -107,15 +107,15 @@ const EMAIL_TEMPLATES = {
   }),
 
   emailVerification: (data) => ({
-    subject: `Verify Your Email — TN WEB RATS`,
+    subject: `Verify Your Email — RYNIX`,
     html: `
       <div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:24px;background:#0d0f11;color:#e0e0e0;border-radius:16px;">
         <div style="text-align:center;margin-bottom:24px;">
-          <h1 style="color:#67F81D;margin:0;">TN WEB RATS</h1>
+          <h1 style="color:#67F81D;margin:0;">RYNIX</h1>
           <p style="color:#888;font-size:12px;">Email Verification</p>
         </div>
         <div style="background:#1a1f1a;padding:20px;border-radius:12px;text-align:center;">
-          <p style="margin:0 0 16px;font-size:16px;">Welcome to TN WEB RATS!</p>
+          <p style="margin:0 0 16px;font-size:16px;">Welcome to RYNIX!</p>
           <p style="margin:0 0 24px;color:#888;font-size:14px;">Please verify your email address to access your dashboard and manage your orders.</p>
           <a href="${data.verificationLink}" style="display:inline-block;background:#67F81D;color:#0d0f11;padding:12px 32px;border-radius:8px;font-weight:700;text-decoration:none;">
             Verify Email Address
@@ -145,7 +145,7 @@ export const sendOrderEmail = async (to, templateName, data) => {
 
   try {
     const info = await transporter.sendMail({
-      from: `"TN WEB RATS" <${env.smtpUser}>`,
+      from: `"RYNIX" <${env.smtpUser}>`,
       to,
       subject,
       html,
