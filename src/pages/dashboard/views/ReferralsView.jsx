@@ -81,7 +81,7 @@ const ReferralsView = () => {
 
       const tier = ROLE_REFERRAL_CONFIG[formData.role] || ROLE_REFERRAL_CONFIG.worker;
       const discount = formData.customDiscount ? Number(formData.customDiscount) : tier.pct;
-      const newCode = makeReferralCode(formData.role);
+      const newCode = makeReferralCode();
 
       await setDoc(doc(db, "referralCodes", newCode), {
         ownerUid,
