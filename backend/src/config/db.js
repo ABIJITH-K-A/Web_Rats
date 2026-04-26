@@ -1,28 +1,7 @@
-import Redis from 'ioredis';
-import env from './env.js';
+// Redis removed - simplified architecture
+export const isRedisReady = () => false;
 
-let redis = null;
-let redisConnected = false;
+export const redis = null;
 
-if (env.redisUrl) {
-  redis = new Redis(env.redisUrl, {
-    maxRetriesPerRequest: 3,
-    retryStrategy: (times) => Math.min(times * 50, 2000),
-  });
-
-  redis.on('connect', () => {
-    redisConnected = true;
-    console.log('Redis connected');
-  });
-
-  redis.on('error', (err) => {
-    redisConnected = false;
-    console.error('Redis connection error:', err.message || err);
-  });
-} else {
-  console.warn('REDIS_URL not provided. Redis features will be unavailable.');
-}
-
-export const isRedisReady = () => Boolean(redis && redisConnected);
-
-export { redis };
+// PostgreSQL removed - simplified architecture
+export const pgPool = null;

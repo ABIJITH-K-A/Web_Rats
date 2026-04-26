@@ -1,13 +1,6 @@
-import nodemailer from "nodemailer";
 import env from "../config/env.js";
 
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: env.smtpUser,
-    pass: env.smtpPass,
-  },
-});
+// Nodemailer removed - simplified architecture (manual calls/emails only)
 
 const EMAIL_TEMPLATES = {
   orderConfirmation: (data) => ({
@@ -129,33 +122,10 @@ const EMAIL_TEMPLATES = {
   }),
 };
 
-export const sendOrderEmail = async (to, templateName, data) => {
-  const templateFn = EMAIL_TEMPLATES[templateName];
-  if (!templateFn) {
-    console.warn(`Email template "${templateName}" not found.`);
-    return null;
-  }
-
-  if (!env.smtpUser || !env.smtpPass) {
-    console.warn("SMTP credentials not configured — skipping email.");
-    return null;
-  }
-
-  const { subject, html } = templateFn(data);
-
-  try {
-    const info = await transporter.sendMail({
-      from: `"TN WEB RATS" <${env.smtpUser}>`,
-      to,
-      subject,
-      html,
-    });
-    console.log(`Email sent: ${info.messageId} → ${to}`);
-    return info;
-  } catch (error) {
-    console.error("Email send error:", error.message);
-    return null;
-  }
+export const sendOrderEmail = async (to, templateName) => {
+  // Nodemailer removed - simplified architecture (manual calls/emails only)
+  console.log(`Email skipped (manual only): ${templateName} → ${to}`);
+  return null;
 };
 
 export const sendVerificationEmail = async (to, verificationLink) => {

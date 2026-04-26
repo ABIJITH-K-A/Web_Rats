@@ -6,7 +6,7 @@ import { HttpError } from '../lib/httpError.js';
 import { authGuard } from '../middleware/authGuard.js';
 import roleGuard from '../middleware/roleGuard.js';
 import { validateBody } from '../middleware/validate.js';
-import { chatLimiter } from '../middleware/rateLimits.js';
+import { apiLimiter } from '../middleware/rateLimits.js';
 import { FieldValue } from 'firebase-admin/firestore';
 
 const router = Router();
@@ -28,7 +28,7 @@ const resolveTicketSchema = z.object({
 router.post(
   '/',
   authGuard,
-  chatLimiter,
+  apiLimiter,
   validateBody(createTicketSchema),
   asyncHandler(async (req, res) => {
     const { orderId, type, priority, title, description } = req.validatedBody;
@@ -117,7 +117,7 @@ router.get(
 router.post(
   '/:id/messages',
   authGuard,
-  chatLimiter,
+  apiLimiter,
   asyncHandler(async (req, res) => {
     const { id } = req.params;
     const { message, attachments = [] } = req.body;

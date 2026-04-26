@@ -25,7 +25,6 @@ const NotFound = lazy(() => import('./pages/public/NotFound'));
 const Terms = lazy(() => import('./pages/public/Terms'));
 const Privacy = lazy(() => import('./pages/public/Privacy'));
 const Profile = lazy(() => import('./pages/auth/Profile'));
-const Messages = lazy(() => import('./pages/auth/Messages'));
 const RoleBasedDashboard = lazy(() => import('./components/dashboard/RoleBasedDashboard'));
 const PaymentSuccess = lazy(() => import('./pages/payment/PaymentSuccess'));
 

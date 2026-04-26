@@ -27,7 +27,6 @@ import OrderPoolView from './views/OrderPoolView';
 import UsersView from './views/UsersView';
 import ReferralsView from './views/ReferralsView';
 import ReviewsView from './views/ReviewsView';
-import SamplesView from './views/SamplesView';
 import MyOrdersView from './views/MyOrdersView';
 import AnalyticsView from './views/AnalyticsView';
 
@@ -48,7 +47,6 @@ const AdminDashboard = () => (
           {currentView === 'users' && <UsersView />}
           {currentView === 'referrals' && <ReferralsView />}
           {currentView === 'reviews' && <ReviewsView />}
-          {currentView === 'samples' && <SamplesView />}
           {currentView === 'orderpool' && <OrderPoolView />}
           {currentView === 'analytics' && <AnalyticsView />}
         </motion.div>

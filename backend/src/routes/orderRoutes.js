@@ -8,13 +8,11 @@ import {
   buildOrderStatusPatch,
   getAllowedStatusUpdates,
   getAssignedWorkerIds,
-  getOrderStatusLabel,
 } from '../lib/orderStatus.js';
 import { isAdminLikeRole, normalizeValue } from '../lib/roles.js';
 import { serializeDocument } from '../lib/serialize.js';
 import { authGuard, optionalAuthGuard } from '../middleware/authGuard.js';
 import { validateBody } from '../middleware/validate.js';
-import { dispatchNotification } from '../services/notificationDispatcher.js';
 import { processOrderCompletion } from '../services/earningsService.js';
 
 const router = Router();
@@ -138,16 +136,6 @@ router.post(
 
     const orderRef = await adminDb().collection('orders').add(orderData);
     const createdSnapshot = await orderRef.get();
-    const createdOrder = { id: createdSnapshot.id, ...createdSnapshot.data() };
-
-    // Dispatch confirmation notification
-    await dispatchNotification(createdOrder.userId, 'orderConfirmation', {
-      orderId: createdOrder.id.slice(-8).toUpperCase(),
-      service: createdOrder.service,
-      plan: createdOrder.plan,
-      amount: createdOrder.totalPrice,
-      customerName: createdOrder.name,
-    });
 
     res.status(201).json({
       order: serializeDocument(createdSnapshot),
@@ -237,7 +225,6 @@ router.patch(
     await orderRef.update(patch);
 
     const updatedSnapshot = await orderRef.get();
-    const updatedOrder = { id: updatedSnapshot.id, ...updatedSnapshot.data() };
 
     if (nextStatus === 'completed') {
       try {
@@ -246,17 +233,6 @@ router.patch(
         console.error('Failed to write ledger entries for order completion:', err);
       }
     }
-
-    // Dispatch status update notification
-    const isCompleted = ['completed', 'delivered'].includes(nextStatus);
-    const eventType = isCompleted ? 'orderCompleted' : 'statusUpdate';
-    
-    await dispatchNotification(updatedOrder.userId, eventType, {
-      orderId: updatedOrder.id.slice(-8).toUpperCase(),
-      service: updatedOrder.service,
-      status: getOrderStatusLabel(nextStatus),
-      customerName: updatedOrder.name,
-    });
 
     res.json({
       order: serializeDocument(updatedSnapshot),

@@ -6,7 +6,7 @@ import { adminDb } from '../config/firebaseAdmin.js';
 import { asyncHandler } from '../lib/asyncHandler.js';
 import { HttpError } from '../lib/httpError.js';
 import { authGuard } from '../middleware/authGuard.js';
-import { paymentLimiter } from '../middleware/rateLimits.js';
+import { apiLimiter } from '../middleware/rateLimits.js';
 import { validateBody } from '../middleware/validate.js';
 import {
   createGatewayOrder,
@@ -186,7 +186,7 @@ const markPaymentRequest = async ({
 
 router.post(
   '/create-order',
-  paymentLimiter,
+  apiLimiter,
   validateBody(createOrderSchema),
   asyncHandler(async (req, res) => {
     const { amount, orderId, userDetails } = req.validatedBody;
@@ -228,7 +228,7 @@ router.post(
 
 router.post(
   '/create-intent',
-  paymentLimiter,
+  apiLimiter,
   authGuard,
   validateBody(createIntentSchema),
   asyncHandler(async (req, res) => {
