@@ -12,19 +12,14 @@ import {
   getDoc,
   getDocFromCache,
   serverTimestamp,
-  setDoc,
-  updateDoc,
   writeBatch,
 } from "firebase/firestore";
 import { auth, db } from "../config/firebase";
-import { logAuditEvent } from "../services/auditService";
 import {
   STAFF_ROLES,
-  getReferralTier,
   makeReferralCode,
   normalizeRole,
 } from "../utils/systemRules";
-import useIdleTimeout from "../hooks/useIdleTimeout";
 import { AuthContext } from "./AuthContext";
 
 const userFriendlyError = (code) => {
@@ -67,7 +62,7 @@ const fetchUserProfile = async (uid) => {
         // Fallback to cache immediately if network is down/unreliable
         const cachedSnap = await getDocFromCache(ref);
         return cachedSnap.exists() ? cachedSnap.data() : null;
-      } catch (cacheError) {
+      } catch {
         // Cache miss and offline — nothing we can do but wait for reconnect
         console.warn("Profile fetch failed: Offline and cache miss.");
         return null;
@@ -83,19 +78,6 @@ export const AuthProvider = ({ children }) => {
   const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState(null);
-  const [sessionExpired, setSessionExpired] = useState(false);
-
-  const handleSessionTimeout = useCallback(async () => {
-    setSessionExpired(true);
-    try {
-      await signOut(auth);
-      window.location.href = '/';
-    } catch (error) {
-      console.error("Session timeout logout error:", error);
-    }
-  }, []);
-
-  const { resetIdleTimer } = useIdleTimeout(handleSessionTimeout);
 
   const refreshProfile = useCallback(async (uid) => {
     const targetUid = uid || user?.uid;
@@ -163,8 +145,6 @@ export const AuthProvider = ({ children }) => {
         throw new Error("This account is not currently active.");
       }
 
-      resetIdleTimer();
-      setSessionExpired(false);
       return profile;
     } catch (error) {
       if (error instanceof Error && !error.message.startsWith("auth/")) {
@@ -199,8 +179,7 @@ export const AuthProvider = ({ children }) => {
       await sendEmailVerification(cred.user);
 
       const uid = cred.user.uid;
-      const personalReferralCode = makeReferralCode(roleValue);
-      const referralTier = getReferralTier(roleValue);
+      const personalReferralCode = makeReferralCode();
       const batch = writeBatch(db);
 
       batch.set(doc(db, "users", uid), {
@@ -211,14 +190,8 @@ export const AuthProvider = ({ children }) => {
         status: "active",
         customerType: sanitizeString(extraData.customerType || "new").toLowerCase(),
         referralCode: personalReferralCode,
-        discountPercent: Number(referralData?.discountPercent || 0),
         usedReferralCode: referralCodeUsed || null,
         referredBy: referralData?.ownerUid || null,
-        notificationPreferences: {
-          in_app: true,
-          email: false,
-          whatsapp: false,
-        },
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
@@ -227,7 +200,6 @@ export const AuthProvider = ({ children }) => {
       batch.set(doc(db, "referralCodes", personalReferralCode), {
         ownerUid: uid,
         role: roleValue,
-        discountPercent: referralTier.pct,
         timesUsed: 0,
         createdAt: serverTimestamp(),
       });
@@ -240,19 +212,6 @@ export const AuthProvider = ({ children }) => {
       }
 
       await batch.commit();
-
-      await logAuditEvent({
-        actorId: uid,
-        actorRole: roleValue,
-        action: "user_signup",
-        targetType: "user",
-        targetId: uid,
-        severity: "low",
-        metadata: {
-          email: normalizedEmail,
-          referredBy: referralData?.ownerUid || null,
-        },
-      });
 
       return { uid, role: roleValue };
     } catch (error) {
@@ -314,8 +273,7 @@ export const AuthProvider = ({ children }) => {
 
       const uid = cred.user.uid;
       const name = `${firstName} ${lastName}`.trim();
-      const referralTier = getReferralTier(staffRole);
-      const personalReferralCode = makeReferralCode(staffRole);
+      const personalReferralCode = makeReferralCode();
       const batch = writeBatch(db);
 
       batch.set(doc(db, "users", uid), {
@@ -326,14 +284,8 @@ export const AuthProvider = ({ children }) => {
         status: "active",
         inviteKeyUsed: inviteKey,
         referralCode: personalReferralCode,
-        discountPercent: referralTier.pct,
         usedReferralCode: null,
         referredBy: null,
-        notificationPreferences: {
-          in_app: true,
-          email: false,
-          whatsapp: false,
-        },
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
@@ -342,7 +294,6 @@ export const AuthProvider = ({ children }) => {
       batch.set(doc(db, "referralCodes", personalReferralCode), {
         ownerUid: uid,
         role: staffRole,
-        discountPercent: referralTier.pct,
         timesUsed: 0,
         createdAt: serverTimestamp(),
       });
@@ -358,20 +309,6 @@ export const AuthProvider = ({ children }) => {
       });
 
       await batch.commit();
-
-      await logAuditEvent({
-        actorId: uid,
-        actorRole: staffRole,
-        action: "staff_signup",
-        targetType: "user",
-        targetId: uid,
-        severity: "medium",
-        metadata: {
-          email: normalizedEmail,
-          inviteKey,
-          role: staffRole,
-        },
-      });
 
       return { uid, role: staffRole };
     } catch (error) {
@@ -411,14 +348,12 @@ export const AuthProvider = ({ children }) => {
     resetPassword,
     resendVerificationEmail,
     emailVerified: user?.emailVerified || false,
-    isAdmin: ["admin", "owner"].includes(role),
+    isAdmin: role === "admin",
     isWorker: role === "worker",
     isClient: role === "client",
-    isStaff: ["admin", "worker", "owner"].includes(role),
+    isStaff: ["admin", "worker"].includes(role),
     fetchError,
     refreshProfile,
-    sessionExpired,
-    clearSessionExpired: () => setSessionExpired(false),
   };
 
   return (

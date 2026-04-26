@@ -10,7 +10,6 @@ import {
 } from 'firebase/firestore';
 import { useAuth } from '../../../context/AuthContext';
 import { useDashboard } from '../../../context/DashboardContext';
-import { notifyRoleUpdated } from '../../../services/notificationService';
 import { canManageRole, getRoleRank, normalizeRole } from '../../../utils/systemRules';
 import { apiRequest } from '../../../services/apiClient';
 
@@ -64,12 +63,6 @@ const UsersView = () => {
       return;
     }
 
-    // Rule 4: Cannot assign owner role
-    if (newRole === 'owner') {
-      alert('The owner role cannot be assigned via this interface.');
-      return;
-    }
-
     // Confirm before changing
     const confirmed = window.confirm(
       `Change ${targetUser.name || targetUser.email}'s role from ${targetCurrentRole} to ${newRole}?`
@@ -89,12 +82,6 @@ const UsersView = () => {
         prev.map((u) => (u.id === uid ? { ...u, role: newRole } : u))
       );
 
-      // Notify user (keep existing notifyRoleUpdated call)
-      await notifyRoleUpdated({
-        recipientId: uid,
-        nextRole: newRole,
-        actorName: currentUserData?.name || currentUser?.email || 'Admin',
-      });
     } catch (err) {
       console.error('Role update failed:', err);
       alert(err.message || 'Failed to update role. Please try again.');
@@ -111,7 +98,6 @@ const UsersView = () => {
 
   const getRoleColor = (role) => {
     switch(role) {
-      case 'owner': return 'text-red-500 bg-red-500/10 border-red-500/20';
       case 'admin': return 'text-blue-500 bg-blue-500/10 border-blue-500/20';
       case 'worker': return 'text-cyan-primary bg-cyan-primary/10 border-cyan-primary/20';
       case 'client': return 'text-white/40 bg-white/5 border-white/10';
@@ -127,7 +113,6 @@ const UsersView = () => {
     }
 
     const ROLE_HIERARCHY_LIST = ['client', 'worker', 'admin'];
-    // owner is excluded — cannot be assigned via UI
     const actorRank = getRoleRank(actorRole);
 
     // Actor can only assign roles strictly below their own rank
@@ -163,7 +148,6 @@ const UsersView = () => {
               <option value="client">Client</option>
               <option value="worker">Worker</option>
               <option value="admin">Admin</option>
-              <option value="owner">Owner</option>
            </select>
         </div>
       </div>

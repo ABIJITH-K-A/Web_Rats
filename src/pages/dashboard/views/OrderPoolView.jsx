@@ -24,8 +24,6 @@ import {
 import { db } from "../../../config/firebase";
 import { useAuth } from "../../../context/AuthContext";
 import OrderDetailsModal from "../../../components/dashboard/OrderDetailsModal";
-import { logAuditEvent } from "../../../services/auditService";
-import { notifyAdmin, notifyOrderStatusChanged } from "../../../services/notificationService";
 import {
   buildOrderStatusPatch,
   formatCurrency,
@@ -125,35 +123,6 @@ const OrderPoolView = () => {
         assignedToName: workerName,
         assignmentStatus: "approved",
         assignedAt: serverTimestamp(),
-      });
-
-      await notifyAdmin({
-        title: "Order Claimed From Pool",
-        message: `${workerName} claimed ${orderData.service || "an order"} from the pool.`,
-        category: "assignment",
-        orderId,
-      });
-
-      // Notify client that a worker has been assigned
-      if (orderData.userId) {
-        await notifyOrderStatusChanged({
-          recipientId: orderData.userId,
-          order: { ...orderData, id: orderId },
-          statusLabel: `assigned to ${workerName}`,
-        });
-      }
-
-      await logAuditEvent({
-        actorId: user.uid,
-        actorRole: userProfile?.role || "worker",
-        action: "order_claimed_from_pool",
-        targetType: "order",
-        targetId: orderId,
-        severity: "medium",
-        metadata: {
-          workerId: user.uid,
-          workerName,
-        },
       });
 
       setSuccessMessage(`${getOrderDisplayId(orderData)} claimed successfully.`);

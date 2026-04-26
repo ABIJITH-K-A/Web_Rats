@@ -1,25 +1,16 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  AlertCircle,
-  Bell,
-  Box,
   Briefcase,
   CheckCircle,
-  Clock,
-  List,
-  Wallet,
 } from "lucide-react";
 import DashboardLayout from "../../components/dashboard/DashboardLayout";
 import { useAuth } from "../../context/AuthContext";
-import { getWallet } from "../../services/backendWalletService";
 import { fetchOrdersAssignedToUser } from "../../services/orderService";
-import { formatCurrency, isCompletedOrder, isOpenOrder } from "../../utils/orderHelpers";
-import EarningsView from "./views/EarningsView";
+import { isCompletedOrder, isOpenOrder } from "../../utils/orderHelpers";
 import MyOrdersView from "./views/MyOrdersView";
 import OrderPoolView from "./views/OrderPoolView";
 import ReviewsView from "./views/ReviewsView";
-import WalletView from "./views/WalletView";
 
 const WorkerDashboard = () => (
   <DashboardLayout>
@@ -36,9 +27,7 @@ const WorkerDashboard = () => (
           {currentView === "overview" && <WorkerOverview />}
           {currentView === "orderpool" && <OrderPoolView />}
           {currentView === "myorders" && <MyOrdersView />}
-          {currentView === "earnings" && <EarningsView />}
           {currentView === "reviews" && <ReviewsView />}
-          {currentView === "wallet" && <WalletView />}
         </motion.div>
       </AnimatePresence>
     )}
@@ -51,31 +40,22 @@ const WorkerOverview = () => {
   const [stats, setStats] = useState({
     activeOrders: 0,
     completedOrders: 0,
-    totalEarned: 0,
-    nextPayoutDate: null,
   });
 
   useEffect(() => {
-    if (!user?.uid) return;
-
     let isMounted = true;
 
     const fetchOverview = async () => {
-      setLoading(true);
+      if (!user?.uid) return;
 
       try {
-        const [assignedOrders, wallet] = await Promise.all([
-          fetchOrdersAssignedToUser(user.uid),
-          getWallet(user.uid),
-        ]);
+        const assignedOrders = await fetchOrdersAssignedToUser(user.uid);
 
         if (!isMounted) return;
 
         setStats({
           activeOrders: assignedOrders.filter(isOpenOrder).length,
           completedOrders: assignedOrders.filter(isCompletedOrder).length,
-          totalEarned: Number(wallet?.totalEarned || wallet?.lifetimeEarnings || wallet?.totalEarnings || 0),
-          nextPayoutDate: wallet?.nextPayoutDate || null,
         });
       } catch (error) {
         console.error(error);
@@ -93,19 +73,9 @@ const WorkerOverview = () => {
     };
   }, [user]);
 
-  const nextPayoutLabel = stats.nextPayoutDate
-    ? new Date(stats.nextPayoutDate).toLocaleDateString("en-IN", {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-      })
-    : "Manual";
-
   const statCards = [
     { label: "Active Orders", value: stats.activeOrders, icon: Briefcase, color: "text-cyan-primary" },
     { label: "Completed", value: stats.completedOrders, icon: CheckCircle, color: "text-green-500" },
-    { label: "Total Earned", value: formatCurrency(stats.totalEarned), icon: Wallet, color: "text-purple-500" },
-    { label: "Next Payout", value: nextPayoutLabel, icon: Clock, color: "text-yellow-500" },
   ];
 
   return (

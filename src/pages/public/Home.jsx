@@ -9,7 +9,6 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button, Card, SectionHeading } from "../../components/ui/Primitives";
-import SpotlightCard from "../../components/ui/SpotlightCard";
 import backgroundTheme from "../../config/backgroundTheme";
 import {
   FEATURED_PROJECTS,
@@ -24,13 +23,6 @@ const categoryIcons = {
   "web-development": BriefcaseBusiness,
   "fix-optimization": Wrench,
   "templates-assets": Package,
-};
-
-const categorySpotlightColors = {
-  "presentation-design": "rgba(103, 248, 29, 0.18)",
-  "web-development": "rgba(98, 203, 44, 0.2)",
-  "fix-optimization": "rgba(103, 248, 29, 0.22)",
-  "templates-assets": "rgba(98, 203, 44, 0.18)",
 };
 
 const Home = () => {
@@ -241,18 +233,14 @@ const Home = () => {
                     </p>
                     <div className="mt-6 space-y-3">
                       {category.services.slice(0, 3).map((service) => (
-                        <SpotlightCard
+                        <div
                           key={service.id}
-                          spotlightColor={
-                            categorySpotlightColors[category.id] ??
-                            "rgba(103, 248, 29, 0.2)"
-                          }
-                          className="px-4 py-3"
+                          className="px-4 py-3 rounded-xl border border-white/8 bg-black/55 hover:bg-black/72 hover:border-cyan-primary/24 transition-colors duration-300"
                         >
-                          <div className="text-sm font-medium tracking-[0.01em] text-light-gray/76 transition-colors duration-300 group-hover:text-white">
+                          <div className="text-sm font-medium tracking-[0.01em] text-light-gray/76 hover:text-white">
                             {service.name}
                           </div>
-                        </SpotlightCard>
+                        </div>
                       ))}
                     </div>
                     <Link

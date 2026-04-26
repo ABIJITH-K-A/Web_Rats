@@ -1,7 +1,6 @@
 import { useAuth } from '../../context/AuthContext';
 import { Navigate } from 'react-router-dom';
 import AdminDashboard from '../../pages/dashboard/AdminDashboard';
-import OwnerDashboard from '../../pages/dashboard/OwnerDashboard';
 import WorkerDashboard from '../../pages/dashboard/WorkerDashboard';
 import { normalizeRole } from '../../utils/systemRules';
 
@@ -17,10 +16,6 @@ const RoleBasedDashboard = () => {
   }
 
   const role = normalizeRole(userProfile?.role);
-
-  if (role === 'owner') {
-    return <OwnerDashboard />;
-  }
 
   if (role === 'admin') {
     return <AdminDashboard />;

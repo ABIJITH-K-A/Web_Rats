@@ -27,7 +27,6 @@ import BackButton from "../../components/ui/BackButton";
 import { Button, Card, SectionHeading } from "../../components/ui/Primitives";
 import Stepper, { Step } from "../../components/ui/Stepper";
 import QRPaymentStep from "../../components/temp/QRPaymentStep";
-import { logAuditEvent } from "../../services/auditService";
 import { createOrder } from "../../services/orderService";
 import {
   BOOKING_STEP_LABELS,
@@ -450,19 +449,6 @@ const BookService = () => {
       // If QPay, we are done with payment steps. Show success immediately.
       if (paymentMethod === "qpay") {
         const whatsappMessage = createWhatsAppMessage(orderDocId);
-        await logAuditEvent({
-          actorId: user?.uid || null,
-          actorRole: userProfile?.role || "client",
-          action: "order_created_qpay",
-          targetType: "order",
-          targetId: orderDocId,
-          severity: "medium",
-          metadata: {
-            serviceId: selectedService.id,
-            planId: selectedPlan.id,
-            utrNumber,
-          },
-        });
 
         if (whatsappMessage) {
           window.open(
@@ -588,21 +574,6 @@ const BookService = () => {
       }
 
       const whatsappMessage = createWhatsAppMessage(orderDocId);
-      await logAuditEvent({
-        actorId: user?.uid || null,
-        actorRole: userProfile?.role || "client",
-        action: "order_created_bypass",
-        targetType: "order",
-        targetId: orderDocId,
-        severity: "low",
-        metadata: {
-          serviceId: selectedService.id,
-          planId: selectedPlan.id,
-          isPriority,
-          customerType: resolvedCustomerType,
-          isTesting: true,
-        },
-      });
 
       if (whatsappMessage) {
         window.open(

@@ -26,7 +26,7 @@ const Privacy = () => {
           <section className="space-y-4">
             <h2 className="text-2xl font-bold text-white">What we collect</h2>
             <p className="leading-relaxed">
-              We only collect exactly what we need to build your project. This includes your contact details for communication (name, email, phone number), payment tokens processed through secure providers, and the specific files or briefs you upload for your order.
+              We only collect exactly what we need to build your project. This includes your contact details for communication (name, email, phone number) and payment tokens processed through secure providers.
             </p>
           </section>
 

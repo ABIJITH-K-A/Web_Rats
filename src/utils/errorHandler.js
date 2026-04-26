@@ -170,14 +170,9 @@ export const getActionErrorMessage = (action, error) => {
       'permission-denied': 'Please log in to place an order.',
     },
     payment: {
-      default: 'Payment processing failed. Please try again or use a different payment method.',
+      default: 'Payment processing failed. Please try again.',
       'card-error': 'Your card was declined. Please check your card details.',
       'insufficient-funds': 'Insufficient funds. Please use a different payment method.',
-    },
-    upload: {
-      default: 'File upload failed. Please try again with a smaller file or different format.',
-      'file-too-large': 'File is too large. Maximum size is 50MB.',
-      'invalid-file-type': 'Invalid file type. Please upload an image, PDF, or document.',
     },
     profile: {
       default: 'Unable to update profile. Please try again.',

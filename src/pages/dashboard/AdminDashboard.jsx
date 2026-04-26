@@ -27,16 +27,9 @@ import OrderPoolView from './views/OrderPoolView';
 import UsersView from './views/UsersView';
 import ReferralsView from './views/ReferralsView';
 import ReviewsView from './views/ReviewsView';
-import WalletView from './views/WalletView';
-import ReportsView from './views/ReportsView';
 import SamplesView from './views/SamplesView';
-import PayrollView from './views/PayrollView';
-import ApprovalsView from './views/ApprovalsView';
 import MyOrdersView from './views/MyOrdersView';
-import InviteKeysView from './views/InviteKeysView';
-import EarningsView from './views/EarningsView';
 import AnalyticsView from './views/AnalyticsView';
-import DisputeResolutionView from './views/DisputeResolutionView';
 
 const AdminDashboard = () => (
   <DashboardLayout>
@@ -55,16 +48,9 @@ const AdminDashboard = () => (
           {currentView === 'users' && <UsersView />}
           {currentView === 'referrals' && <ReferralsView />}
           {currentView === 'reviews' && <ReviewsView />}
-          {currentView === 'wallet' && <WalletView />}
-          {currentView === 'reports' && <ReportsView />}
           {currentView === 'samples' && <SamplesView />}
-          {currentView === 'payroll' && <PayrollView />}
-          {currentView === 'approvals' && <ApprovalsView />}
           {currentView === 'orderpool' && <OrderPoolView />}
-          {currentView === 'invitekeys' && <InviteKeysView />}
-          {currentView === 'earnings' && <EarningsView />}
           {currentView === 'analytics' && <AnalyticsView />}
-          {currentView === 'disputes' && <DisputeResolutionView />}
         </motion.div>
       </AnimatePresence>
     )}
@@ -273,7 +259,6 @@ const OverviewTab = () => {
                 'Priority orders should be assigned first.',
                 'Returning customers now use a 50 percent upfront split.',
                 'Student referral pricing is stored directly on the order.',
-                'Delivery uploads stay preview-only until final approval or payment.',
               ].map((message, index) => (
                 <div key={message} className="flex gap-4">
                   <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-cyan-primary" />

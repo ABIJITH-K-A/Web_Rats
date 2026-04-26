@@ -54,7 +54,6 @@ import { apiRequest } from "../../services/apiClient";
 import { useAuth } from "../../context/AuthContext";
 import { useDashboard } from "../../context/DashboardContext";
 import { CONTACT_INFO } from "../../data/siteData";
-import { notifySupportRequest } from "../../services/notificationService";
 import { STAFF_ROLES, getEligibleReferralDiscount } from "../../utils/systemRules";
 import {
   formatCurrency,
@@ -400,13 +399,6 @@ const Profile = () => {
         message: supportForm.message.trim(),
         status: "new",
         createdAt: serverTimestamp(),
-      });
-
-      await notifySupportRequest({
-        supportId: supportRef.id,
-        senderId: user?.uid || 'anonymous',
-        senderName: displayName,
-        subject: supportForm.subject.trim(),
       });
 
       setSupportForm({ subject: "", message: "" });

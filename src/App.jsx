@@ -7,8 +7,6 @@ import Home from './pages/public/Home';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import ScrollToTop from './components/utils/ScrollToTop';
 import ErrorBoundary from './components/ui/ErrorBoundary';
-import ResilienceLayer from './components/utils/ResilienceLayer';
-import PermissionErrorHandler from './components/utils/PermissionErrorHandler';
 import { Analytics } from "@vercel/analytics/react"
 
 // Lazy load non-critical routes
@@ -34,15 +32,13 @@ const PaymentSuccess = lazy(() => import('./pages/payment/PaymentSuccess'));
 function App() {
   return (
     <BrowserRouter>
-      <ResilienceLayer>
-        <ErrorBoundary variant="page">
-          <AuthProvider>
-            <PermissionErrorHandler />
-            <DashboardProvider>
-              <ScrollToTop />
-              <RootLayout>
-                <Suspense fallback={<div className="min-h-screen bg-primary-dark" />}>
-                  <Routes>
+      <ErrorBoundary variant="page">
+        <AuthProvider>
+          <DashboardProvider>
+            <ScrollToTop />
+            <RootLayout>
+              <Suspense fallback={<div className="min-h-screen bg-primary-dark" />}>
+                <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/services" element={<Services />} />
                     <Route path="/service/:serviceId" element={<ServiceDetail />} />
@@ -62,16 +58,8 @@ function App() {
                     <Route
                       path="/dashboard"
                       element={
-                        <ProtectedRoute allowedRoles={['owner', 'admin', 'worker']}>
+                        <ProtectedRoute allowedRoles={['admin', 'worker']}>
                           <RoleBasedDashboard />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/messages"
-                      element={
-                        <ProtectedRoute>
-                          <Messages />
                         </ProtectedRoute>
                       }
                     />
@@ -85,8 +73,7 @@ function App() {
             </DashboardProvider>
           </AuthProvider>
         </ErrorBoundary>
-      </ResilienceLayer>
-    </BrowserRouter>
+      </BrowserRouter>
   );
 }
 

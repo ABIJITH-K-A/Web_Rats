@@ -2,11 +2,10 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, Check, Clock3, ExternalLink, Download, Star, 
-  Paperclip, Info, CreditCard, Calendar, User,
+  Info, CreditCard, Calendar, User,
   LayoutDashboard
 } from 'lucide-react';
 import { Button, Card } from '../ui/Primitives';
-import FileUploader from '../ui/FileUploader';
 import { 
   getOrderDisplayId, 
   getOrderProgress, 
@@ -37,8 +36,6 @@ const OrderDetailsModal = ({
 
   // Permissions
   const isStaff = ['owner', 'admin', 'worker'].includes(userRole);
-  const canUploadDeliverables = ['owner', 'worker'].includes(userRole);
-  const canUploadReferences = userRole === 'client';
 
   const formatCurrency = (val) => Number(val || 0).toLocaleString('en-IN', {
     style: 'currency',
@@ -79,7 +76,6 @@ const OrderDetailsModal = ({
             <div className="bg-black/40 p-1 rounded-2xl border border-white/5 flex">
                 {[
                   { id: 'details', label: 'Details', icon: Info },
-                  { id: 'attachments', label: 'Files', icon: Paperclip },
                 ].map(tab => (
                 <button 
                   key={tab.id}
@@ -250,52 +246,6 @@ const OrderDetailsModal = ({
                       )}
                     </div>
                   </Card>
-                </div>
-              </motion.div>
-            )}
-
-            {activeTab === 'attachments' && (
-              <motion.div 
-                key="attachments"
-                initial={{ opacity: 0, x: 10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
-                className="grid grid-cols-1 lg:grid-cols-2 gap-12"
-              >
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <div>
-                      <h4 className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2">
-                        <Paperclip size={16} className="text-cyan-primary" /> Reference Files
-                      </h4>
-                      <p className="text-[10px] font-mono text-white/30 uppercase tracking-widest mt-1">Briefs, moodboards, and client-uploaded source material</p>
-                    </div>
-                  </div>
-                  <FileUploader 
-                    orderId={order.id}
-                    type="reference"
-                    existingFiles={order.attachments || []}
-                    canUpload={canUploadReferences && !isCompleted}
-                    canDelete={canUploadReferences && !isCompleted}
-                  />
-                </div>
-
-                <div className="space-y-6 border-l border-white/5 pl-0 lg:pl-12">
-                  <div className="flex items-center justify-between mb-2">
-                    <div>
-                      <h4 className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2">
-                        <Download size={16} className="text-teal-400" /> Delivery Preview
-                      </h4>
-                      <p className="text-[10px] font-mono text-white/30 uppercase tracking-widest mt-1">Workers upload preview-only files here before final download unlocks</p>
-                    </div>
-                  </div>
-                  <FileUploader 
-                    orderId={order.id}
-                    type="deliverable"
-                    existingFiles={order.attachments || []}
-                    canUpload={canUploadDeliverables && !isCompleted}
-                    canDelete={canUploadDeliverables && !isCompleted}
-                  />
                 </div>
               </motion.div>
             )}

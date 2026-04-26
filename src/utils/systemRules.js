@@ -2,7 +2,6 @@ export const ROLE_HIERARCHY = [
   "client",
   "worker",
   "admin",
-  "owner",
 ];
 
 export const STAFF_ROLES = ROLE_HIERARCHY.filter((role) => role !== "client");
@@ -11,93 +10,56 @@ export const ROLE_REFERRAL_CONFIG = {
   client: { code: "CLI", pct: 0 },
   worker: { code: "WRK", pct: 5 },
   admin: { code: "ADM", pct: 15 },
-  owner: { code: "OWR", pct: 25 },
 };
 
 export const MAX_STUDENT_REFERRAL_DISCOUNT = 40;
 
 export const ROLE_PERMISSIONS = {
   client: ["create_order", "chat", "request_revision", "pay"],
-  worker: ["accept_work", "upload_delivery", "chat", "receive_revision"],
-  admin: ["view_all_orders", "assign_work", "manage_users", "view_earnings", "handle_payroll"],
-  owner: [
+  worker: ["accept_work", "chat", "receive_revision"],
+  admin: [
     "view_all_orders",
     "assign_work",
     "manage_users",
     "view_earnings",
     "handle_payroll",
-    "manage_admins",
     "view_full_system_analytics",
-    "override_system_rules",
     "view_financial_overview",
   ],
 };
 
 export const DASHBOARD_VIEW_RULES = {
   overview: STAFF_ROLES,
-  analytics: ["owner"],
-  orders: ["owner", "admin"],
+  analytics: ["admin"],
+  orders: ["admin"],
   orderpool: ["worker"],
-  users: ["owner", "admin"],
-  referrals: ["owner", "admin"],
+  users: ["admin"],
+  referrals: ["admin"],
   reviews: STAFF_ROLES,
-  wallet: STAFF_ROLES,
-  reports: STAFF_ROLES,
   samples: STAFF_ROLES,
-  demodata: ["owner", "admin"],
-  payroll: ["owner", "admin"],
-  approvals: ["owner", "admin"],
   myorders: ["worker"],
-  invitekeys: ["owner", "admin"],
-  earnings: ["worker"],
-  disputes: STAFF_ROLES,
 };
 
 export const ORDER_STATUS_META = {
-  created: {
-    label: "Created",
-    progress: 6,
+  new: {
+    label: "New",
+    progress: 0,
     badgeClass: "border-white/15 bg-white/5 text-white/60",
-  },
-  pending_assignment: {
-    label: "Pending Assignment",
-    progress: 14,
-    badgeClass: "border-amber-400/20 bg-amber-400/10 text-amber-300",
-  },
-  assigned: {
-    label: "Assigned",
-    progress: 28,
-    badgeClass: "border-sky-500/20 bg-sky-500/10 text-sky-300",
   },
   in_progress: {
     label: "In Progress",
-    progress: 48,
+    progress: 50,
     badgeClass: "border-blue-500/20 bg-blue-500/10 text-blue-300",
   },
-  delivered_preview: {
-    label: "Preview Delivered",
-    progress: 68,
+  review: {
+    label: "Review",
+    progress: 75,
     badgeClass: "border-violet-500/20 bg-violet-500/10 text-violet-300",
   },
-  revision_requested: {
-    label: "Revision Requested",
-    progress: 62,
-    badgeClass: "border-orange-400/20 bg-orange-400/10 text-orange-300",
-  },
-  awaiting_final_payment: {
-    label: "Awaiting Final Payment",
-    progress: 82,
-    badgeClass: "border-fuchsia-500/20 bg-fuchsia-500/10 text-fuchsia-300",
-  },
-  completed: {
-    label: "Completed",
+  complete: {
+    label: "Complete",
     progress: 100,
     badgeClass: "border-cyan-primary/20 bg-cyan-primary/10 text-cyan-primary",
-  },
-  closed: {
-    label: "Closed",
-    progress: 100,
-    badgeClass: "border-emerald-500/20 bg-emerald-500/10 text-emerald-300",
   },
   cancelled: {
     label: "Cancelled",
@@ -106,31 +68,23 @@ export const ORDER_STATUS_META = {
   },
 };
 
-export const ORDER_STATUS_FLOW = Object.keys(ORDER_STATUS_META);
+export const ORDER_STATUS_FLOW = ["new", "in_progress", "review", "complete"];
 
 export const ORDER_STATUS_ALIASES = {
-  new: "created",
-  created: "created",
-  active: "pending_assignment",
-  pending: "pending_assignment",
-  pending_assignment: "pending_assignment",
-  accepted: "assigned",
-  assigned: "assigned",
+  new: "new",
+  created: "new",
+  pending: "new",
+  assigned: "in_progress",
   in_progress: "in_progress",
-  progress: "in_progress",
   working: "in_progress",
-  delivered_preview: "delivered_preview",
-  preview: "delivered_preview",
-  preview_delivered: "delivered_preview",
-  revision_requested: "revision_requested",
-  revision: "revision_requested",
-  awaiting_final_payment: "awaiting_final_payment",
-  awaiting_payment: "awaiting_final_payment",
-  payment_due: "awaiting_final_payment",
-  complete: "completed",
-  completed: "completed",
-  done: "completed",
-  closed: "closed",
+  progress: "in_progress",
+  delivered: "review",
+  review: "review",
+  preview: "review",
+  complete: "complete",
+  completed: "complete",
+  done: "complete",
+  closed: "complete",
   cancelled: "cancelled",
   canceled: "cancelled",
 };
@@ -140,17 +94,9 @@ export const PAYMENT_STATUS_META = {
     label: "Pending",
     badgeClass: "border-yellow-500/20 bg-yellow-500/10 text-yellow-400",
   },
-  partial: {
-    label: "Partial",
-    badgeClass: "border-blue-500/20 bg-blue-500/10 text-blue-400",
-  },
   paid: {
     label: "Paid",
     badgeClass: "border-green-500/20 bg-green-500/10 text-green-400",
-  },
-  refunded: {
-    label: "Refunded",
-    badgeClass: "border-orange-400/20 bg-orange-400/10 text-orange-300",
   },
 };
 
@@ -158,15 +104,9 @@ export const PAYMENT_STATUS_ALIASES = {
   pending: "pending",
   unpaid: "pending",
   due: "pending",
-  advance_due: "pending",
-  partial: "partial",
-  partly_paid: "partial",
-  partial_paid: "partial",
-  advance_paid: "partial",
+  partial: "pending",
   paid: "paid",
   completed: "paid",
-  refunded: "refunded",
-  refund: "refunded",
 };
 
 export const FINANCIAL_RULES = {
@@ -228,11 +168,8 @@ export const canGenerateInviteForRole = (actorRole, targetRole) => {
   const target = normalizeRole(targetRole);
 
   if (target === "client") return false;
-  if (actor === "owner") {
-    return ["admin", "worker"].includes(target);
-  }
   if (actor === "admin") {
-    return target === "worker";
+    return ["admin", "worker"].includes(target);
   }
 
   return false;
