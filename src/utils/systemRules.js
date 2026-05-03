@@ -6,25 +6,14 @@ export const ROLE_HIERARCHY = [
 
 export const STAFF_ROLES = ROLE_HIERARCHY.filter((role) => role !== "client");
 
-export const ROLE_REFERRAL_CONFIG = {
-  client: { code: "CLI", pct: 0 },
-  worker: { code: "WRK", pct: 5 },
-  admin: { code: "ADM", pct: 15 },
-};
-
-export const MAX_STUDENT_REFERRAL_DISCOUNT = 40;
-
 export const ROLE_PERMISSIONS = {
-  client: ["create_order", "chat", "request_revision", "pay"],
-  worker: ["accept_work", "chat", "receive_revision"],
+  client: ["create_order", "request_revision", "pay"],
+  worker: ["accept_work", "receive_revision"],
   admin: [
     "view_all_orders",
     "assign_work",
     "manage_users",
-    "view_earnings",
-    "handle_payroll",
     "view_full_system_analytics",
-    "view_financial_overview",
   ],
 };
 
@@ -112,33 +101,7 @@ export const PAYMENT_STATUS_ALIASES = {
 export const FINANCIAL_RULES = {
   workerPercent: 90,
   companyPercent: 10,
-  referralWorkerPercent: 82,
-  referralCompanyPercent: 18,
-  minimumWithdrawal: 100,
-  maxWithdrawalsPerWeek: 4,
-  priorityPercent: 20,
-  priorityMinimum: 99,
-  pendingReleaseDays: 3,
-  penaltyMinPercent: 5,
-  penaltyMaxPercent: 20,
-  bonusPercent: 5,
-  regularRefund: { client: 60, worker: 20, company: 20 },
-  returningRefund: { client: 70, worker: 20, company: 10 },
 };
-
-export const NOTIFICATION_PRIORITY_BY_CATEGORY = {
-  payment: "high",
-  dispute: "high",
-  finance: "high",
-  order: "medium",
-  assignment: "medium",
-  earnings: "medium",
-  support: "medium",
-  system: "low",
-};
-
-export const NOTIFICATION_MAX_PER_MINUTE = 5;
-export const NOTIFICATION_DEFAULT_CHANNELS = ["in_app"];
 
 const randomSegment = () =>
   Math.random().toString(36).toUpperCase().slice(2, 6).padEnd(4, "X");
@@ -183,53 +146,6 @@ export const getAllowedDashboardViews = (role) =>
 export const canAccessDashboardView = (role, viewId) =>
   hasRoleAccess(role, DASHBOARD_VIEW_RULES[viewId] || []);
 
-export const getReferralTier = (role) =>
-  ROLE_REFERRAL_CONFIG[normalizeRole(role)] || ROLE_REFERRAL_CONFIG.client;
-
-export const clampReferralDiscountPercent = (discountPercent) => {
-  const normalized = Number(discountPercent || 0);
-
-  if (!Number.isFinite(normalized) || normalized <= 0) {
-    return 0;
-  }
-
-  return Math.min(MAX_STUDENT_REFERRAL_DISCOUNT, Math.round(normalized));
-};
-
-export const getEligibleReferralDiscount = (profile = {}) => {
-  if (!profile?.usedReferralCode) {
-    return 0;
-  }
-
-  return clampReferralDiscountPercent(profile.discountPercent);
-};
-
-export const makeReferralCode = (role) => {
-  const tier = getReferralTier(role);
-  return `TNWR-${tier.code}-${randomSegment()}`;
-};
-
-export const getNotificationPriority = (category) =>
-  NOTIFICATION_PRIORITY_BY_CATEGORY[normalizeValue(category)] || "low";
-
-export const getNotificationRecipientsForUser = (user, role) => {
-  const recipients = [user?.uid, "all"].filter(Boolean);
-  const normalizedRole = normalizeRole(role);
-
-  if (normalizedRole) {
-    recipients.push(normalizedRole);
-  }
-
-  if (normalizedRole !== "client") {
-    recipients.push("staff");
-  }
-
-  return Array.from(new Set(recipients)).slice(0, 10);
-};
-
-export const getNextMonthlyPayoutDate = (baseDate = new Date()) => {
-  const next = new Date(baseDate);
-  next.setMonth(next.getMonth() + 1, 1);
-  next.setHours(0, 0, 0, 0);
-  return next;
+export const makeReferralCode = () => {
+  return `TNWR-${randomSegment()}`;
 };
