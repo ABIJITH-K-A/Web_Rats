@@ -394,7 +394,7 @@ const Profile = () => {
       const supportRef = await addDoc(collection(db, "supportMessages"), {
         userId: user?.uid || 'anonymous',
         name: displayName,
-        email: user?.email || "anonymous@tnwebrats.com",
+        email: user?.email || "anonymous@rynix.com",
         subject: supportForm.subject.trim(),
         message: supportForm.message.trim(),
         status: "new",
@@ -572,7 +572,7 @@ const Profile = () => {
               Client Dashboard
             </div>
             <h1 className="mt-3 text-2xl font-black text-white">
-              TNWebRats
+              Rynix
             </h1>
             <p className="mt-2 text-sm leading-7 text-light-gray/50">
               Track orders, payment status, delivery previews, messages, and
@@ -2015,9 +2015,9 @@ const DetailBlock = ({ label, value }) => (
 );
 
 const QRPaymentModal = ({ state, setState, onSubmit }) => {
-  const upiId = CONTACT_INFO.upiId || "tnwebrats@okaxis";
+  const upiId = CONTACT_INFO.upiId || "rynix@okaxis";
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(
-    `upi://pay?pa=${upiId}&pn=TNWebRats&am=${state.dueNow}&cu=INR&tn=Order_${state.order?.id?.slice(-8)}`
+    `upi://pay?pa=${upiId}&pn=Rynix&am=${state.dueNow}&cu=INR&tn=Order_${state.order?.id?.slice(-8)}`
   )}`;
 
   return (
@@ -2047,7 +2047,7 @@ const QRPaymentModal = ({ state, setState, onSubmit }) => {
 
         <div className="flex flex-col gap-3 mb-6 w-full max-w-sm mx-auto">
           <a 
-            href={`upi://pay?pa=${upiId}&pn=TNWebRats&am=${state.dueNow}&cu=INR&tn=Order_${state.order?.id?.slice(-8)}`}
+            href={`upi://pay?pa=${upiId}&pn=Rynix&am=${state.dueNow}&cu=INR&tn=Order_${state.order?.id?.slice(-8)}`}
             className="flex items-center justify-center gap-2 w-full py-4 bg-white text-black font-bold rounded-xl hover:bg-light-gray/90 transition-all shadow-lg md:hidden"
           >
             <ExternalLink size={18} /> Pay via UPI App

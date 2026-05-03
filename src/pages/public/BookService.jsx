@@ -350,7 +350,7 @@ const BookService = () => {
     }
 
     return [
-      "Hi TNWebRats, a new booking was created.",
+      "Hi Rynix, a new booking was created.",
       "",
       `Order ID: ${newOrderId}`,
       `Category: ${selectedCategory.name}`,

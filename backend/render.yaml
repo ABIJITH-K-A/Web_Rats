@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: tnwebrats-backend
+    name: rynix-backend
     env: node
     plan: free
     region: oregon 
@@ -14,11 +14,11 @@ services:
       - key: REDIS_URL
         fromService:
           type: redis
-          name: tnwebrats-redis
+          name: rynix-redis
           property: connectionString
-      - fromGroup: tnwebrats-secrets
+      - fromGroup: rynix-secrets
 
   - type: redis
-    name: tnwebrats-redis
+    name: rynix-redis
     plan: free
     region: oregon

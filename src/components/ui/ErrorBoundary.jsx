@@ -2,7 +2,7 @@ import React from "react";
 import { AlertTriangle, Home, RefreshCw, AlertCircle } from "lucide-react";
 
 /**
- * ErrorBoundary - TNWebRats System Resilience Layer
+ * ErrorBoundary - Rynix System Resilience Layer
  * Now supports two variants:
  * - 'page': Full-screen takeover for catastrophic app failure.
  * - 'module': Inline error card for specific component failure.

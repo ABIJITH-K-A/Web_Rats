@@ -26,7 +26,7 @@ const Services = () => {
           </h1>
           <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-light-gray/70">
             We keep our focus sharp and our output sharper. Here is exactly what
-            TNWebRats brings to the table - nothing bloated, nothing vague.
+            Rynix brings to the table - nothing bloated, nothing vague.
           </p>
 
           <div className="mt-10 flex flex-wrap justify-center gap-4">
@@ -163,7 +163,7 @@ const Services = () => {
             <div className="mt-8 flex flex-wrap justify-center gap-4">
               <a
                 href={`https://wa.me/${CONTACT_INFO.whatsappNumber}?text=${encodeURIComponent(
-                  "Hi TNWebRats, I need help choosing the right service."
+                  "Hi Rynix, I need help choosing the right service."
                 )}`}
                 target="_blank"
                 rel="noreferrer"

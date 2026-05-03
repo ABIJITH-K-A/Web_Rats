@@ -1,5 +1,5 @@
 export const CONTACT_INFO = {
-  email: "tnwebrats@gmail.com",
+  email: "rynix@gmail.com",
   whatsappNumber: "918300920680",
   whatsappDisplay: "+91 8300920680",
   instagramHandle: "@tn_web_rats",
@@ -795,8 +795,8 @@ export const FEATURED_PROJECTS = [
     category: "Mixed Deliverables",
     status: "Expanding",
     description:
-      "A growing collection of presentation, poster, and web work that shows the range of what TNWebRats ships.",
-    builtBy: "TNWebRats",
+      "A growing collection of presentation, poster, and web work that shows the range of what Rynix ships.",
+    builtBy: "Rynix",
     image: "/Images/gears/gear_3.webp",
   },
   {
@@ -913,7 +913,7 @@ export const TEAM_MEMBERS = [
     role: "Co-Founder & Lead Developer",
     image: "/Images/Icons/WebratTransparentDark.png",
     intro:
-      "WaveWalker drives the web side of TNWebRats - translating ideas into responsive interfaces, cleaner structures, and builds that feel deliberate on both mobile and desktop.",
+      "WaveWalker drives the web side of Rynix - translating ideas into responsive interfaces, cleaner structures, and builds that feel deliberate on both mobile and desktop.",
     skills: [
       "React and frontend development",
       "UI and interaction structure",

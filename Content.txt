@@ -2,16 +2,16 @@
 
 Hero Section
 We Build. We Design. We Deliver.
-Welcome to TNWebRats — a creative studio run by two passionate developers and designers who turn ideas into polished digital experiences. Websites, presentations, posters — we do it all, and we do it right.
+Welcome to Rynix — a creative studio run by two passionate developers and designers who turn ideas into polished digital experiences. Websites, presentations, posters — we do it all, and we do it right.
 
 "Two minds. One mission. Infinite creativity."
 
 
 Who We Are
-TNWebRats is a two-person creative powerhouse built on skill, hustle, and a shared obsession with great design. We're not a big agency — we're two people who actually care about what we build, and it shows in every pixel we push.
+Rynix is a two-person creative powerhouse built on skill, hustle, and a shared obsession with great design. We're not a big agency — we're two people who actually care about what we build, and it shows in every pixel we push.
 From students to startups, from a single poster to a full-blown website — we help you show up like you mean it.
 
-Why TNWebRats? (3 Value Cards)
+Why Rynix? (3 Value Cards)
 🎯 Built With Purpose
 No lazy templates. No copy-paste work. Every project is custom-crafted with intention and precision.
 ⚡ Fast & Reliable
@@ -30,7 +30,7 @@ Ready to build something people will actually notice?
 
 Header
 What We Do
-We keep our focus sharp and our output sharper. Here's exactly what TNWebRats brings to the table — nothing more, nothing bloated.
+We keep our focus sharp and our output sharper. Here's exactly what Rynix brings to the table — nothing more, nothing bloated.
 
 🖥️ Website Design & Development
 Your website is your first impression — and you only get one. We design and develop clean, modern, and fully responsive websites that don't just look good, they perform good.
@@ -79,7 +79,7 @@ Our Work
 We let the work do the talking. Here's what we've built, designed, and shipped — and there's a lot more in the pipeline.
 
 Intro
-Every project here started with a problem and ended with something we're genuinely proud of. Real clients, real briefs, real results. This is TNWebRats in action.
+Every project here started with a problem and ended with something we're genuinely proud of. Real clients, real briefs, real results. This is Rynix in action.
 
 🔧 AutoBit
 Category: Web Development / Software
@@ -108,10 +108,10 @@ We're always building. Check back for updates — or better yet, [start a projec
 👥 ABOUT PAGE
 
 Header
-About TNWebRats
+About Rynix
 
 Brand Story
-TNWebRats started as a simple conversation between two friends who realised they were already doing the work — building things, designing things, solving problems — so why not make it official?
+Rynix started as a simple conversation between two friends who realised they were already doing the work — building things, designing things, solving problems — so why not make it official?
 What started as a side passion turned into a proper creative studio. Two developers. Two designers. One shared drive to build things that actually matter. We work with students, startups, and small businesses who want quality output without the big agency price tag and impersonal experience.
 The name is bold. The work is bolder.
 
@@ -161,11 +161,11 @@ Skills & Tools:
 
 Closing Note
 
-TNWebRats isn't just a service — it's a creative duo that genuinely loves what they do.
+Rynix isn't just a service — it's a creative duo that genuinely loves what they do.
 If you've got an idea, a deadline, or just a rough thought you want to make real —
 [Let's talk. →]
 
-SERVICES PAGE STRUCTURE – TNWEBRATS
+SERVICES PAGE STRUCTURE – RYNIX
 
 ---
 
@@ -576,7 +576,7 @@ Each order shows:
 
 END OF STRUCTURE
 
-CLIENT DASHBOARD – TNWEBRATS
+CLIENT DASHBOARD – RYNIX
 
 ---
 
@@ -1005,7 +1005,7 @@ UX ADVANTAGE
 
 END OF FEATURE
 
-TNWEBRATS – AUTH & ROLE ACCESS SYSTEM (FINAL)
+RYNIX – AUTH & ROLE ACCESS SYSTEM (FINAL)
 
 ---
 

@@ -3,7 +3,7 @@ Email verification
 
 
 
-TNWEBRATS – FINANCE ENGINE v3 (ULTRA 20x)
+RYNIX – FINANCE ENGINE v3 (ULTRA 20x)
 ==================================================  PURPOSE
 Handle all money flow in system
 Track earnings (workers + company)
@@ -106,7 +106,7 @@ Worker system
 ================================================== END OF SYSTEM
 
 
-TNWEBRATS – TICKET / ESCALATION SYSTEM v3 (ULTRA 20x)
+RYNIX – TICKET / ESCALATION SYSTEM v3 (ULTRA 20x)
 ==================================================  PURPOSE
 Handle disputes, issues, bugs, and escalations
 Allow structured communication beyond normal chat
@@ -248,7 +248,7 @@ Security system
 ✔ Professional support
 ================================================== END OF SYSTEM
 
-TNWEBRATS – WORKER → CLIENT FILE DELIVERY SYSTEM v3 (ULTRA 20x)
+RYNIX – WORKER → CLIENT FILE DELIVERY SYSTEM v3 (ULTRA 20x)
 
 ==================================================
  PURPOSE
@@ -524,7 +524,7 @@ Works with:
 - Chat system
 - Payment system
 - Security system
-TNWEBRATS – CORE BUSINESS SYSTEMS (ULTRA 20x)
+RYNIX – CORE BUSINESS SYSTEMS (ULTRA 20x)
 WALLET + MONTHLY BILLING + COMPANY MESSAGE
 ==================================================  GLOBAL PURPOSE
 Control all financial flows
@@ -651,7 +651,7 @@ END OF SYSTEM
 
 
 
-TNWEBRATS – CORE BUSINESS SYSTEMS (ULTRA 20x)
+RYNIX – CORE BUSINESS SYSTEMS (ULTRA 20x)
 WALLET + MONTHLY BILLING + COMPANY MESSAGE
 ==================================================  GLOBAL PURPOSE
 Control all financial flows

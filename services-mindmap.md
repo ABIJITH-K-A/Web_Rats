@@ -1,7 +1,7 @@
-# TN WEB RATS - Ultra-Detailed Services Mindmap & Use Cases
+# RYNIX - Ultra-Detailed Services Mindmap & Use Cases
 
 ## Overview
-This document provides comprehensive use cases, workflows, and detailed specifications for all 12 services across 4 categories in the TN WEB RATS platform.
+This document provides comprehensive use cases, workflows, and detailed specifications for all 12 services across 4 categories in the RYNIX platform.
 
 ---
 
@@ -9,7 +9,7 @@ This document provides comprehensive use cases, workflows, and detailed specific
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                    TN WEB RATS SERVICE ECOSYSTEM                              │
+│                    RYNIX SERVICE ECOSYSTEM                              │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                               │
 │  ┌─────────────────────┐  ┌─────────────────────┐  ┌─────────────────────┐ │
@@ -2501,7 +2501,7 @@ This document provides comprehensive use cases, workflows, and detailed specific
 │                            │                                                    │
 │                            ▼                                                    │
 │  CONSIDERATION                                                                │
-│  ├── Visit website (tnwebrats.com)                                                │
+│  ├── Visit website (rynix.com)                                                │
 │  ├── Browse services (view categories)                                              │
 │  ├── View portfolio/examples                                                        │
 │  ├── Check pricing                                                                  │
@@ -2585,4 +2585,4 @@ This document provides comprehensive use cases, workflows, and detailed specific
 ---
 
 *Ultra-Detailed Services Mindmap generated on March 27, 2026*
-*Project: TN WEB RATS - Complete Service Catalog with Workflows*
+*Project: RYNIX - Complete Service Catalog with Workflows*

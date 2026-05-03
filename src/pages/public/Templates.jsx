@@ -162,7 +162,7 @@ const Templates = () => {
           </h1>
           <p className="mx-auto mt-6 max-w-xl text-base leading-8 text-light-gray/50">
             Browse our curated collection of website, portfolio, presentation,
-            and graphic templates. Free & premium — all built by the TNWebRats
+            and graphic templates. Free & premium — all built by the Rynix
             studio.
           </p>
         </motion.div>

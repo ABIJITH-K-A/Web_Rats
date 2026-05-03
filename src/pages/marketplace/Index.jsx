@@ -37,7 +37,7 @@ export default function Index() {
               Template Marketplace
             </div>
             <h1 className="mt-5 text-4xl font-black text-white md:text-5xl">
-              Ready-to-sell assets built in the TN Web Rats style.
+              Ready-to-sell assets built in the Rynix style.
             </h1>
             <p className="mt-4 max-w-2xl text-base leading-8 text-white/56">
               Search by keyword, filter by category, preview the pack, then buy once and unlock the download permanently.

@@ -12,7 +12,7 @@ const Footer = () => {
         <div className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr_1fr]">
           <div>
             <div className="text-[10px] font-mono uppercase tracking-[0.24em] text-cyan-primary/72">
-              TNWebRats
+              Rynix
             </div>
             <h2 className="mt-4 text-3xl font-black text-white">
               A small studio with a sharp focus.
@@ -150,7 +150,7 @@ const Footer = () => {
           </div>
         </div>
         <div className="mt-14 border-t border-white/8 pt-8 text-sm text-light-gray/45">
-          2026 TNWebRats. Built for direct collaboration, faster delivery, and
+          2026 Rynix. Built for direct collaboration, faster delivery, and
           cleaner project handoffs.
         </div>
       </div>

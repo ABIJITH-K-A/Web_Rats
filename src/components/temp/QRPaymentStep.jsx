@@ -17,8 +17,8 @@ const QRPaymentStep = ({
   const [utr, setUtr] = useState("");
   const [copied, setCopied] = useState(false);
 
-  const upiId = CONTACT_INFO.upiId || "tnwebrats@okaxis";
-  const businessName = "TNWebRats";
+  const upiId = CONTACT_INFO.upiId || "rynix@okaxis";
+  const businessName = "Rynix";
   
   // UPI URI Format: upi://pay?pa=VPA&pn=NAME&am=AMOUNT&cu=INR&tn=NOTE
   const upiUri = useMemo(() => {
