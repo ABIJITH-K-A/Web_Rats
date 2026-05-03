@@ -1,5 +1,4 @@
 import React, { useState, Children, useRef, useLayoutEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import BackButton from './BackButton';
 
 export default function Stepper({
@@ -121,67 +120,20 @@ export default function Stepper({
   );
 }
 
-function StepContentWrapper({ isCompleted, currentStep, direction, children, className }) {
-  const [parentHeight, setParentHeight] = useState('auto');
-
+function StepContentWrapper({ isCompleted, currentStep, children, className }) {
   return (
-    <motion.div
+    <div
       style={{ position: 'relative', overflow: 'hidden' }}
-      animate={{ height: isCompleted ? 0 : parentHeight }}
-      transition={{ type: 'spring', duration: 0.4, bounce: 0 }}
       className={className}
     >
-      <AnimatePresence initial={false} mode="popLayout" custom={direction}>
-        {!isCompleted && (
-          <SlideTransition key={currentStep} direction={direction} onHeightReady={h => setParentHeight(h)}>
-            {children}
-          </SlideTransition>
-        )}
-      </AnimatePresence>
-    </motion.div>
+      {!isCompleted && (
+        <div key={currentStep} className="w-full p-0" style={{ position: 'relative' }}>
+          {children}
+        </div>
+      )}
+    </div>
   );
 }
-
-function SlideTransition({ children, direction, onHeightReady }) {
-  const containerRef = useRef(null);
-
-  useLayoutEffect(() => {
-    if (containerRef.current) {
-      onHeightReady(containerRef.current.offsetHeight);
-    }
-  }, [children, onHeightReady]);
-
-  return (
-    <motion.div
-      ref={containerRef}
-      custom={direction}
-      variants={stepVariants}
-      initial="enter"
-      animate="center"
-      exit="exit"
-      transition={{ duration: 0.4, ease: "easeInOut" }}
-      className="w-full"
-      style={{ position: 'absolute', top: 0, left: 0 }}
-    >
-      {children}
-    </motion.div>
-  );
-}
-
-const stepVariants = {
-  enter: dir => ({
-    x: dir >= 0 ? '100%' : '-100%',
-    opacity: 0
-  }),
-  center: {
-    x: '0%',
-    opacity: 1
-  },
-  exit: dir => ({
-    x: dir >= 0 ? '-50%' : '50%',
-    opacity: 0
-  })
-};
 
 export function Step({ children, className = '' }) {
   return <div className={`p-8 ${className}`}>{children}</div>;
@@ -194,54 +146,46 @@ function StepIndicator({ step, currentStep, onClickStep, disableStepIndicators }
     if (step !== currentStep && !disableStepIndicators) onClickStep(step);
   };
 
+  const bgColor =
+    status === 'active' ? '#66FCF1' :
+    status === 'complete' ? '#66FCF1' :
+    'rgba(255,255,255,0.05)';
+  const textColor =
+    status === 'active' || status === 'complete' ? '#0B0C10' : 'rgba(255,255,255,0.3)';
+
   return (
-    <motion.div
+    <div
       onClick={handleClick}
       className="relative cursor-pointer outline-none focus:outline-none"
-      animate={status}
-      initial={false}
     >
-      <motion.div
-        variants={{
-          inactive: { scale: 1, backgroundColor: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.3)' },
-          active: { scale: 1, backgroundColor: '#66FCF1', color: '#0B0C10' },
-          complete: { scale: 1, backgroundColor: '#66FCF1', color: '#0B0C10' }
-        }}
-        transition={{ duration: 0.3 }}
-        className="flex h-10 w-10 items-center justify-center rounded-full font-bold text-sm shadow-xl"
+      <div
+        className="flex h-10 w-10 items-center justify-center rounded-full font-bold text-sm shadow-xl transition-colors duration-300"
+        style={{ backgroundColor: bgColor, color: textColor }}
       >
         {status === 'complete' ? (
           <CheckIcon className="h-5 w-5" />
         ) : (
           <span>{step}</span>
         )}
-      </motion.div>
+      </div>
       {status === 'active' && (
-        <motion.div 
-          layoutId="activeStep"
+        <div
           className="absolute -inset-1 rounded-full border border-cyan-primary/50"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
         />
       )}
-    </motion.div>
+    </div>
   );
 }
 
 function StepConnector({ isComplete }) {
-  const lineVariants = {
-    incomplete: { width: 0, backgroundColor: 'transparent' },
-    complete: { width: '100%', backgroundColor: '#66FCF1' }
-  };
-
   return (
     <div className="relative mx-4 h-[1px] flex-1 bg-white/10 overflow-hidden">
-      <motion.div
-        className="absolute left-0 top-0 h-full"
-        variants={lineVariants}
-        initial={false}
-        animate={isComplete ? 'complete' : 'incomplete'}
-        transition={{ duration: 0.4 }}
+      <div
+        className="absolute left-0 top-0 h-full transition-[width] duration-400"
+        style={{
+          width: isComplete ? '100%' : '0%',
+          backgroundColor: isComplete ? '#66FCF1' : 'transparent',
+        }}
       />
     </div>
   );
@@ -250,10 +194,7 @@ function StepConnector({ isComplete }) {
 function CheckIcon(props) {
   return (
     <svg {...props} fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
-      <motion.path
-        initial={{ pathLength: 0 }}
-        animate={{ pathLength: 1 }}
-        transition={{ delay: 0.1, type: 'tween', ease: 'easeOut', duration: 0.3 }}
+      <path
         strokeLinecap="round"
         strokeLinejoin="round"
         d="M5 13l4 4L19 7"

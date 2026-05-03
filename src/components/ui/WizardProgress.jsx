@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+
 
 const WizardProgress = ({ steps, currentStep }) => {
   return (

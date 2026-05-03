@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
 import { Download } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -84,7 +83,7 @@ export default function DownloadActionButton({
 
   if (to) {
     return (
-      <motion.div whileTap={disabled ? undefined : { scale: 0.985 }} className="inline-flex">
+      <div className="inline-flex">
         <Link
           to={to}
           onTouchStart={handleTouchStart}
@@ -94,13 +93,13 @@ export default function DownloadActionButton({
         >
           {content}
         </Link>
-      </motion.div>
+      </div>
     );
   }
 
   if (href) {
     return (
-      <motion.div whileTap={disabled ? undefined : { scale: 0.985 }} className="inline-flex">
+      <div className="inline-flex">
         <a
           href={href}
           onTouchStart={handleTouchStart}
@@ -110,14 +109,13 @@ export default function DownloadActionButton({
         >
           {content}
         </a>
-      </motion.div>
+      </div>
     );
   }
 
   return (
-    <motion.button
+    <button
       type={type}
-      whileTap={disabled ? undefined : { scale: 0.985 }}
       onClick={disabled ? undefined : onClick}
       onTouchStart={handleTouchStart}
       className={baseClassName}
@@ -125,6 +123,6 @@ export default function DownloadActionButton({
       {...props}
     >
       {content}
-    </motion.button>
+    </button>
   );
 }

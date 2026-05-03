@@ -1,5 +1,3 @@
-import { motion } from "framer-motion";
-
 const renderLetters = (label, offset = 0) =>
   label.split("").map((character, index) => (
     <span key={`${label}-${index}`} style={{ "--i": index + offset }}>
@@ -61,9 +59,8 @@ export default function SupportSendButton({
   ...props
 }) {
   return (
-    <motion.button
+    <button
       type={type}
-      whileTap={disabled ? undefined : { scale: 0.985 }}
       data-status={status}
       disabled={disabled}
       className={`tn-send-btn w-full bg-[#0f151a] text-[#0b0f13] shadow-[0_0_0_1px_rgba(255,255,255,0.16),0_18px_36px_rgba(0,0,0,0.3)] ${className}`}
@@ -82,6 +79,6 @@ export default function SupportSendButton({
         </div>
         <p>{renderLetters(sentLabel, 5)}</p>
       </div>
-    </motion.button>
+    </button>
   );
 }

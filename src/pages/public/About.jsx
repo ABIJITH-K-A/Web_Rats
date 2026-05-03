@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import { ArrowRight, Mail, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button, Card, SectionHeading } from "../../components/ui/Primitives";
@@ -15,11 +14,7 @@ const About = () => {
     <div className="flex flex-col py-20">
       <section className="pb-18">
         <div className="container mx-auto grid items-center gap-12 px-6 lg:grid-cols-[1.05fr_0.95fr]">
-          <motion.div
-            initial={{ opacity: 0, x: -28 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6 }}
-          >
+          <div>
             <div className="mb-6 inline-flex rounded-full border border-cyan-primary/20 bg-cyan-primary/8 px-4 py-2 text-[10px] font-mono uppercase tracking-[0.24em] text-cyan-primary">
               About Rynix
             </div>
@@ -51,13 +46,9 @@ const About = () => {
                 <Button variant="outline">See What We Build</Button>
               </Link>
             </div>
-          </motion.div>
+          </div>
 
-          <motion.div
-            initial={{ opacity: 0, x: 28 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.06 }}
-          >
+          <div>
             <Card className="border-cyan-primary/10 bg-black/72 p-8">
               <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-cyan-primary/72">
                 Brand Story
@@ -81,7 +72,7 @@ const About = () => {
                 ))}
               </div>
             </Card>
-          </motion.div>
+          </div>
         </div>
       </section>
 
@@ -148,14 +139,8 @@ const About = () => {
           </SectionHeading>
 
           <div className="grid gap-8 lg:grid-cols-2">
-            {TEAM_MEMBERS.map((member, index) => (
-              <motion.div
-                key={member.id}
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.45, delay: index * 0.08 }}
-              >
+            {TEAM_MEMBERS.map((member) => (
+              <div key={member.id}>
                 <Card className="h-full border-white/8 bg-black/72">
                   <div className="flex flex-col gap-8 md:flex-row md:items-start">
                     <img
@@ -194,7 +179,7 @@ const About = () => {
                     </div>
                   </div>
                 </Card>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>

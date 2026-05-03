@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+
 import { Mail, SendHorizonal } from 'lucide-react';
 import BackButton from '../../components/ui/BackButton';
 import { Button, Card } from '../../components/ui/Primitives';
@@ -40,11 +40,7 @@ const ForgotPassword = () => {
 
         <Card className="p-8">
           {sent ? (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="text-center space-y-4"
-            >
+            <div className="text-center space-y-4">
               <div className="w-16 h-16 rounded-full bg-cyan-primary/10 border border-cyan-primary/20 flex items-center justify-center mx-auto">
                 <Mail size={28} className="text-cyan-primary" />
               </div>
@@ -53,7 +49,7 @@ const ForgotPassword = () => {
                 A password reset link has been sent to <span className="text-cyan-primary font-bold">{email}</span>.
               </p>
               <BackButton to="/join?login=1" label="Back to sign in" className="mt-4 w-full min-w-0" />
-            </motion.div>
+            </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-5">
               {error && (

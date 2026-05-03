@@ -106,7 +106,7 @@ const DashboardLayout = ({ children }) => {
         {/* Brand */}
         <div className="p-6 border-b border-white/5 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3">
-            <img src="./Images/Icons/WebRatTransparentLight.png" alt="TN WR" className="w-8 h-8" />
+            <img src="/Images/Icons/logo.jpg" alt="Rynix" className="w-8 h-8 rounded-full object-cover" />
             <div>
               <div className="text-sm font-black text-white leading-tight">RYNIX</div>
               <div className="text-[9px] font-mono text-cyan-primary uppercase tracking-widest">{role} Portal</div>

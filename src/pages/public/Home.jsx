@@ -1,5 +1,4 @@
 import { useRef } from "react";
-import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import {
   ArrowRight,
   BriefcaseBusiness,
@@ -27,38 +26,8 @@ const categoryIcons = {
 
 const Home = () => {
   const heroRef = useRef(null);
-  const shouldReduceMotion = useReducedMotion();
-  const { scrollYProgress } = useScroll({
-    target: heroRef,
-    offset: ["start start", "end start"],
-  });
-  const heroWallpaperScale = useTransform(
-    scrollYProgress,
-    [0, 0.4, 0.8, 1],
-    shouldReduceMotion ? [1, 1, 1, 1] : [1, 1.5, 1.95, 2.08],
-  );
-  const heroWallpaperOpacity = useTransform(
-    scrollYProgress,
-    [0, 0.5, 0.8, 1],
-    shouldReduceMotion ? [0.34, 0.24, 0.12, 0.08] : [0.42, 0.24, 0, 0],
-  );
-  const heroWallpaperY = useTransform(
-    scrollYProgress,
-    [0, 1],
-    shouldReduceMotion ? ["0%", "0%"] : ["0%", "10%"],
-  );
-  const heroOverlayOpacity = useTransform(
-    scrollYProgress,
-    [0, 1],
-    shouldReduceMotion ? [0.34, 0.5] : [0.28, 0.72],
-  );
-  const heroContentY = useTransform(
-    scrollYProgress,
-    [0, 1],
-    shouldReduceMotion ? [0, 0] : [0, 96],
-  );
   const heroWallpaperStyle = {
-    backgroundImage: `${backgroundTheme.homeHero.overlay}, url("${backgroundTheme.homeHero.image}")`,
+    backgroundImage: `${backgroundTheme.homeHero.overlay}`,
     backgroundPosition: backgroundTheme.homeHero.position,
     backgroundSize: backgroundTheme.homeHero.size,
     backgroundRepeat: backgroundTheme.homeHero.repeat ?? "no-repeat",
@@ -68,30 +37,16 @@ const Home = () => {
     <div className="flex flex-col">
       <section ref={heroRef} className="relative isolate overflow-hidden py-20 md:py-28">
         <div aria-hidden="true" className="absolute inset-0 z-0 overflow-hidden">
-          <motion.div
-            className="absolute inset-[-8%] bg-no-repeat"
-            style={{
-              ...heroWallpaperStyle,
-              opacity: heroWallpaperOpacity,
-              scale: heroWallpaperScale,
-              y: heroWallpaperY,
-            }}
+          <div
+            className="absolute inset-[-8%] bg-no-repeat opacity-40"
+            style={heroWallpaperStyle}
           />
-          <motion.div
-            className="absolute inset-0 bg-black"
-            style={{ opacity: heroOverlayOpacity }}
-          />
+          <div className="absolute inset-0 bg-black opacity-30" />
           <div className="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-b from-transparent via-primary-dark/45 to-primary-dark" />
         </div>
 
         <div className="container relative z-10 mx-auto flex min-h-[82vh] flex-col items-center justify-center gap-14 px-6 text-center md:min-h-[96vh]">
-          <motion.div
-            initial={{ opacity: 0, y: -32 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7 }}
-            style={{ y: heroContentY }}
-            className="flex flex-col items-center"
-          >
+          <div className="flex flex-col items-center">
             <h1 className="max-w-4xl text-5xl font-black leading-[1.05] text-white md:text-7xl text-center ">
               We{" "}<span className="text-gradient-brand inline-block">Build</span>. We{" "}<span className="text-gradient-brand inline-block">Design</span>. We{" "}
               <span className="text-gradient-brand inline-block">Deliver.</span>
@@ -115,7 +70,7 @@ const Home = () => {
                 <Button variant="galaxy" className="min-w-[224px]">See Our Projects <ArrowRight size={18} /></Button>
               </Link>
             </div>
-          </motion.div>
+          </div>
         </div>
       </section>
 
@@ -137,8 +92,8 @@ const Home = () => {
           <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
             <Card className="border-cyan-primary/10 bg-secondary-dark/65">
               <p className="text-lg leading-8 text-light-gray/72">
-               We’re not a large agency — and we don’t aim to be.
-               We’re two builders who care deeply about what we ship, 
+               We're not a large agency — and we don't aim to be.
+               We're two builders who care deeply about what we ship, 
                how it looks, and whether it truly delivers value to the 
                people we work with.
               </p>
@@ -175,26 +130,18 @@ const Home = () => {
           </SectionHeading>
 
           <div className="grid gap-6 lg:grid-cols-3">
-            {VALUE_POINTS.map((item, index) => (
-              <motion.div
-                key={item.id}
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-80px" }}
-                transition={{ duration: 0.45, delay: index * 0.08 }}
-              >
-                <Card className="h-full border-cyan-primary/10 bg-black/75">
-                  <div className="mb-4 text-[10px] font-mono uppercase tracking-[0.22em] text-cyan-primary/70">
-                    0{index + 1}
-                  </div>
-                  <h3 className="mb-4 text-2xl font-black text-white">
-                    {item.title}
-                  </h3>
-                  <p className="text-base leading-7 text-light-gray/68">
-                    {item.summary}
-                  </p>
-                </Card>
-              </motion.div>
+            {VALUE_POINTS.map((item) => (
+              <Card key={item.id} className="h-full border-cyan-primary/10 bg-black/75">
+                <div className="mb-4 text-[10px] font-mono uppercase tracking-[0.22em] text-cyan-primary/70">
+                  0{VALUE_POINTS.indexOf(item) + 1}
+                </div>
+                <h3 className="mb-4 text-2xl font-black text-white">
+                  {item.title}
+                </h3>
+                <p className="text-base leading-7 text-light-gray/68">
+                  {item.summary}
+                </p>
+              </Card>
             ))}
           </div>
         </div>
@@ -207,50 +154,42 @@ const Home = () => {
           </SectionHeading>
 
           <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-4">
-            {SERVICE_CATEGORIES.map((category, index) => {
+            {SERVICE_CATEGORIES.map((category) => {
               const Icon = categoryIcons[category.id] || FileStack;
 
               return (
-                <motion.div
-                  key={category.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-60px" }}
-                  transition={{ duration: 0.4, delay: index * 0.06 }}
-                >
-                  <Card className="flex h-full flex-col border-white/8 bg-secondary-dark/80">
-                    <div className="mb-5 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-cyan-primary/10 text-cyan-primary">
-                      <Icon size={24} />
-                    </div>
-                    <div className="mb-3 text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary/70">
-                      {category.pricingHint}
-                    </div>
-                    <h3 className="text-2xl font-black text-white">
-                      {category.name}
-                    </h3>
-                    <p className="mt-4 text-sm leading-7 text-light-gray/65">
-                      {category.description}
-                    </p>
-                    <div className="mt-6 space-y-3">
-                      {category.services.slice(0, 3).map((service) => (
-                        <div
-                          key={service.id}
-                          className="px-4 py-3 rounded-xl border border-white/8 bg-black/55 hover:bg-black/72 hover:border-cyan-primary/24 transition-colors duration-300"
-                        >
-                          <div className="text-sm font-medium tracking-[0.01em] text-light-gray/76 hover:text-white">
-                            {service.name}
-                          </div>
+                <Card key={category.id} className="flex h-full flex-col border-white/8 bg-secondary-dark/80">
+                  <div className="mb-5 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-cyan-primary/10 text-cyan-primary">
+                    <Icon size={24} />
+                  </div>
+                  <div className="mb-3 text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary/70">
+                    {category.pricingHint}
+                  </div>
+                  <h3 className="text-2xl font-black text-white">
+                    {category.name}
+                  </h3>
+                  <p className="mt-4 text-sm leading-7 text-light-gray/65">
+                    {category.description}
+                  </p>
+                  <div className="mt-6 space-y-3">
+                    {category.services.slice(0, 3).map((service) => (
+                      <div
+                        key={service.id}
+                        className="px-4 py-3 rounded-xl border border-white/8 bg-black/55 hover:bg-black/72 hover:border-cyan-primary/24 transition-colors duration-300"
+                      >
+                        <div className="text-sm font-medium tracking-[0.01em] text-light-gray/76 hover:text-white">
+                          {service.name}
                         </div>
-                      ))}
-                    </div>
-                    <Link
-                      to={`/services#${category.id}`}
-                      className="mt-7 inline-flex items-center gap-2 text-sm font-semibold text-cyan-primary"
-                    >
-                      Explore lane <ArrowRight size={16} />
-                    </Link>
-                  </Card>
-                </motion.div>
+                      </div>
+                    ))}
+                  </div>
+                  <Link
+                    to={`/services#${category.id}`}
+                    className="mt-7 inline-flex items-center gap-2 text-sm font-semibold text-cyan-primary"
+                  >
+                    Explore lane <ArrowRight size={16} />
+                  </Link>
+                </Card>
               );
             })}
           </div>
@@ -264,62 +203,45 @@ const Home = () => {
           </SectionHeading>
 
           <div className="grid gap-6 lg:grid-cols-3">
-            {FEATURED_PROJECTS.map((project, index) => (
-              <motion.div
-                key={project.id}
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.45, delay: index * 0.08 }}
-              >
-                <Card className="flex h-full flex-col overflow-hidden border-white/8 bg-black/70 p-0">
-                  <img
-                    src={project.image}
-                    alt={project.title}
-                    className="h-60 w-full object-cover"
-                  />
-                  <div className="flex flex-1 flex-col p-7">
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary/70">
-                        {project.category}
-                      </div>
-                      <div className="rounded-full border border-cyan-primary/20 bg-cyan-primary/8 px-3 py-1 text-[10px] font-mono uppercase tracking-[0.16em] text-cyan-primary">
-                        {project.status}
-                      </div>
+            {FEATURED_PROJECTS.map((project) => (
+              <Card key={project.id} className="flex h-full flex-col overflow-hidden border-white/8 bg-black/70 p-0">
+                <img
+                  src={project.image}
+                  alt={project.title}
+                  className="h-60 w-full object-cover"
+                />
+                <div className="flex flex-1 flex-col p-7">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary/70">
+                      {project.category}
                     </div>
-                    <h3 className="mt-4 text-2xl font-black text-white">
-                      {project.title}
-                    </h3>
-                    <p className="mt-4 flex-1 text-sm leading-7 text-light-gray/66">
-                      {project.description}
-                    </p>
-                    <div className="mt-6 text-sm text-light-gray/58">
-                      Built by: {project.builtBy}
+                    <div className="rounded-full border border-cyan-primary/20 bg-cyan-primary/8 px-3 py-1 text-[10px] font-mono uppercase tracking-[0.16em] text-cyan-primary">
+                      {project.status}
                     </div>
                   </div>
-                </Card>
-              </motion.div>
+                  <h3 className="mt-4 text-2xl font-black text-white">
+                    {project.title}
+                  </h3>
+                  <p className="mt-4 flex-1 text-sm leading-7 text-light-gray/66">
+                    {project.description}
+                  </p>
+                  <div className="mt-6 text-sm text-light-gray/58">
+                    Built by: {project.builtBy}
+                  </div>
+                </div>
+              </Card>
             ))}
           </div>
           <div className="grid gap-6 lg:grid-cols-2 place-items-center mt-6">
-            {HORIZONTAL_PROJECTS.map((project, index) => (
-              <motion.div
-                key={project.id}
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.45, delay: index * 0.1 }}
-                viewport={{ once: true }}
-                className="w-full"
-              >
+            {HORIZONTAL_PROJECTS.map((project) => (
+              <div key={project.id} className="w-full">
                 <Card className="relative overflow-hidden border-white/8 bg-black/70 p-0 h-64 group">
                   <img
                     src={project.image}
                     alt={project.title}
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   />
-                  {/* Gradient overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
-                  {/* Text content */}
                   <div className="absolute bottom-0 left-0 right-0 p-6">
                     <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary mb-2">
                       {project.category}
@@ -332,7 +254,7 @@ const Home = () => {
                     </p>
                   </div>
                 </Card>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>

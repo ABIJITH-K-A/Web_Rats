@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
   CheckCircle,
@@ -385,35 +384,28 @@ const OrdersView = () => {
         </div>
       </div>
 
-      <AnimatePresence>
-        {selectedOrder && (
-          <OrderDetailsModal 
-            order={selectedOrder}
-            userRole={userProfile?.role}
-            onClose={() => setSelectedOrder(null)}
-            onContact={() => {
-              setSelectedOrder(null);
-              navigate(`/messages?id=${selectedOrder.id}`);
-            }}
-            onUpdateStatus={(o, s) => handleUpdateStatus(o, s)}
-          />
-        )}
+      {selectedOrder && (
+        <OrderDetailsModal 
+          order={selectedOrder}
+          userRole={userProfile?.role}
+          onClose={() => setSelectedOrder(null)}
+          onContact={() => {
+            setSelectedOrder(null);
+            navigate(`/messages?id=${selectedOrder.id}`);
+          }}
+          onUpdateStatus={(o, s) => handleUpdateStatus(o, s)}
+        />
+      )}
 
-        {assignModal.open && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onMouseDown={() => setAssignModal({ open: false, orderId: null })}
-              className="absolute inset-0 bg-black/75 backdrop-blur"
-            />
-            <motion.div
-              initial={{ opacity: 0, y: 20, scale: 0.97 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 20, scale: 0.97 }}
-              className="relative z-10 w-full max-w-xl rounded-[28px] border border-white/10 bg-[#121417] p-6 shadow-2xl"
-            >
+      {assignModal.open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
+          <div
+            onMouseDown={() => setAssignModal({ open: false, orderId: null })}
+            className="absolute inset-0 bg-black/75 backdrop-blur"
+          />
+          <div
+            className="relative z-10 w-full max-w-xl rounded-[28px] border border-white/10 bg-[#121417] p-6 shadow-2xl"
+          >
               <button
                 type="button"
                 onClick={() => setAssignModal({ open: false, orderId: null })}
@@ -484,10 +476,9 @@ const OrdersView = () => {
                   Save Assignment
                 </Button>
               </div>
-            </motion.div>
           </div>
-        )}
-      </AnimatePresence>
+        </div>
+      )}
     </div>
   );
 };

@@ -897,7 +897,7 @@ export const TEAM_MEMBERS = [
     id: "ratty",
     name: "Mr_Ratty",
     role: "Founder & Creative Director",
-    image: "/Images/Icons/WebRatTransparentLight.png",
+    image: "/Images/Icons/logo.jpg",
     intro:
       "Mr_Ratty leads the visual side of the studio - posters, graphics, presentations, and the look-and-feel decisions that make the work feel bold instead of generic.",
     skills: [
@@ -911,7 +911,7 @@ export const TEAM_MEMBERS = [
     id: "wavewalker",
     name: "WaveWalker",
     role: "Co-Founder & Lead Developer",
-    image: "/Images/Icons/WebratTransparentDark.png",
+    image: "/Images/Icons/logo.jpg",
     intro:
       "WaveWalker drives the web side of Rynix - translating ideas into responsive interfaces, cleaner structures, and builds that feel deliberate on both mobile and desktop.",
     skills: [

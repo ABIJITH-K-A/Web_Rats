@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { AnimatePresence } from 'framer-motion';
 import {
   AlertCircle,
   Calendar,
@@ -265,20 +264,18 @@ const MyOrdersView = () => {
         </p>
       </div>
 
-      <AnimatePresence>
-        {selectedOrder && (
-          <OrderDetailsModal 
-            order={selectedOrder}
-            userRole={userProfile?.role}
-            onClose={() => setSelectedOrder(null)}
-            onContact={() => {
-              setSelectedOrder(null);
-              navigate(`/messages?id=${selectedOrder.id}`);
-            }}
-            onUpdateStatus={(o, s) => handleUpdateStatus(o, s)}
-          />
-        )}
-      </AnimatePresence>
+      {selectedOrder && (
+        <OrderDetailsModal 
+          order={selectedOrder}
+          userRole={userProfile?.role}
+          onClose={() => setSelectedOrder(null)}
+          onContact={() => {
+            setSelectedOrder(null);
+            navigate(`/messages?id=${selectedOrder.id}`);
+          }}
+          onUpdateStatus={(o, s) => handleUpdateStatus(o, s)}
+        />
+      )}
     </div>
   );
 };

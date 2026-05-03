@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -39,33 +38,32 @@ export default function BackButton({
 
   if (to) {
     return (
-      <motion.div whileTap={{ scale: 0.98 }} className="inline-flex">
+      <div className="inline-flex">
         <Link to={to} className={baseClassName} {...props}>
           {content}
         </Link>
-      </motion.div>
+      </div>
     );
   }
 
   if (href) {
     return (
-      <motion.div whileTap={{ scale: 0.98 }} className="inline-flex">
+      <div className="inline-flex">
         <a href={href} className={baseClassName} {...props}>
           {content}
         </a>
-      </motion.div>
+      </div>
     );
   }
 
   return (
-    <motion.button
+    <button
       type={type}
-      whileTap={{ scale: 0.98 }}
       onClick={onClick}
       className={baseClassName}
       {...props}
     >
       {content}
-    </motion.button>
+    </button>
   );
 }

@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "./Primitives";
@@ -7,13 +6,7 @@ const formatPrice = (price) => `Rs ${price.toLocaleString("en-IN")}`;
 
 const ServiceCard = ({ service }) => {
   return (
-    <motion.article
-      initial={{ opacity: 0, y: 24 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-80px" }}
-      transition={{ duration: 0.45 }}
-      className="group flex h-full flex-col overflow-hidden rounded-[28px] border border-white/8 bg-secondary-dark/80 shadow-[0_20px_60px_rgba(0,0,0,0.28)]"
-    >
+    <article className="group flex h-full flex-col overflow-hidden rounded-[28px] border border-white/8 bg-secondary-dark/80 shadow-[0_20px_60px_rgba(0,0,0,0.28)]">
       <div className="relative h-56 overflow-hidden">
         <img
           src={service.image}
@@ -69,7 +62,7 @@ const ServiceCard = ({ service }) => {
           </Link>
         </div>
       </div>
-    </motion.article>
+    </article>
   );
 };
 

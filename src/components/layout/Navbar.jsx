@@ -53,7 +53,7 @@ const Navbar = () => {
           <Link to="/" className="flex items-center gap-3 justify-self-start">
             <div className="h-11 w-11 overflow-hidden rounded-full border border-white/12 bg-[#08090C]/80">
               <img
-                src="/Images/Icons/WebRatTransparentLight.png"
+                src="/Images/Icons/logo.jpg"
                 alt="Rynix"
                 className="h-full w-full object-cover"
               />

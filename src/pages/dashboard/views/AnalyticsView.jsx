@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import {
   BarChart,
   Bar,
@@ -232,11 +231,8 @@ const AnalyticsView = () => {
             color: 'text-blue-500',
           },
         ].map((stat, index) => (
-          <motion.div
+          <div
             key={stat.label}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
             className="bg-[#121417] border border-white/5 p-8 rounded-[2rem] shadow-2xl"
           >
             <div className="flex justify-between items-start mb-6 gap-4">
@@ -253,7 +249,7 @@ const AnalyticsView = () => {
             <div className="text-[10px] font-mono uppercase tracking-widest text-white/20">
               {stat.label}
             </div>
-          </motion.div>
+          </div>
         ))}
       </div>
 

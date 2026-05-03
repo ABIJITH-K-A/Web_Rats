@@ -1,10 +1,8 @@
 import { ReactLenis } from 'lenis/react';
-import SiteBg from './SiteBg';
 import Navbar from './Navbar';
 import Footer from './Footer';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { motion } from 'framer-motion';
 import { Mail, RefreshCw, X } from 'lucide-react';
 import { useState } from 'react';
 
@@ -34,9 +32,7 @@ const VerificationBanner = () => {
   };
 
   return (
-    <motion.div
-      initial={{ height: 0, opacity: 0 }}
-      animate={{ height: 'auto', opacity: 1 }}
+    <div
       className="bg-amber-500/10 border-b border-amber-500/20 relative z-50"
     >
       <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between gap-4">
@@ -60,7 +56,7 @@ const VerificationBanner = () => {
           </button>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
 
@@ -74,7 +70,6 @@ const RootLayout = ({ children }) => {
   return (
     <ReactLenis root>
       <div className="relative min-h-screen bg-primary-dark font-sans selection:bg-cyan-primary selection:text-primary-dark">
-        <SiteBg />
         
         <div className="relative z-10 flex flex-col min-h-screen overflow-x-hidden">
           <VerificationBanner />

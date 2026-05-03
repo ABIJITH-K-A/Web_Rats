@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import { CircleX } from "lucide-react";
 
 export default function DeniedActionButton({
@@ -9,9 +8,8 @@ export default function DeniedActionButton({
   ...props
 }) {
   return (
-    <motion.button
+    <button
       type={type}
-      whileTap={{ scale: 0.98 }}
       aria-disabled="true"
       onClick={(event) => {
         event.preventDefault();
@@ -25,6 +23,6 @@ export default function DeniedActionButton({
         <span>{label}</span>
         <CircleX size={20} className="text-[#ff8c79] transition-colors duration-300 group-hover:text-white" />
       </span>
-    </motion.button>
+    </button>
   );
 }

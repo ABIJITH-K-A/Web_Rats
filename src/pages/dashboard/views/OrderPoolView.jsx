@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
 import {
   AlertCircle,
   Calendar,
@@ -163,31 +162,17 @@ const OrderPoolView = () => {
         </div>
       </div>
 
-      <AnimatePresence>
-        {successMessage ? (
-          <motion.div
-            key="pool-success"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="flex items-center gap-3 rounded-2xl border border-green-500/20 bg-[#0f1f15] px-4 py-3 text-sm text-green-400"
-          >
-            <CheckCircle size={16} /> {successMessage}
-          </motion.div>
-        ) : null}
+      {successMessage && (
+        <div className="flex items-center gap-3 rounded-2xl border border-green-500/20 bg-[#0f1f15] px-4 py-3 text-sm text-green-400">
+          <CheckCircle size={16} /> {successMessage}
+        </div>
+      )}
 
-        {claimError ? (
-          <motion.div
-            key="pool-error"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="flex items-center gap-3 rounded-2xl border border-red-500/20 bg-[#1a0f0f] px-4 py-3 text-sm text-red-400"
-          >
-            <AlertCircle size={16} /> {claimError}
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
+      {claimError && (
+        <div className="flex items-center gap-3 rounded-2xl border border-red-500/20 bg-[#1a0f0f] px-4 py-3 text-sm text-red-400">
+          <AlertCircle size={16} /> {claimError}
+        </div>
+      )}
 
       {loading ? (
         <div className="flex items-center justify-center py-24">

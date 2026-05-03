@@ -1,17 +1,16 @@
-import { motion } from "framer-motion";
 import { Wallet } from "lucide-react";
 
 const PARTICLES = [
-  { top: "18%", left: "16%", size: 4, drift: -8, duration: 1.45, delay: 0.05 },
-  { top: "22%", left: "36%", size: 5, drift: 10, duration: 1.7, delay: 0.22 },
-  { top: "24%", left: "68%", size: 4, drift: -6, duration: 1.5, delay: 0.14 },
-  { top: "34%", left: "84%", size: 5, drift: 9, duration: 1.68, delay: 0.08 },
-  { top: "52%", left: "18%", size: 4, drift: -8, duration: 1.55, delay: 0.28 },
-  { top: "56%", left: "44%", size: 6, drift: 11, duration: 1.88, delay: 0.18 },
-  { top: "48%", left: "70%", size: 4, drift: -10, duration: 1.52, delay: 0.34 },
-  { top: "74%", left: "24%", size: 5, drift: -7, duration: 1.74, delay: 0.25 },
-  { top: "78%", left: "56%", size: 4, drift: 8, duration: 1.64, delay: 0.16 },
-  { top: "72%", left: "82%", size: 5, drift: -6, duration: 1.9, delay: 0.31 },
+  { top: "18%", left: "16%", size: 4 },
+  { top: "22%", left: "36%", size: 5 },
+  { top: "24%", left: "68%", size: 4 },
+  { top: "34%", left: "84%", size: 5 },
+  { top: "52%", left: "18%", size: 4 },
+  { top: "56%", left: "44%", size: 6 },
+  { top: "48%", left: "70%", size: 4 },
+  { top: "74%", left: "24%", size: 5 },
+  { top: "78%", left: "56%", size: 4 },
+  { top: "72%", left: "82%", size: 5 },
 ];
 
 function CardGlyph() {
@@ -68,61 +67,40 @@ export default function AnimatedPaymentButton({
   const activeLabel = processing ? processingLabel : idleLabel;
 
   return (
-    <motion.button
+    <button
       type={type}
       onClick={onClick}
       disabled={isDisabled}
       aria-busy={processing}
       data-processing={processing}
-      whileTap={isDisabled ? undefined : { scale: 0.98 }}
       className={`tn-pay-btn relative isolate inline-flex min-h-[68px] items-center justify-center overflow-hidden rounded-[1.55rem] border border-white/12 bg-[#0e151a]/96 px-6 py-4 text-white shadow-[0_18px_44px_rgba(0,0,0,0.28)] transition-[border-color,transform,box-shadow] duration-300 hover:-translate-y-0.5 hover:border-cyan-primary/35 hover:shadow-[0_24px_52px_rgba(103,248,29,0.14)] disabled:cursor-not-allowed disabled:opacity-65 ${className}`}
     >
-      <motion.div
-        className="absolute inset-0 bg-gradient-to-r from-cyan-primary via-teal-primary to-cyan-primary"
-        initial={false}
-        animate={{ scaleX: processing ? 1 : 0 }}
-        transition={{ duration: 0.45, ease: "easeOut" }}
-        style={{ transformOrigin: "left" }}
+      {/* Processing fill bar */}
+      <div
+        className="absolute inset-0 bg-gradient-to-r from-cyan-primary via-teal-primary to-cyan-primary transition-transform duration-500"
+        style={{
+          transformOrigin: "left",
+          transform: processing ? "scaleX(1)" : "scaleX(0)",
+        }}
       />
 
-      <motion.div
-        className="absolute inset-0 bg-[linear-gradient(110deg,transparent_12%,rgba(255,255,255,0.42)_48%,transparent_88%)]"
-        initial={{ x: "-140%", opacity: 0 }}
-        animate={
-          processing
-            ? { x: ["-140%", "140%"], opacity: [0, 0.85, 0] }
-            : { x: "-140%", opacity: 0 }
-        }
-        transition={
-          processing
-            ? { duration: 1.28, repeat: Infinity, ease: "linear" }
-            : { duration: 0.2 }
-        }
-      />
+      {/* Shimmer on processing */}
+      {processing && (
+        <div className="absolute inset-0 bg-[linear-gradient(110deg,transparent_12%,rgba(255,255,255,0.42)_48%,transparent_88%)] animate-[shimmer_1.3s_linear_infinite]" />
+      )}
 
+      {/* Particles */}
       {processing && (
         <div className="pointer-events-none absolute inset-0">
           {PARTICLES.map((particle, index) => (
-            <motion.span
+            <span
               key={`${particle.left}-${particle.top}-${index}`}
-              className="absolute rounded-full bg-white/70"
+              className="absolute rounded-full bg-white/70 animate-pulse"
               style={{
                 top: particle.top,
                 left: particle.left,
                 width: particle.size,
                 height: particle.size,
-              }}
-              animate={{
-                y: [0, -18, 0],
-                x: [0, particle.drift, 0],
-                opacity: [0, 1, 0],
-                scale: [0.75, 1.25, 0.75],
-              }}
-              transition={{
-                duration: particle.duration,
-                delay: particle.delay,
-                repeat: Infinity,
-                ease: "easeInOut",
               }}
             />
           ))}
@@ -151,6 +129,6 @@ export default function AnimatedPaymentButton({
         </span>
         <span className="text-sm font-black uppercase tracking-[0.16em]">{activeLabel}</span>
       </div>
-    </motion.button>
+    </button>
   );
 }

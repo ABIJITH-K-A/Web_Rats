@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import { ArrowRight, MessageCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button, Card } from "../../components/ui/Primitives";
@@ -68,12 +67,7 @@ const Services = () => {
         >
           <div className="container mx-auto px-6">
             <div className="grid gap-8 lg:grid-cols-[0.72fr_1.28fr]">
-              <motion.div
-                initial={{ opacity: 0, x: -24 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, margin: "-100px" }}
-                transition={{ duration: 0.5 }}
-              >
+              <div>
                 <Card className="sticky top-28 flex h-full flex-col border-cyan-primary/10 bg-black/70 lg:min-h-[38rem] xl:min-h-[42rem]">
                   <div className="text-[10px] font-mono uppercase tracking-[0.24em] text-cyan-primary/70">
                     {category.pricingHint}
@@ -108,7 +102,7 @@ const Services = () => {
                     </Button>
                   </Link>
                 </Card>
-              </motion.div>
+              </div>
 
               <div className="grid gap-6 xl:grid-cols-2">
                 {category.services.map((service) => (

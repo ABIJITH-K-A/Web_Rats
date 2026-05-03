@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, ChevronLeft, ChevronRight, Eye, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button, Card, SectionHeading } from "../../components/ui/Primitives";
@@ -55,11 +54,7 @@ const Projects = () => {
     <div className="flex flex-col py-20">
       <section className="pb-18">
         <div className="container mx-auto grid items-center gap-12 px-6 lg:grid-cols-[0.95fr_1.05fr]">
-          <motion.div
-            initial={{ opacity: 0, x: -28 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6 }}
-          >
+          <div>
             <div className="mb-6 inline-flex rounded-full border border-cyan-primary/20 bg-cyan-primary/8 px-4 py-2 text-[10px] font-mono uppercase tracking-[0.24em] text-cyan-primary">
               Our Work
             </div>
@@ -82,14 +77,9 @@ const Projects = () => {
                 <Button variant="outline">Start A Project With Us</Button>
               </Link>
             </div>
-          </motion.div>
+          </div>
 
-          <motion.div
-            initial={{ opacity: 0, x: 28 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.06 }}
-            className="grid gap-4 sm:grid-cols-2"
-          >
+          <div className="grid gap-4 sm:grid-cols-2">
             {PORTFOLIO_GALLERY.slice(0, 4).map((item, index) => (
               <button
                 type="button"
@@ -114,7 +104,7 @@ const Projects = () => {
                 </div>
               </button>
             ))}
-          </motion.div>
+          </div>
         </div>
       </section>
 
@@ -125,14 +115,8 @@ const Projects = () => {
           </SectionHeading>
 
           <div className="grid gap-6 lg:grid-cols-3">
-            {FEATURED_PROJECTS.map((project, index) => (
-              <motion.div
-                key={project.id}
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.45, delay: index * 0.08 }}
-              >
+            {FEATURED_PROJECTS.map((project) => (
+              <div key={project.id}>
                 <Card className="flex h-full flex-col overflow-hidden border-white/8 bg-black/72 p-0">
                   <img
                     src={project.image}
@@ -162,7 +146,7 @@ const Projects = () => {
                     </div>
                   </div>
                 </Card>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
@@ -181,14 +165,10 @@ const Projects = () => {
 
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
             {PORTFOLIO_GALLERY.map((item, index) => (
-              <motion.button
+              <button
                 type="button"
                 key={item.id}
                 onClick={() => setPreviewIndex(index)}
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-80px" }}
-                transition={{ duration: 0.4 }}
                 className="group overflow-hidden rounded-[26px] border border-white/8 bg-black/70 text-left transition-transform duration-300 hover:-translate-y-1"
                 aria-label={`Preview ${item.title}`}
               >
@@ -208,7 +188,7 @@ const Projects = () => {
                     {item.title}
                   </div>
                 </div>
-              </motion.button>
+              </button>
             ))}
           </div>
         </div>
@@ -238,18 +218,16 @@ const Projects = () => {
         </div>
       </section>
 
-      <AnimatePresence>
-        {previewItem && (
-          <PortfolioPreviewModal
-            items={PORTFOLIO_GALLERY}
-            activeIndex={previewIndex}
-            onClose={closePreview}
-            onPrevious={showPreviousPreview}
-            onNext={showNextPreview}
-            onSelect={setPreviewIndex}
-          />
-        )}
-      </AnimatePresence>
+      {previewItem && (
+        <PortfolioPreviewModal
+          items={PORTFOLIO_GALLERY}
+          activeIndex={previewIndex}
+          onClose={closePreview}
+          onPrevious={showPreviousPreview}
+          onNext={showNextPreview}
+          onSelect={setPreviewIndex}
+        />
+      )}
     </div>
   );
 };
@@ -267,17 +245,11 @@ const PortfolioPreviewModal = ({
   if (!activeItem) return null;
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
+    <div
       className="fixed inset-0 z-[120] flex items-center justify-center bg-black/82 p-4 backdrop-blur"
       onClick={onClose}
     >
-      <motion.div
-        initial={{ opacity: 0, y: 18, scale: 0.97 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 18, scale: 0.97 }}
+      <div
         className="relative w-full max-w-6xl overflow-hidden rounded-[32px] border border-white/10 bg-[#10141a] shadow-2xl"
         onClick={(event) => event.stopPropagation()}
       >
@@ -379,8 +351,8 @@ const PortfolioPreviewModal = ({
             </div>
           </div>
         </div>
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 };
 

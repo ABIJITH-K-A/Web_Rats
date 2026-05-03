@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+
 import {
   UserPlus, LogIn, User, Mail, Smartphone, Lock,
   Eye, EyeOff, Ticket, Check, ArrowRight, KeyRound,

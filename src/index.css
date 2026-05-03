@@ -17,7 +17,7 @@
 @layer base {
   body {
     @apply bg-primary-dark text-light-gray font-sans cursor-default overflow-x-hidden m-0 p-0;
-    background: rgba(9, 10, 14, 0.94);
+    background: rgba(11, 18, 12, 0.94);
   }
 
   /* Grid overlay from original styles.css */
@@ -51,11 +51,11 @@
 
 @layer components {
   .btn-primary {
-    @apply relative z-10 px-8 py-3 rounded-full font-semibold transition-all duration-300 bg-cyan-primary text-primary-dark overflow-hidden inline-flex items-center justify-center;
+    @apply relative z-10 px-8 py-3 rounded-full font-semibold transition-all duration-300 bg-cyan-primary text-white overflow-hidden inline-flex items-center justify-center;
   }
 
   .btn-primary:hover {
-    @apply shadow-[0_0_5px_#67F81D,0_0_25px_#67F81D,0_0_50px_#67F81D];
+    @apply shadow-[0_0_5px_#9BFF57,0_0_25px_#9BFF57,0_0_50px_#9BFF57];
   }
 
   .service-card {
@@ -71,7 +71,7 @@
   
   /* Force a high-opacity backing on any section or glass elements so text remains readable over the intense neural background */
   section[class*="bg-"] {
-    background-color: rgba(9, 10, 14, 0.94) !important;
+    background-color: rgba(11, 18, 12, 0.94) !important;
     backdrop-filter: blur(28px) !important;
     position: relative;
   }

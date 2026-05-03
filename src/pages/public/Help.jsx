@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   LifeBuoy,
   Mail,
@@ -25,20 +24,13 @@ const AccordionItem = ({ question, answer, isOpen, onClick }) => (
       <span className="text-base font-semibold text-white">{question}</span>
       <AccordionToggleIcon open={isOpen} />
     </button>
-    <AnimatePresence initial={false}>
-      {isOpen && (
-        <motion.div
-          initial={{ height: 0, opacity: 0 }}
-          animate={{ height: "auto", opacity: 1 }}
-          exit={{ height: 0, opacity: 0 }}
-          className="overflow-hidden"
-        >
-          <div className="border-t border-white/8 px-6 py-5 text-sm leading-7 text-light-gray/68">
-            {answer}
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+    {isOpen && (
+      <div className="overflow-hidden">
+        <div className="border-t border-white/8 px-6 py-5 text-sm leading-7 text-light-gray/68">
+          {answer}
+        </div>
+      </div>
+    )}
   </div>
 );
 
@@ -94,7 +86,7 @@ const Help = () => {
               action: "Open Sign In",
               external: false,
             },
-          ].map((item, index) => {
+          ].map((item) => {
             const Icon = item.icon;
             const content = (
               <Card className="flex h-full flex-col border-white/8 bg-black/72">
@@ -112,13 +104,7 @@ const Help = () => {
             );
 
             return (
-              <motion.div
-                key={item.title}
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.45, delay: index * 0.08 }}
-              >
+              <div key={item.title}>
                 {item.external ? (
                   <a href={item.href} rel="noreferrer">
                     {content}
@@ -126,7 +112,7 @@ const Help = () => {
                 ) : (
                   <Link to={item.href}>{content}</Link>
                 )}
-              </motion.div>
+              </div>
             );
           })}
         </div>
@@ -182,14 +168,8 @@ const Help = () => {
 
       <section className="py-20">
         <div className="container mx-auto grid gap-6 px-6 md:grid-cols-3">
-          {HELP_PROMISES.map((item, index) => (
-            <motion.div
-              key={item.title}
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.45, delay: index * 0.08 }}
-            >
+          {HELP_PROMISES.map((item) => (
+            <div key={item.title}>
               <Card className="h-full border-white/8 bg-secondary-dark/72">
                 <LifeBuoy size={22} className="mb-5 text-cyan-primary" />
                 <h2 className="text-2xl font-black text-white">{item.title}</h2>
@@ -197,7 +177,7 @@ const Help = () => {
                   {item.text}
                 </p>
               </Card>
-            </motion.div>
+            </div>
           ))}
         </div>
       </section>

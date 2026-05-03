@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import BackButton from "../../components/ui/BackButton";
@@ -40,14 +40,10 @@ const ServiceDetail = () => {
           <BackButton to="/services" label="Back to services" className="mb-8" />
 
           <div className="grid gap-10 lg:grid-cols-[0.95fr_1.05fr]">
-            <motion.div
-              initial={{ opacity: 0, x: -24 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.55 }}
-            >
-              <div className="mb-5 inline-flex rounded-full border border-cyan-primary/18 bg-cyan-primary/8 px-4 py-2 text-[10px] font-mono uppercase tracking-[0.22em] text-cyan-primary">
-                {category?.name}
-              </div>
+          <div>
+            <div className="mb-5 inline-flex rounded-full border border-cyan-primary/18 bg-cyan-primary/8 px-4 py-2 text-[10px] font-mono uppercase tracking-[0.22em] text-cyan-primary">
+              {category?.name}
+            </div>
               <h1 className="text-5xl font-black leading-[1.05] text-white md:text-6xl">
                 {service.name}
               </h1>
@@ -89,13 +85,9 @@ const ServiceDetail = () => {
                   </p>
                 </Card>
               </div>
-            </motion.div>
+          </div>
 
-            <motion.div
-              initial={{ opacity: 0, x: 24 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.55, delay: 0.06 }}
-            >
+          <div>
               <div className="overflow-hidden rounded-[32px] border border-white/8 bg-black/70">
                 <img
                   src={service.image}
@@ -103,7 +95,7 @@ const ServiceDetail = () => {
                   className="h-[420px] w-full object-cover"
                 />
               </div>
-            </motion.div>
+          </div>
           </div>
         </div>
       </section>
@@ -132,14 +124,8 @@ const ServiceDetail = () => {
             </Card>
 
             <div className="grid gap-6 xl:grid-cols-3">
-              {service.plans.map((plan, index) => (
-                <motion.div
-                  key={plan.id}
-                  initial={{ opacity: 0, y: 24 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-80px" }}
-                  transition={{ duration: 0.45, delay: index * 0.08 }}
-                >
+              {service.plans.map((plan) => (
+                <div key={plan.id}>
                   <Card
                     className={`flex h-full flex-col border-white/8 bg-secondary-dark/75 ${
                       plan.label === "Standard"
@@ -185,7 +171,7 @@ const ServiceDetail = () => {
                       </Button>
                     </Link>
                   </Card>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>

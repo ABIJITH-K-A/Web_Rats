@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import { LogOut } from "lucide-react";
 
 export default function LogoutButton({
@@ -9,9 +8,8 @@ export default function LogoutButton({
   ...props
 }) {
   return (
-    <motion.button
+    <button
       type={type}
-      whileTap={{ scale: 0.58 }}
       onClick={onClick}
       aria-label={label}
       className={`tn-logout-btn ${className}`}
@@ -21,6 +19,6 @@ export default function LogoutButton({
         <LogOut />
       </span>
       <span className="tn-logout-btn__text">{label}</span>
-    </motion.button>
+    </button>
   );
 }
