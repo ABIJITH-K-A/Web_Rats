@@ -68,13 +68,32 @@ const wrapAuthError = (error) => {
 };
 
 const SESSION_KEY = 'rynix_session_start';
+const COOKIE_CONSENT_KEY = 'rynix_cookie_consent';
 const SESSION_DURATION_MS = 60 * 60 * 1000; // 1 hour
 
+const hasCookieConsent = () => {
+  return localStorage.getItem(COOKIE_CONSENT_KEY) === 'accepted';
+};
+
 const isSessionExpired = () => {
+  // If no cookie consent, treat as expired (force re-auth on refresh)
+  if (!hasCookieConsent()) return true;
   const sessionStart = localStorage.getItem(SESSION_KEY);
   if (!sessionStart) return true;
   const elapsed = Date.now() - parseInt(sessionStart, 10);
   return elapsed > SESSION_DURATION_MS;
+};
+
+const setSessionStart = () => {
+  if (hasCookieConsent()) {
+    localStorage.setItem(SESSION_KEY, Date.now().toString());
+  }
+};
+
+const clearSessionData = () => {
+  if (hasCookieConsent()) {
+    localStorage.removeItem(SESSION_KEY);
+  }
 };
 
 export const AuthProvider = ({ children }) => {
@@ -154,9 +173,9 @@ export const AuthProvider = ({ children }) => {
           return;
         }
         
-        // Set session start time if not set
+        // Set session start time only if cookies are accepted
         if (!localStorage.getItem(SESSION_KEY)) {
-          localStorage.setItem(SESSION_KEY, Date.now().toString());
+          setSessionStart();
         }
         
         setUser(currentUser);
@@ -173,7 +192,7 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
         setUserProfile(null);
         setRole(null);
-        localStorage.removeItem(SESSION_KEY);
+        clearSessionData();
       }
       setLoading(false);
     });

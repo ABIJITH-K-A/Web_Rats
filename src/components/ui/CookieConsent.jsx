@@ -27,7 +27,7 @@ export const CookieConsent = () => {
   };
 
   const handleDecline = () => {
-    localStorage.setItem(COOKIE_CONSENT_KEY, 'declined');
+    // Don't save 'declined' - just hide and ask again on next refresh
     setShow(false);
   };
 
