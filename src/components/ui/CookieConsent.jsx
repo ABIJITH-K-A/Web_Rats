@@ -8,14 +8,18 @@ export const CookieConsent = () => {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
-    // Check if user has already consented
+    // Check if user has already consented (accepted or declined)
     const consent = localStorage.getItem(COOKIE_CONSENT_KEY);
-    if (!consent) {
-      // Show after a short delay
-      const timer = setTimeout(() => setShow(true), 1000);
-      return () => clearTimeout(timer);
+    if (consent === 'accepted' || consent === 'declined') {
+      return; // Don't show if already decided
     }
+    // Show after a short delay for new visitors
+    const timer = setTimeout(() => setShow(true), 1000);
+    return () => clearTimeout(timer);
   }, []);
+
+  // Don't render anything if not showing (performance optimization)
+  if (!show) return null;
 
   const handleAccept = () => {
     localStorage.setItem(COOKIE_CONSENT_KEY, 'accepted');
