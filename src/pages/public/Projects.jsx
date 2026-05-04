@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ArrowRight, ChevronLeft, ChevronRight, Eye, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button, Card, SectionHeading } from "../../components/ui/Primitives";
+import { ScrollReveal, StaggerContainer, StaggerItem, GradientText } from "../../components/ui/ScrollReveal";
 import {
   FEATURED_PROJECTS,
   PORTFOLIO_GALLERY,
@@ -55,28 +56,38 @@ const Projects = () => {
       <section className="pb-18">
         <div className="container mx-auto grid items-center gap-12 px-6 lg:grid-cols-[0.95fr_1.05fr]">
           <div>
-            <div className="mb-6 inline-flex rounded-full border border-cyan-primary/20 bg-cyan-primary/8 px-4 py-2 text-[10px] font-mono uppercase tracking-[0.24em] text-cyan-primary">
-              Our Work
-            </div>
-            <h1 className="text-5xl font-black leading-[1.05] text-white md:text-6xl">
-              We let the work do the talking.
-            </h1>
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-light-gray/68">
-              Every project here started with a problem and ended with
-              something we were genuinely proud to ship. Real briefs, real
-              builds, and a lot more currently in the pipeline.
-            </p>
+            <ScrollReveal direction="up" delay={0.1}>
+              <div className="mb-6 inline-flex rounded-full border border-cyan-primary/20 bg-cyan-primary/8 px-4 py-2 text-[10px] font-mono uppercase tracking-[0.24em] text-cyan-primary">
+                Our Work
+              </div>
+            </ScrollReveal>
+            
+            <ScrollReveal direction="up" delay={0.2}>
+              <h1 className="text-5xl font-black leading-[1.05] text-white md:text-6xl">
+                We let the <GradientText>work</GradientText> do the talking.
+              </h1>
+            </ScrollReveal>
+            
+            <ScrollReveal direction="up" delay={0.3}>
+              <p className="mt-6 max-w-2xl text-lg leading-8 text-light-gray/68">
+                Every project here started with a problem and ended with
+                something we were genuinely proud to ship. Real briefs, real
+                builds, and a lot more currently in the pipeline.
+              </p>
+            </ScrollReveal>
 
-            <div className="mt-10 flex flex-wrap gap-4">
-              <a href="#featured-projects">
-                <Button>
-                  View Projects <ArrowRight size={16} />
-                </Button>
-              </a>
-              <Link to="/book">
-                <Button variant="outline">Start A Project With Us</Button>
-              </Link>
-            </div>
+            <ScrollReveal direction="up" delay={0.4}>
+              <div className="mt-10 flex flex-wrap gap-4">
+                <a href="#featured-projects">
+                  <Button>
+                    View Projects <ArrowRight size={16} />
+                  </Button>
+                </a>
+                <Link to="/book">
+                  <Button variant="outline">Start A Project With Us</Button>
+                </Link>
+              </div>
+            </ScrollReveal>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
