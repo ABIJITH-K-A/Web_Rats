@@ -6,7 +6,7 @@ export const ScrollReveal = ({
   children, 
   direction = 'up', 
   delay = 0, 
-  duration = 0.8,
+  duration = 0.9,
   className = '' 
 }) => {
   const ref = useRef(null);
@@ -91,7 +91,7 @@ export const StaggerItem = ({ children, direction = 'up', className = '' }) => {
           y: 0, 
           scale: 1,
           transition: {
-            duration: 0.6,
+            duration: 0.7,
             ease: [0.16, 1, 0.3, 1]
           }
         }
@@ -103,11 +103,11 @@ export const StaggerItem = ({ children, direction = 'up', className = '' }) => {
   );
 };
 
-// Animated gradient text
+// Animated gradient text - using website theme colors
 export const GradientText = ({ children, className = '', animate = true }) => {
   return (
     <motion.span
-      className={`bg-gradient-to-r from-cyan-400 via-cyan-500 to-cyan-400 bg-clip-text text-transparent bg-[length:200%_auto] ${className}`}
+      className={`bg-gradient-to-r from-[#9BFF57] via-[#00d9ff] to-[#9BFF57] bg-clip-text text-transparent bg-[length:200%_auto] ${className}`}
       animate={animate ? { backgroundPosition: ['0% center', '200% center'] } : {}}
       transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
       style={{ backgroundSize: '200% auto' }}
@@ -117,12 +117,13 @@ export const GradientText = ({ children, className = '', animate = true }) => {
   );
 };
 
-// Glow text effect
-export const GlowText = ({ children, className = '', color = 'cyan' }) => {
+// Glow text effect - using website theme colors
+export const GlowText = ({ children, className = '', color = 'primary' }) => {
   const colors = {
-    cyan: 'text-cyan-400 drop-shadow-[0_0_10px_rgba(0,217,255,0.8)]',
+    primary: 'text-[#9BFF57] drop-shadow-[0_0_10px_rgba(155,255,87,0.8)]',
+    cyan: 'text-[#00d9ff] drop-shadow-[0_0_10px_rgba(0,217,255,0.8)]',
     purple: 'text-purple-400 drop-shadow-[0_0_10px_rgba(168,85,247,0.8)]',
-    green: 'text-green-400 drop-shadow-[0_0_10px_rgba(34,197,94,0.8)]',
+    green: 'text-[#9BFF57] drop-shadow-[0_0_10px_rgba(155,255,87,0.8)]',
     pink: 'text-pink-400 drop-shadow-[0_0_10px_rgba(236,72,153,0.8)]'
   };
   
