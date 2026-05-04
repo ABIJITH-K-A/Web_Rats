@@ -28,7 +28,7 @@ export default function BackButton({
         className={`relative z-20 flex w-full items-center justify-center font-semibold tracking-[0.08em] transition-[opacity,transform] duration-300 ${
           compact
             ? "pl-14 pr-4 text-sm opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 group-active:opacity-100"
-            : "pl-14 pr-6 text-sm"
+            : "pl-14 pr-6 text-sm opacity-100 group-hover:opacity-0 group-focus-visible:opacity-0 group-active:opacity-0"
         }`}
       >
         {label}
