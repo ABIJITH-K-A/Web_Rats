@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
+  CreditCard,
   Check,
   Circle,
   Clock3,
@@ -10,23 +11,27 @@ import {
   ListChecks,
   Mail,
   Phone,
+  Paperclip,
+  QrCode,
   ShieldCheck,
   Sparkles,
+  Upload,
   User,
 } from "lucide-react";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import {
   doc,
-  getDoc,
-  setDoc,
+  updateDoc,
 } from "firebase/firestore";
-import { db } from "../../config/firebase";
+import { getDownloadURL, ref as storageRef, uploadBytes } from "firebase/storage";
+import { db, storage } from "../../config/firebase";
 import { useAuth } from "../../context/AuthContext";
 import AnimatedPaymentButton from "../../components/ui/AnimatedPaymentButton";
 import BackButton from "../../components/ui/BackButton";
 import { Button, Card, SectionHeading } from "../../components/ui/Primitives";
 import Stepper, { Step } from "../../components/ui/Stepper";
 import QRPaymentStep from "../../components/temp/QRPaymentStep";
+import { apiRequest } from "../../services/apiClient";
 import { createOrder } from "../../services/orderService";
 import {
   BOOKING_STEP_LABELS,
@@ -41,6 +46,7 @@ import { buildReorderDraft } from "../../utils/orderHelpers";
 import {
   clampReferralDiscountPercent,
   getEligibleReferralDiscount,
+  getStudentStartupDiscount,
 } from "../../utils/systemRules";
 
 const formatPrice = (price) => `Rs ${price.toLocaleString("en-IN")}`;
@@ -132,8 +138,10 @@ const BookService = () => {
   const [selectedServiceId, setSelectedServiceId] = useState(initialServiceId);
   const [selectedPlanId, setSelectedPlanId] = useState(initialPlanId);
   const [isPriority, setIsPriority] = useState(Boolean(reorderDraft?.isPriority));
-  const [paymentMethod] = useState("qpay"); // Temporary: default to qpay
+  const [paymentMethod, setPaymentMethod] = useState("cashfree");
   const [utrNumber, setUtrNumber] = useState("");
+  const [referenceFiles, setReferenceFiles] = useState([]);
+  const [demoRequested, setDemoRequested] = useState(false);
   const [customerType] = useState(
     reorderDraft ? "returning" : userProfile?.customerType || "new"
   );
@@ -208,7 +216,7 @@ const BookService = () => {
           })
     );
     setReferralFeedback((current) =>
-      current || `${profileDiscount}% student referral discount is linked to this order.`
+      current || `${profileDiscount}% referral discount is linked to this order.`
     );
   }, [userProfile]);
 
@@ -221,13 +229,23 @@ const BookService = () => {
   const selectedPlan =
     selectedService?.plans.find((plan) => plan.id === selectedPlanId) || null;
   const resolvedCustomerType = reorderDraft ? "returning" : customerType;
+  const studentStartupDiscountPercent = getStudentStartupDiscount(
+    userProfile?.organizationType || userProfile?.customerSegment || ""
+  );
+  const appliedDiscountPercent = Math.max(
+    referralState.discountPercent,
+    studentStartupDiscountPercent
+  );
   const payment = buildPaymentBreakdown({
     basePrice: selectedPlan?.price ?? 0,
     isPriority: Boolean(selectedPlan && isPriority),
     customerType: resolvedCustomerType,
-    referralDiscountPercent: referralState.discountPercent,
+    referralDiscountPercent: appliedDiscountPercent,
   });
   const hasReferralDiscount = referralState.discountPercent > 0;
+  const hasStudentStartupDiscount = studentStartupDiscountPercent > 0;
+  const isStudentStartupDiscountApplied =
+    studentStartupDiscountPercent > referralState.discountPercent;
 
   const goToStep = (nextStep) => {
     setDirection(nextStep > step ? 1 : -1);
@@ -301,20 +319,11 @@ const BookService = () => {
     setIsApplyingReferral(true);
 
     try {
-      const referralSnapshot = await getDoc(doc(db, "referralCodes", normalizedCode));
-
-      if (!referralSnapshot.exists()) {
-        setReferralError("Invalid Referral code. Check the code and try again.");
-        return;
-      }
-
-      const referralData = referralSnapshot.data() || {};
-      const discountPercent = clampReferralDiscountPercent(
-        referralData.discountPercent
-      );
+      const referralData = await apiRequest(`/auth/validate-referral/${normalizedCode}`);
+      const discountPercent = clampReferralDiscountPercent(referralData?.discountPercent);
 
       if (discountPercent <= 0) {
-        setReferralError("This code does not include a student discount.");
+        setReferralError("This code does not include a discount.");
         return;
       }
 
@@ -323,11 +332,11 @@ const BookService = () => {
         buildReferralState({
           code: normalizedCode,
           discountPercent,
-          referredBy: referralData.ownerUid || null,
+          referredBy: referralData.ownerUid || referralData.referredBy || null,
         })
       );
       setReferralFeedback(
-        `${discountPercent}% student referral discount applied.`
+        `${discountPercent}% referral discount applied.`
       );
     } catch (error) {
       console.error("Referral validation failed:", error);
@@ -342,6 +351,45 @@ const BookService = () => {
     setReferralState(buildReferralState());
     setReferralFeedback("");
     setReferralError("");
+  };
+
+  const handleReferenceFilesChange = (event) => {
+    const files = Array.from(event.target.files || []).slice(0, 6);
+    setReferenceFiles(files);
+  };
+
+  const uploadReferenceFiles = async (orderDocId) => {
+    if (!referenceFiles.length) return [];
+
+    if (!user?.uid) {
+      throw new Error("Please sign in before uploading reference files.");
+    }
+
+    const uploadedFiles = await Promise.all(
+      referenceFiles.map(async (file) => {
+        const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+        const path = `orders/${orderDocId}/references/${Date.now()}-${safeName}`;
+        const fileRef = storageRef(storage, path);
+
+        await uploadBytes(fileRef, file);
+        const url = await getDownloadURL(fileRef);
+
+        return {
+          name: file.name,
+          url,
+          path,
+          size: file.size,
+          type: file.type || "application/octet-stream",
+        };
+      })
+    );
+
+    await updateDoc(doc(db, "orders", orderDocId), {
+      referenceFiles: uploadedFiles,
+      "requirements.referenceFiles": uploadedFiles,
+    });
+
+    return uploadedFiles;
   };
 
   const createWhatsAppMessage = (newOrderId) => {
@@ -359,10 +407,18 @@ const BookService = () => {
       `Priority: ${isPriority ? "High" : "Normal"}`,
       `Customer Type: ${resolvedCustomerType}`,
       hasReferralDiscount
-        ? `Student Referral: ${referralState.code} (${referralState.discountPercent}% off)`
+        ? `Referral: ${referralState.code} (${referralState.discountPercent}% off)`
+        : null,
+      hasStudentStartupDiscount
+        ? `Student/Startup Discount: ${studentStartupDiscountPercent}% ${
+            isStudentStartupDiscountApplied ? "applied" : "available"
+          }`
         : null,
       `Total: ${formatPrice(payment.total)}`,
       `Advance: ${formatPrice(payment.advancePayment)}`,
+      `Payment Method: ${paymentMethod === "cashfree" ? "Cashfree" : "QR fallback"}`,
+      demoRequested ? "Company demo requested before final scope lock." : null,
+      referenceFiles.length ? `Reference Files: ${referenceFiles.length}` : null,
       "",
       `Name: ${formData.name}`,
       `Email: ${formData.email}`,
@@ -386,7 +442,14 @@ const BookService = () => {
     setIsSubmitting(true);
 
     try {
-      // First create the order in Firebase
+      const isTextBypass = utrNumber === "TEST_BYPASS";
+      const referralDiscountAmount = isStudentStartupDiscountApplied
+        ? 0
+        : payment.discountAmount;
+      const studentStartupDiscountAmount = isStudentStartupDiscountApplied
+        ? payment.discountAmount
+        : 0;
+
       const orderPayload = {
         userId: user?.uid || "guest",
         customerId: user?.uid || null,
@@ -405,15 +468,19 @@ const BookService = () => {
         priorityFee: payment.priorityFee,
         subtotalPrice: payment.subtotal,
         totalPrice: payment.total,
-        referralDiscountPercent: payment.discountPercent,
-        referralDiscountAmount: payment.discountAmount,
+        discountPercent: payment.discountPercent,
+        discountAmount: payment.discountAmount,
+        referralDiscountPercent: referralState.discountPercent,
+        referralDiscountAmount,
+        studentStartupDiscountPercent,
+        studentStartupDiscountAmount,
         usedReferralCode: referralState.code || null,
         referredBy: referralState.referredBy || null,
         advancePayment: payment.advancePayment,
-        advancePaid: 0,
+        advancePaid: isTextBypass ? payment.advancePayment : 0,
         remainingPayment: payment.remainingPayment,
         remainingAmount: payment.remainingPayment,
-        totalPaid: 0,
+        totalPaid: isTextBypass ? payment.advancePayment : 0,
         advanceRate: payment.advanceRate,
         customerType: resolvedCustomerType,
         isPriority,
@@ -423,20 +490,26 @@ const BookService = () => {
         projectDescription: formData.projectDescription.trim(),
         features: formData.features.trim(),
         references: formData.references.trim(),
+        referenceFiles: [],
+        referenceFileCount: referenceFiles.length,
         deadline: formData.deadline,
         requirements: {
           projectDescription: formData.projectDescription.trim(),
           features: formData.features.trim(),
           references: formData.references.trim(),
+          referenceFiles: [],
           deadline: formData.deadline,
         },
-        paymentStatus: utrNumber === "DEMO_BYPASS" ? "Demo Bypass" : "Pending",
+        paymentStatus: isTextBypass ? "Test Paid" : "Pending",
         assignmentStatus: "unassigned",
         paymentMethod,
+        paymentProvider: paymentMethod === "cashfree" ? "cashfree" : "qpay",
         utrNumber,
-        status: (paymentMethod === "qpay" && utrNumber && utrNumber !== "DEMO_BYPASS") ? "Awaiting Payment Verification" : "Pending Assignment",
-        statusKey: (paymentMethod === "qpay" && utrNumber && utrNumber !== "DEMO_BYPASS") ? "pending_payment_verification" : "pending_assignment",
-        isTestOrder: utrNumber === "TEST_BYPASS" || utrNumber === "DEMO_BYPASS",
+        demoRequested,
+        status: (paymentMethod === "qpay" && utrNumber && !isTextBypass) ? "Awaiting Payment Verification" : "Pending Assignment",
+        orderStatus: (paymentMethod === "qpay" && utrNumber && !isTextBypass) ? "Awaiting Payment Verification" : "Pending Assignment",
+        statusKey: (paymentMethod === "qpay" && utrNumber && !isTextBypass) ? "pending_payment_verification" : "pending_assignment",
+        isTestOrder: isTextBypass,
       };
 
       const createdOrder = await createOrder(orderPayload);
@@ -446,7 +519,8 @@ const BookService = () => {
         throw new Error("Order could not be created.");
       }
 
-      // If QPay, we are done with payment steps. Show success immediately.
+      await uploadReferenceFiles(orderDocId);
+
       if (paymentMethod === "qpay") {
         const whatsappMessage = createWhatsAppMessage(orderDocId);
 
@@ -465,13 +539,10 @@ const BookService = () => {
         return;
       }
 
-      // Use Cashfree for payment
-      const cashfreeResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/payment/create-order`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const cashfreeResponse = await apiRequest("/payment/create-order", {
+        method: "POST",
+        authMode: "optional",
+        body: {
           amount: payment.advancePayment,
           orderId: orderDocId,
           userDetails: {
@@ -479,117 +550,20 @@ const BookService = () => {
             email: formData.email.trim(),
             phone: formData.phone.trim(),
           },
-        }),
+        },
       });
 
-      if (!cashfreeResponse.ok) {
-        throw new Error('Failed to create payment order');
-      }
-
-      const { paymentSessionId } = await cashfreeResponse.json();
-
-      // Redirect to Cashfree checkout
-      if (paymentSessionId) {
-        window.location.href = `https://payments.cashfree.com/checkout?session_id=${paymentSessionId}`;
+      if (cashfreeResponse?.paymentSessionId) {
+        window.location.href = `https://payments.cashfree.com/checkout?session_id=${cashfreeResponse.paymentSessionId}`;
       } else {
-        throw new Error('No payment session created');
+        throw new Error("No payment session created");
       }
 
     } catch (error) {
       console.error("Booking error:", error);
       setSubmitError(
-        `We're having trouble processing your payment right now (${error.message || 'Server Busy'}). Please check your connection and try again in 30 seconds.`
+        `We're having trouble processing your payment right now (${error.message || "Server Busy"}). Switch to QR fallback or try again in 30 seconds.`
       );
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleBypassPayment = async () => {
-    if (!payment || !selectedCategory || !selectedService || !selectedPlan) {
-      return;
-    }
-
-    setSubmitError("");
-    setIsSubmitting(true);
-
-    try {
-      const orderPayload = {
-        userId: user?.uid || "guest",
-        customerId: user?.uid || null,
-        name: formData.name.trim(),
-        email: formData.email.trim(),
-        phone: formData.phone.trim(),
-        category: selectedCategory.name,
-        categoryId: selectedCategory.id,
-        service: selectedService.name,
-        serviceId: selectedService.id,
-        plan: selectedPlan.label,
-        planId: selectedPlan.id,
-        package: selectedPlan.label,
-        price: payment.total,
-        basePrice: payment.basePrice,
-        priorityFee: payment.priorityFee,
-        subtotalPrice: payment.subtotal,
-        totalPrice: payment.total,
-        referralDiscountPercent: payment.discountPercent,
-        referralDiscountAmount: payment.discountAmount,
-        usedReferralCode: referralState.code || null,
-        referredBy: referralState.referredBy || null,
-        advancePayment: payment.advancePayment,
-        advancePaid: payment.advancePayment,
-        remainingPayment: payment.remainingPayment,
-        remainingAmount: payment.remainingPayment,
-        totalPaid: payment.advancePayment,
-        advanceRate: payment.advanceRate,
-        customerType: resolvedCustomerType,
-        isPriority,
-        priorityLabel: isPriority ? "High" : "Normal",
-        isReorder: Boolean(reorderDraft),
-        parentOrderId: reorderDraft?.parentOrderId || null,
-        projectDescription: formData.projectDescription.trim(),
-        features: formData.features.trim(),
-        references: formData.references.trim(),
-        deadline: formData.deadline,
-        requirements: {
-          projectDescription: formData.projectDescription.trim(),
-          features: formData.features.trim(),
-          references: formData.references.trim(),
-          deadline: formData.deadline,
-        },
-        paymentStatus: "Test Paid",
-        status: "Pending Assignment",
-        orderStatus: "Pending Assignment",
-        statusKey: "pending_assignment",
-        assignmentStatus: "unassigned",
-        utrNumber: utrNumber || null,
-      };
-
-      const createdOrder = await createOrder(orderPayload);
-      const orderDocId = createdOrder?.id;
-
-      if (!orderDocId) throw new Error("Order could not be created.");
-
-      if (user?.uid) {
-        await setDoc(doc(db, "users", user.uid), { customerType: resolvedCustomerType }, { merge: true });
-      }
-
-      const whatsappMessage = createWhatsAppMessage(orderDocId);
-
-      if (whatsappMessage) {
-        window.open(
-          `https://wa.me/${CONTACT_INFO.whatsappNumber}?text=${encodeURIComponent(
-            whatsappMessage
-          )}`,
-          "_blank"
-        );
-      }
-
-      setOrderId(orderDocId);
-      setOrderConfirmed(true);
-      setIsSubmitting(false);
-    } catch (error) {
-      console.error("Booking bypass error:", error);
-      setSubmitError("Bypass failed. Could not save the booking.");
       setIsSubmitting(false);
     }
   };
@@ -919,13 +893,14 @@ const BookService = () => {
               <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_260px] lg:items-start">
                 <div>
                   <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary/72">
-                    Student Referral
+                    Referral Code
                   </div>
                   <h2 className="mt-3 text-2xl font-black text-white">
                     Apply up to 40% off
                   </h2>
                   <p className="mt-3 max-w-2xl text-sm leading-7 text-light-gray/64">
-                    The student code is only provided to students.
+                    Client codes apply 5%, worker codes 10%, and admin codes 15%.
+                    Student and new startup discounts are considered automatically.
                   </p>
 
                   <div className="mt-6 flex flex-col gap-3 sm:flex-row">
@@ -938,7 +913,7 @@ const BookService = () => {
                         setReferralError("");
                         setReferralFeedback("");
                       }}
-                      placeholder="Enter student referral code"
+                      placeholder="Enter referral code"
                       className="w-full rounded-2xl border border-white/10 bg-secondary-dark/70 px-4 py-3.5 text-sm uppercase tracking-[0.12em] text-white outline-none transition-colors placeholder:normal-case placeholder:tracking-normal placeholder:text-white/28 focus:border-cyan-primary"
                     />
                     <Button
@@ -1141,6 +1116,83 @@ const BookService = () => {
                     )}
                   </div>
                 </label>
+
+                <label className="space-y-2">
+                  <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-light-gray/42">
+                    Reference Files
+                  </span>
+                  <div className="rounded-2xl border border-dashed border-white/12 bg-secondary-dark/70 px-5 py-5">
+                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-cyan-primary/20 bg-cyan-primary/8 text-cyan-primary">
+                          <Paperclip size={18} />
+                        </div>
+                        <div>
+                          <div className="text-sm font-bold text-white">
+                            Upload inspiration, docs, screenshots, or PDFs
+                          </div>
+                          <div className="mt-1 text-xs text-light-gray/42">
+                            Up to 6 files. Links in the text box still work too.
+                          </div>
+                        </div>
+                      </div>
+                      <span className="relative inline-flex">
+                        <input
+                          type="file"
+                          multiple
+                          onChange={handleReferenceFilesChange}
+                          className="absolute inset-0 cursor-pointer opacity-0"
+                        />
+                        <span className="inline-flex items-center gap-2 rounded-full border border-cyan-primary/35 px-5 py-3 text-sm font-bold text-cyan-primary">
+                          <Upload size={15} /> Choose Files
+                        </span>
+                      </span>
+                    </div>
+                    {referenceFiles.length ? (
+                      <div className="mt-4 grid gap-2">
+                        {referenceFiles.map((file) => (
+                          <div
+                            key={`${file.name}-${file.size}`}
+                            className="flex items-center justify-between gap-4 rounded-xl border border-white/8 bg-black/30 px-4 py-3 text-xs"
+                          >
+                            <span className="truncate text-white/70">{file.name}</span>
+                            <span className="shrink-0 text-light-gray/36">
+                              {Math.ceil(file.size / 1024)} KB
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                </label>
+
+                <button
+                  type="button"
+                  onClick={() => setDemoRequested((current) => !current)}
+                  className={`flex items-start gap-4 rounded-2xl border p-5 text-left transition-colors ${
+                    demoRequested
+                      ? "border-cyan-primary bg-cyan-primary/10"
+                      : "border-white/8 bg-secondary-dark/70"
+                  }`}
+                >
+                  <div
+                    className={`mt-0.5 flex h-5 w-5 items-center justify-center rounded border ${
+                      demoRequested
+                        ? "border-cyan-primary bg-cyan-primary text-primary-dark"
+                        : "border-white/20 text-transparent"
+                    }`}
+                  >
+                    <Check size={13} />
+                  </div>
+                  <div>
+                    <div className="text-sm font-bold text-white">
+                      Request a company demo before final scope lock
+                    </div>
+                    <div className="mt-1 text-xs leading-5 text-light-gray/45">
+                      Useful for companies that want a quick walkthrough before the full build begins.
+                    </div>
+                  </div>
+                </button>
               </div>
             </Card>
 
@@ -1189,15 +1241,98 @@ const BookService = () => {
              Secure your order
             </div>
 
+            <div className="mb-6 grid gap-3 md:grid-cols-2">
+              {[
+                {
+                  id: "cashfree",
+                  icon: CreditCard,
+                  title: "Cashfree Checkout",
+                  description: "Recommended for cards, UPI, netbanking, and wallets.",
+                },
+                {
+                  id: "qpay",
+                  icon: QrCode,
+                  title: "QR Fallback",
+                  description: "Use this if checkout is unavailable or you prefer UPI QR.",
+                },
+              ].map((method) => {
+                const Icon = method.icon;
+                const active = paymentMethod === method.id;
+
+                return (
+                  <button
+                    key={method.id}
+                    type="button"
+                    onClick={() => {
+                      setPaymentMethod(method.id);
+                      setUtrNumber("");
+                    }}
+                    className={`rounded-2xl border p-5 text-left transition-colors ${
+                      active
+                        ? "border-cyan-primary/35 bg-cyan-primary/10"
+                        : "border-white/8 bg-black/40 hover:border-white/16"
+                    }`}
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-cyan-primary">
+                        <Icon size={19} />
+                      </div>
+                      <div>
+                        <div className="text-sm font-black text-white">
+                          {method.title}
+                        </div>
+                        <div className="mt-1 text-xs leading-5 text-light-gray/45">
+                          {method.description}
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
             <div className="grid gap-8 lg:grid-cols-[1fr_400px]">
-              <QRPaymentStep 
-                amount={payment.advancePayment}
-                onUtrSubmit={(utr) => {
-                  setUtrNumber(utr);
-                  goToStep(6);
-                }}
-                isSubmitting={isSubmitting}
-              />
+              {paymentMethod === "qpay" ? (
+                <QRPaymentStep
+                  amount={payment.advancePayment}
+                  onUtrSubmit={(utr) => {
+                    setUtrNumber(utr);
+                    goToStep(6);
+                  }}
+                  isSubmitting={isSubmitting}
+                />
+              ) : (
+                <Card className="border-cyan-primary/20 bg-cyan-primary/5 p-6 md:p-8">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-primary/20 bg-cyan-primary/10 text-cyan-primary">
+                    <CreditCard size={24} />
+                  </div>
+                  <h3 className="mt-6 text-2xl font-black text-white">
+                    Cashfree secure checkout
+                  </h3>
+                  <p className="mt-3 max-w-xl text-sm leading-7 text-light-gray/60">
+                    We will create your order first, then redirect you to Cashfree
+                    for the advance payment. If checkout fails, return here and
+                    switch to QR fallback.
+                  </p>
+                  <div className="mt-8 rounded-2xl border border-white/8 bg-black/35 p-5">
+                    <div className="flex items-center justify-between text-sm text-light-gray/66">
+                      <span>Advance due now</span>
+                      <span className="text-2xl font-black text-cyan-primary">
+                        {formatPrice(payment.advancePayment)}
+                      </span>
+                    </div>
+                  </div>
+                  <Button
+                    className="mt-8 w-full"
+                    onClick={() => {
+                      setUtrNumber("");
+                      goToStep(6);
+                    }}
+                  >
+                    Continue to Review <ArrowRight size={16} />
+                  </Button>
+                </Card>
+              )}
 
               <div className="space-y-6">
                 <Card className="border-white/8 bg-black/72">
@@ -1254,29 +1389,21 @@ const BookService = () => {
                   </div>
 
                   <div className="mt-8 rounded-2xl border border-cyan-primary/12 bg-black/45 p-5 text-sm leading-7 text-light-gray/64">
-                    Please pay the <strong className="text-cyan-primary">Advance Payment</strong> amount via QR to proceed. The remaining amount will be due upon project completion.
+                    Please pay the <strong className="text-cyan-primary">Advance Payment</strong> amount to proceed. The remaining amount will be due upon project completion.
                     {hasReferralDiscount ? (
                       <span className="mt-3 block text-emerald-300">
-                        Student referral saved: {referralState.discountPercent}% off.
+                        Referral saved: {referralState.discountPercent}% off.
+                      </span>
+                    ) : null}
+                    {hasStudentStartupDiscount ? (
+                      <span className="mt-3 block text-emerald-300">
+                        Student/startup discount: {studentStartupDiscountPercent}% {isStudentStartupDiscountApplied ? "applied" : "available but referral is higher"}.
                       </span>
                     ) : null}
                   </div>
                 </Card>
                 
                 <BackButton onClick={() => handleBack(4)} label="Back to requirements" className="w-full min-w-0" />
-                
-                {/* Demo: Skip Payment Button */}
-                <Button 
-                  variant="outline"
-                  onClick={() => {
-                    setUtrNumber("DEMO_BYPASS");
-                    // Pre-set payment as "paid" for demo so it shows correctly
-                    goToStep(6);
-                  }}
-                  className="w-full border-cyan-primary/30 text-cyan-primary hover:bg-cyan-primary/10"
-                >
-                  Skip Payment (Demo)
-                </Button>
               </div>
             </div>
           </div>
@@ -1312,9 +1439,25 @@ const BookService = () => {
                     ],
                     ...(hasReferralDiscount
                       ? [[
-                          "Student Referral",
+                          "Referral",
                           `${referralState.code} (${referralState.discountPercent}% off)`,
                         ]]
+                      : []),
+                    ...(hasStudentStartupDiscount
+                      ? [[
+                          "Student/Startup Discount",
+                          `${studentStartupDiscountPercent}% ${
+                            isStudentStartupDiscountApplied ? "applied" : "available"
+                          }`,
+                        ]]
+                      : []),
+                    [
+                      "Payment",
+                      paymentMethod === "cashfree" ? "Cashfree checkout" : "QR fallback",
+                    ],
+                    ...(demoRequested ? [["Demo", "Requested"]] : []),
+                    ...(referenceFiles.length
+                      ? [["Reference Files", `${referenceFiles.length} selected`]]
                       : []),
                     ["Advance", formatPrice(payment.advancePayment)],
                     ["Remaining", formatPrice(payment.remainingPayment)],
@@ -1363,6 +1506,18 @@ const BookService = () => {
                       <div>{formData.references}</div>
                     </div>
                   )}
+                  {referenceFiles.length ? (
+                    <div>
+                      <div className="font-semibold text-white">Reference Files</div>
+                      <div>{referenceFiles.map((file) => file.name).join(", ")}</div>
+                    </div>
+                  ) : null}
+                  {demoRequested ? (
+                    <div>
+                      <div className="font-semibold text-white">Demo Request</div>
+                      <div>Requested before final scope lock</div>
+                    </div>
+                  ) : null}
                   <div>
                     <div className="font-semibold text-white">Deadline</div>
                     <div>{formData.deadline}</div>
@@ -1435,21 +1590,12 @@ const BookService = () => {
 
             <div className="flex flex-col gap-4 rounded-[28px] border border-white/8 bg-black/65 p-6 md:flex-row md:items-center md:justify-between">
               <div className="text-sm leading-7 text-light-gray/64">
-                Confirming now will save the booking, mark its priority state,
-                and open the WhatsApp summary for quick follow-up.
+                Confirming now saves the booking and starts the selected payment path.
+                Cashfree redirects to checkout; QR fallback opens the WhatsApp summary
+                after you submit the UTR.
               </div>
               <div className="flex flex-wrap gap-4">
                 <BackButton onClick={() => handleBack(5)} label="Edit Review" className="min-w-[170px]" />
-                {import.meta.env.DEV && (
-                  <Button
-                    variant="outline"
-                    className="border-amber-500/50 text-amber-500 hover:bg-amber-500/10"
-                    onClick={handleBypassPayment}
-                    disabled={!termsAccepted || isSubmitting}
-                  >
-                    Bypass Payment (Test)
-                  </Button>
-                )}
                 <AnimatedPaymentButton
                   onClick={() => {
                     if (!termsAccepted) {

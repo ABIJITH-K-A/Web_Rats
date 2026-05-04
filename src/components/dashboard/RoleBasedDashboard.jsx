@@ -17,7 +17,7 @@ const RoleBasedDashboard = () => {
 
   const role = normalizeRole(userProfile?.role);
 
-  if (role === 'admin') {
+  if (role === 'admin' || role === 'owner') {
     return <AdminDashboard />;
   }
 

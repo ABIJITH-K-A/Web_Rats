@@ -12,7 +12,7 @@ import { FieldValue } from 'firebase-admin/firestore';
 const router = Router();
 
 const createTicketSchema = z.object({
-  orderId: z.string().trim().min(5),
+  orderId: z.string().trim().min(5).nullable().optional().default(null),
   type: z.enum(['order', 'payment', 'worker', 'client', 'bug', 'other']).default('order'),
   priority: z.enum(['low', 'medium', 'high', 'critical']).default('medium'),
   title: z.string().trim().min(5).max(120),
@@ -34,10 +34,10 @@ router.post(
     const { orderId, type, priority, title, description } = req.validatedBody;
     const { uid, role } = req.currentUser;
 
-    const orderSnap = await adminDb().collection('orders').doc(orderId).get();
-    if (!orderSnap.exists) throw new HttpError(404, 'Order not found.');
-
-    const order = orderSnap.data();
+    if (orderId) {
+      const orderSnap = await adminDb().collection('orders').doc(orderId).get();
+      if (!orderSnap.exists) throw new HttpError(404, 'Order not found.');
+    }
     
     // Check priority auto-rules
     let finalPriority = priority;
@@ -74,20 +74,21 @@ router.post(
       createdAt: FieldValue.serverTimestamp(),
     });
 
-    // Set escalation on order
-    batch.update(db.collection('orders').doc(orderId), {
-      escalation: true,
-      ticketId: ticketRef.id,
-      escalatedAt: FieldValue.serverTimestamp(),
-      updatedAt: FieldValue.serverTimestamp(),
-    });
+    if (orderId) {
+      batch.update(db.collection('orders').doc(orderId), {
+        escalation: true,
+        ticketId: ticketRef.id,
+        escalatedAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
+      });
 
-    // Set escalation on chat
-    batch.update(db.collection('chats').doc(orderId), {
-      escalated: true,
-      ticketId: ticketRef.id,
-      escalatedAt: FieldValue.serverTimestamp(),
-    });
+      batch.set(db.collection('chatPlaceholders').doc(orderId), {
+        escalated: true,
+        ticketId: ticketRef.id,
+        escalatedAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
+      }, { merge: true });
+    }
 
     await batch.commit();
 
@@ -174,14 +175,17 @@ router.patch(
       updatedAt: FieldValue.serverTimestamp(),
     });
 
-    batch.update(db.collection('orders').doc(orderId), {
-      escalation: false,
-      updatedAt: FieldValue.serverTimestamp(),
-    });
+    if (orderId) {
+      batch.update(db.collection('orders').doc(orderId), {
+        escalation: false,
+        updatedAt: FieldValue.serverTimestamp(),
+      });
 
-    batch.update(db.collection('chats').doc(orderId), {
-      escalated: false,
-    });
+      batch.set(db.collection('chatPlaceholders').doc(orderId), {
+        escalated: false,
+        updatedAt: FieldValue.serverTimestamp(),
+      }, { merge: true });
+    }
 
     await batch.commit();
     res.json({ success: true });

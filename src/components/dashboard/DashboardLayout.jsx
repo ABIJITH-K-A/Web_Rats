@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { 
   Menu, X, Home, List, Users, Ticket, Star, Wallet, 
   Bug, Box, CheckSquare, DollarSign, Briefcase, Key, AlertCircle,
@@ -44,6 +45,10 @@ const DashboardLayout = ({ children }) => {
       title: "Admin Command",
       description: "Revenue, staffing, referrals, and approvals in one workspace.",
     },
+    owner: {
+      title: "Owner Command",
+      description: "Full-system visibility for finance, roles, approvals, and delivery quality.",
+    },
     worker: {
       title: "Production Queue",
       description: "Stay on top of active work, delivery status, and payout timing.",
@@ -54,15 +59,15 @@ const DashboardLayout = ({ children }) => {
   };
   
   const navItems = [
-    { id: 'overview', label: 'Overview', icon: <Home size={18} />, roles: ['admin', 'worker'] },
+    { id: 'overview', label: 'Overview', icon: <Home size={18} />, roles: ['admin', 'owner', 'worker'] },
     { id: 'myorders', label: 'My Orders', icon: <Briefcase size={18} />, roles: ['worker'] },
-    { id: 'analytics', label: 'Analytics', icon: <TrendingUp size={18} />, roles: ['admin'] },
-    { id: 'orders', label: 'Orders', icon: <List size={18} />, roles: ['admin'] },
+    { id: 'analytics', label: 'Analytics', icon: <TrendingUp size={18} />, roles: ['admin', 'owner'] },
+    { id: 'orders', label: 'Orders', icon: <List size={18} />, roles: ['admin', 'owner'] },
     { id: 'orderpool', label: 'Order Pool', icon: <Package size={18} />, roles: ['worker'] },
-    { id: 'users', label: 'Users', icon: <Users size={18} />, roles: ['admin'] },
-    { id: 'referrals', label: 'Referrals', icon: <Ticket size={18} />, roles: ['admin'] },
-    { id: 'reviews', label: 'Reviews', icon: <Star size={18} />, roles: ['admin', 'worker'] },
-    { id: 'samples', label: 'Samples', icon: <Box size={18} />, roles: ['admin', 'worker'] },
+    { id: 'users', label: 'Users', icon: <Users size={18} />, roles: ['admin', 'owner'] },
+    { id: 'referrals', label: 'Referrals', icon: <Ticket size={18} />, roles: ['admin', 'owner'] },
+    { id: 'reviews', label: 'Reviews', icon: <Star size={18} />, roles: ['admin', 'owner', 'worker'] },
+    { id: 'samples', label: 'Samples', icon: <Box size={18} />, roles: ['admin', 'owner', 'worker'] },
   ];
 
   const filteredNavItems = navItems.filter((item) =>

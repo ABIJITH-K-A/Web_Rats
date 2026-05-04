@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { adminDb } from '../config/firebaseAdmin.js';
 import { asyncHandler } from '../lib/asyncHandler.js';
 import { HttpError } from '../lib/httpError.js';
-import { authGuard } from '../middleware/authGuard.js';
+import { authGuard, optionalAuthGuard } from '../middleware/authGuard.js';
 import { apiLimiter } from '../middleware/rateLimits.js';
 import { validateBody } from '../middleware/validate.js';
 import {
@@ -187,9 +187,11 @@ const markPaymentRequest = async ({
 router.post(
   '/create-order',
   apiLimiter,
+  optionalAuthGuard,
   validateBody(createOrderSchema),
   asyncHandler(async (req, res) => {
     const { amount, orderId, userDetails } = req.validatedBody;
+    const userId = req.currentUser?.uid || null;
 
     await adminDb()
       .collection(PAYMENT_REQUESTS_COLLECTION)
@@ -201,7 +203,7 @@ router.post(
           referenceId: orderId,
           amount,
           paymentStatus: 'pending',
-          userId: null,
+          userId,
           updatedAt: FieldValue.serverTimestamp(),
           createdAt: FieldValue.serverTimestamp(),
         },
@@ -216,6 +218,7 @@ router.post(
         requestId: orderId,
         kind: 'order',
         referenceId: orderId,
+        userId: userId || '',
       },
     });
 

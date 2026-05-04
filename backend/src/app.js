@@ -19,6 +19,8 @@ import templateRoutes from './routes/templateRoutes.js';
 import usersRouter from './routes/users.js';
 import ticketRoutes from './routes/ticketRoutes.js';
 import workerProfileRoutes from './routes/workerProfileRoutes.js';
+import profileRoutes from './routes/profileRoutes.js';
+import notificationSettingsRoutes from './routes/notificationSettingsRoutes.js';
 import announcementRoutes from './routes/announcementRoutes.js';
 import qpayRoutes from './routes/temp/qpayRoutes.js';
 
@@ -43,7 +45,19 @@ app.use(
 app.use(
   helmet({
     crossOriginResourcePolicy: false,
-    contentSecurityPolicy: false, // React handles its own CSP usually or we can configure it separately
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://*.firebaseapp.com", "https://*.googleapis.com", "https://*.cashfree.com"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+        fontSrc: ["'self'", "https://fonts.gstatic.com"],
+        imgSrc: ["'self'", "data:", "blob:", "https://*.googleusercontent.com", "https://*.firebasestorage.app"],
+        connectSrc: ["'self'", "https://*.firebaseio.com", "https://*.googleapis.com", "https://*.cashfree.com", "https://api.cashfree.com", "https://sandbox.cashfree.com"],
+        frameSrc: ["'self'", "https://*.cashfree.com"],
+        objectSrc: ["'none'"],
+        upgradeInsecureRequests: [],
+      },
+    },
     hsts: {
       maxAge: 31536000,
       includeSubDomains: true,
@@ -73,6 +87,8 @@ app.use('/templates', templateRoutes);
 app.use('/users', usersRouter);
 app.use('/tickets', ticketRoutes);
 app.use('/worker-profile', workerProfileRoutes);
+app.use('/profile', profileRoutes);
+app.use('/notification-settings', notificationSettingsRoutes);
 app.use('/announcements', announcementRoutes);
 app.use('/cron', cronRoutes);
 app.use('/temp/qpay', qpayRoutes);

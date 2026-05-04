@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import {
+  AlertCircle,
   Briefcase,
   CheckCircle,
 } from "lucide-react";

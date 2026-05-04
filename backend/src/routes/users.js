@@ -1,20 +1,22 @@
 import { FieldValue } from 'firebase-admin/firestore';
 import { Router } from 'express';
 import { z } from 'zod';
-import { adminDb } from '../config/firebaseAdmin.js';
+import { adminAuth, adminDb } from '../config/firebaseAdmin.js';
+import {
+  getReferralDiscountForRole,
+  makeReferralCode,
+} from '../lib/referrals.js';
+import { normalizeRole } from '../lib/roles.js';
 import { asyncHandler } from '../lib/asyncHandler.js';
 import { HttpError } from '../lib/httpError.js';
+import { serializeValue } from '../lib/serialize.js';
 import { authGuard } from '../middleware/authGuard.js';
+import roleGuard from '../middleware/roleGuard.js';
 import { validateBody } from '../middleware/validate.js';
 
 const router = Router();
 
 const ROLE_HIERARCHY = ['client', 'worker', 'admin', 'owner'];
-
-const normalizeRole = (role) =>
-  ROLE_HIERARCHY.includes(String(role || '').trim().toLowerCase())
-    ? String(role || '').trim().toLowerCase()
-    : 'client';
 
 const getRoleRank = (role) => ROLE_HIERARCHY.indexOf(normalizeRole(role));
 
@@ -34,6 +36,56 @@ const setRoleSchema = z.object({
   targetUid: z.string().trim().min(10).max(128),
   newRole: z.enum(['client', 'worker', 'admin']),
 });
+
+const approveWorkerSchema = z.object({
+  applicationUid: z.string().trim().min(10).max(128),
+  decision: z.enum(['approved', 'rejected']),
+  note: z.string().trim().max(500).optional().default(''),
+});
+
+const setRoleClaim = async (uid, role) => {
+  const userRecord = await adminAuth().getUser(uid);
+  await adminAuth().setCustomUserClaims(uid, {
+    ...(userRecord.customClaims || {}),
+    role,
+  });
+};
+
+const ensureReferralCode = async ({ uid, role, existingCode }) => {
+  if (existingCode) {
+    await adminDb()
+      .collection('referralCodes')
+      .doc(existingCode)
+      .set(
+        {
+          ownerUid: uid,
+          role,
+          discountPercent: getReferralDiscountForRole(role),
+          updatedAt: FieldValue.serverTimestamp(),
+        },
+        { merge: true }
+      );
+    return existingCode;
+  }
+
+  const referralCode = makeReferralCode(role);
+  await adminDb()
+    .collection('referralCodes')
+    .doc(referralCode)
+    .set(
+      {
+        ownerUid: uid,
+        role,
+        discountPercent: getReferralDiscountForRole(role),
+        timesUsed: 0,
+        createdAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
+      },
+      { merge: true }
+    );
+
+  return referralCode;
+};
 
 router.post(
   '/set-role',
@@ -64,35 +116,25 @@ router.post(
       );
     }
 
+    const referralCode = ['client', 'worker', 'admin'].includes(newRole)
+      ? await ensureReferralCode({
+          uid: targetUid,
+          role: newRole,
+          existingCode: targetData.referralCode,
+        })
+      : null;
+
     const updates = {
       role: newRole,
+      ...(referralCode ? { referralCode } : {}),
+      discountPercent: getReferralDiscountForRole(newRole),
       roleUpdatedAt: FieldValue.serverTimestamp(),
       roleUpdatedBy: actor.uid,
       updatedAt: FieldValue.serverTimestamp(),
     };
 
-    const isStaffRole = ['worker', 'admin'].includes(newRole);
-    if (isStaffRole && !targetData.referralCode) {
-      const ROLE_CODES = {
-        worker: { code: 'WRK', pct: 5 },
-        admin: { code: 'ADM', pct: 15 },
-      };
-      const tier = ROLE_CODES[newRole];
-      const referralCode = `TNWR-${tier.code}-${Math.random().toString(36).toUpperCase().slice(-4)}`;
-
-      updates.referralCode = referralCode;
-      updates.discountPercent = tier.pct;
-
-      await adminDb().collection('referralCodes').doc(referralCode).set({
-        ownerUid: targetUid,
-        role: newRole,
-        discountPercent: tier.pct,
-        timesUsed: 0,
-        createdAt: FieldValue.serverTimestamp(),
-      });
-    }
-
     await targetRef.update(updates);
+    await setRoleClaim(targetUid, newRole);
 
     await adminDb().collection('auditLogs').add({
       actorId: actor.uid,
@@ -114,6 +156,159 @@ router.post(
       targetUid,
       previousRole: targetCurrentRole,
       newRole,
+    });
+  })
+);
+
+router.get(
+  '/worker-applications',
+  authGuard,
+  roleGuard(['admin', 'owner']),
+  asyncHandler(async (req, res) => {
+    const snapshot = await adminDb()
+      .collection('workerApplications')
+      .orderBy('createdAt', 'desc')
+      .limit(100)
+      .get();
+
+    res.json({
+      applications: snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...serializeValue(doc.data()),
+      })),
+    });
+  })
+);
+
+router.post(
+  '/approve-worker',
+  authGuard,
+  roleGuard(['admin', 'owner']),
+  validateBody(approveWorkerSchema),
+  asyncHandler(async (req, res) => {
+    const { applicationUid, decision, note } = req.validatedBody;
+    const actor = req.currentUser;
+    const db = adminDb();
+    const applicationRef = db.collection('workerApplications').doc(applicationUid);
+    const userRef = db.collection('users').doc(applicationUid);
+    const workerRef = db.collection('workerProfiles').doc(applicationUid);
+
+    const [applicationSnap, userSnap, workerSnap] = await Promise.all([
+      applicationRef.get(),
+      userRef.get(),
+      workerRef.get(),
+    ]);
+
+    if (!applicationSnap.exists) {
+      throw new HttpError(404, 'Worker application not found.');
+    }
+    if (!userSnap.exists) {
+      throw new HttpError(404, 'Applicant user profile not found.');
+    }
+
+    const user = userSnap.data() || {};
+    const workerProfile = workerSnap.exists ? workerSnap.data() || {} : {};
+    const batch = db.batch();
+
+    if (decision === 'approved') {
+      const referralCode = await ensureReferralCode({
+        uid: applicationUid,
+        role: 'worker',
+        existingCode: user.referralCode,
+      });
+
+      batch.set(
+        userRef,
+        {
+          role: 'worker',
+          status: 'active',
+          workerApprovalStatus: 'approved',
+          referralCode,
+          discountPercent: getReferralDiscountForRole('worker'),
+          approvedBy: actor.uid,
+          approvedAt: FieldValue.serverTimestamp(),
+          updatedAt: FieldValue.serverTimestamp(),
+        },
+        { merge: true }
+      );
+
+      batch.set(
+        workerRef,
+        {
+          ...workerProfile,
+          uid: applicationUid,
+          approvalStatus: 'approved',
+          availabilityStatus: workerProfile.availabilityStatus || 'available',
+          approvedBy: actor.uid,
+          approvedAt: FieldValue.serverTimestamp(),
+          updatedAt: FieldValue.serverTimestamp(),
+        },
+        { merge: true }
+      );
+
+      await setRoleClaim(applicationUid, 'worker');
+    } else {
+      batch.set(
+        userRef,
+        {
+          role: 'client',
+          status: 'active',
+          workerApprovalStatus: 'rejected',
+          rejectionNote: note || null,
+          rejectedBy: actor.uid,
+          rejectedAt: FieldValue.serverTimestamp(),
+          updatedAt: FieldValue.serverTimestamp(),
+        },
+        { merge: true }
+      );
+
+      batch.set(
+        workerRef,
+        {
+          approvalStatus: 'rejected',
+          availabilityStatus: 'unavailable',
+          rejectionNote: note || null,
+          updatedAt: FieldValue.serverTimestamp(),
+        },
+        { merge: true }
+      );
+
+      await setRoleClaim(applicationUid, 'client');
+    }
+
+    batch.set(
+      applicationRef,
+      {
+        status: decision,
+        reviewedBy: actor.uid,
+        reviewedAt: FieldValue.serverTimestamp(),
+        reviewNote: note || null,
+        updatedAt: FieldValue.serverTimestamp(),
+      },
+      { merge: true }
+    );
+
+    batch.set(db.collection('auditLogs').doc(), {
+      actorId: actor.uid,
+      actorRole: actor.role,
+      action: `worker_application_${decision}`,
+      targetType: 'workerApplication',
+      targetId: applicationUid,
+      severity: decision === 'approved' ? 'medium' : 'low',
+      metadata: {
+        applicantEmail: user.email || null,
+        note: note || null,
+      },
+      timestamp: FieldValue.serverTimestamp(),
+    });
+
+    await batch.commit();
+
+    res.json({
+      success: true,
+      applicationUid,
+      decision,
+      role: decision === 'approved' ? 'worker' : 'client',
     });
   })
 );

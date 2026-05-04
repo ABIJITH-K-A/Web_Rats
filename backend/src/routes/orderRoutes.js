@@ -23,6 +23,19 @@ const requirementSchema = z.object({
   projectDescription: z.string().trim().min(10).max(5000),
   features: z.string().trim().min(5).max(3000),
   references: z.string().trim().max(3000).optional().default(''),
+  referenceFiles: z
+    .array(
+      z.object({
+        name: z.string().trim().max(240),
+        url: z.string().trim().max(1000),
+        path: z.string().trim().max(500).optional().default(''),
+        size: z.preprocess((value) => Number(value || 0), z.number().nonnegative()).optional().default(0),
+        type: z.string().trim().max(120).optional().default(''),
+      })
+    )
+    .max(12)
+    .optional()
+    .default([]),
   deadline: z.string().trim().min(2).max(120),
 });
 
@@ -44,8 +57,12 @@ const createOrderSchema = z.object({
   priorityFee: numberField.optional().default(0),
   subtotalPrice: numberField.optional().default(0),
   totalPrice: numberField,
+  discountPercent: numberField.optional().default(0),
+  discountAmount: numberField.optional().default(0),
   referralDiscountPercent: numberField.optional().default(0),
   referralDiscountAmount: numberField.optional().default(0),
+  studentStartupDiscountPercent: numberField.optional().default(0),
+  studentStartupDiscountAmount: numberField.optional().default(0),
   usedReferralCode: z.string().trim().max(120).nullable().optional().default(null),
   referredBy: z.string().trim().max(128).nullable().optional().default(null),
   advancePayment: numberField,
@@ -62,9 +79,16 @@ const createOrderSchema = z.object({
   projectDescription: z.string().trim().min(10).max(5000),
   features: z.string().trim().min(5).max(3000),
   references: z.string().trim().max(3000).optional().default(''),
+  referenceFiles: requirementSchema.shape.referenceFiles,
+  referenceFileCount: z.preprocess((value) => Number(value || 0), z.number().int().nonnegative()).optional().default(0),
   deadline: z.string().trim().min(2).max(120),
   requirements: requirementSchema,
   paymentStatus: z.string().trim().max(40).optional().default('Pending'),
+  paymentMethod: z.enum(['cashfree', 'qpay']).optional().default('cashfree'),
+  paymentProvider: z.string().trim().max(40).optional().default('cashfree'),
+  utrNumber: z.string().trim().max(80).optional().default(''),
+  demoRequested: z.boolean().optional().default(false),
+  isTestOrder: z.boolean().optional().default(false),
   status: z.string().trim().max(80).optional().default('Pending Assignment'),
   orderStatus: z.string().trim().max(80).optional().default('Pending Assignment'),
   statusKey: z.string().trim().max(80).optional().default('pending_assignment'),

@@ -98,6 +98,7 @@ const UsersView = () => {
 
   const getRoleColor = (role) => {
     switch(role) {
+      case 'owner': return 'text-red-400 bg-red-500/10 border-red-500/20';
       case 'admin': return 'text-blue-500 bg-blue-500/10 border-blue-500/20';
       case 'worker': return 'text-cyan-primary bg-cyan-primary/10 border-cyan-primary/20';
       case 'client': return 'text-white/40 bg-white/5 border-white/10';
@@ -148,6 +149,7 @@ const UsersView = () => {
               <option value="client">Client</option>
               <option value="worker">Worker</option>
               <option value="admin">Admin</option>
+              <option value="owner">Owner</option>
            </select>
         </div>
       </div>

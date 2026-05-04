@@ -128,14 +128,15 @@ const QRPaymentStep = ({
             processingLabel="Submitting payment..."
           />
 
-          {/* Developer Bypass Button */}
-          <button
-            type="button"
-            onClick={() => onUtrSubmit("TEST_BYPASS")}
-            className="text-[10px] font-mono uppercase tracking-widest text-white/10 hover:text-cyan-primary/40 transition-colors"
-          >
-            [ Developer Bypass: Create Test Order ]
-          </button>
+          {import.meta.env.DEV ? (
+            <button
+              type="button"
+              onClick={() => onUtrSubmit("TEST_BYPASS")}
+              className="text-[10px] font-mono uppercase tracking-widest text-white/10 transition-colors hover:text-cyan-primary/40"
+            >
+              [ Developer Bypass: Create Test Order ]
+            </button>
+          ) : null}
         </div>
       </div>
     </div>

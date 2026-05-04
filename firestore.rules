@@ -247,14 +247,6 @@ service cloud.firestore {
       allow write: if false; // Admin SDK only
     }
 
-    // ── Worker Profiles ───────────────────────────────────────
-
-    match /workerProfiles/{userId} {
-      allow read: if isAuthenticated();
-      allow create, update: if isOwner(userId);
-      allow delete: if isAdmin();
-    }
-
     // ── Assignment Requests ───────────────────────────────────
 
     match /assignmentRequests/{requestId} {

@@ -16,6 +16,9 @@ const profileSchema = z.object({
     end: z.string(),
     timezone: z.string().default('Asia/Kolkata'),
   }).optional(),
+  workingDays: z.array(z.number().int().min(0).max(6)).max(7).optional().default([1, 2, 3, 4, 5]),
+  contactMethods: z.array(z.enum(['chat', 'voice', 'video'])).min(1).max(3).optional().default(['chat']),
+  portfolioLinks: z.array(z.string().trim().max(300)).max(10).optional().default([]),
   unavailableDays: z.array(z.number().min(0).max(6)).optional().default([]),
   unavailableDates: z.array(z.string()).optional().default([]),
   maxActiveOrders: z.number().min(1).max(20).optional().default(3),
@@ -45,6 +48,7 @@ router.put('/', authGuard, validateBody(profileSchema), asyncHandler(async (req,
     uid,
     ...data,
     allowedCategories: getCategoriesForSkills(data.skills),
+    approvalStatus: req.currentUser.profile?.workerApprovalStatus || 'approved',
     updatedAt: FieldValue.serverTimestamp(),
   }, { merge: true });
 
@@ -56,10 +60,10 @@ router.patch('/availability', authGuard, validateBody(availabilitySchema), async
   const { status } = req.validatedBody;
   const { uid } = req.currentUser;
 
-  await adminDb().collection('workerProfiles').doc(uid).update({
+  await adminDb().collection('workerProfiles').doc(uid).set({
     availabilityStatus: status,
     updatedAt: FieldValue.serverTimestamp(),
-  });
+  }, { merge: true });
 
   res.json({ success: true });
 }));
