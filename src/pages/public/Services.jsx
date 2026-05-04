@@ -1,6 +1,7 @@
 import { ArrowRight, MessageCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button, Card } from "../../components/ui/Primitives";
+import { ScrollReveal, StaggerContainer, StaggerItem, GradientText, GlowText } from "../../components/ui/ScrollReveal";
 import ServiceCard from "../../components/ui/ServiceCard";
 import {
   CONTACT_INFO,
@@ -13,47 +14,59 @@ const Services = () => {
     <div className="flex flex-col py-20">
       <section className="pb-18">
         <div className="container mx-auto px-6 text-center">
-          <div className="mb-6 inline-flex rounded-full border border-cyan-primary/20 bg-cyan-primary/8 px-4 py-2 text-[10px] font-mono uppercase tracking-[0.24em] text-cyan-primary">
-            Our Services
-          </div>
-          <h1 className="mx-auto max-w-5xl text-5xl font-black leading-[1.05] text-white md:text-6xl">
-            Affordable{" "}
-            <span className="text-gradient-brand inline-block">
-              digital solutions
-            </span>{" "}
-            for students, creators, and small businesses.
-          </h1>
-          <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-light-gray/70">
-            We keep our focus sharp and our output sharper. Here is exactly what
-            Rynix brings to the table - nothing bloated, nothing vague.
-          </p>
+          <ScrollReveal direction="up" delay={0.1}>
+            <div className="mb-6 inline-flex rounded-full border border-cyan-primary/20 bg-cyan-primary/8 px-4 py-2 text-[10px] font-mono uppercase tracking-[0.24em] text-cyan-primary">
+              Our Services
+            </div>
+          </ScrollReveal>
+          
+          <ScrollReveal direction="up" delay={0.2}>
+            <h1 className="mx-auto max-w-5xl text-5xl font-black leading-[1.05] text-white md:text-6xl">
+              Affordable{" "}
+              <GradientText className="inline-block">
+                digital solutions
+              </GradientText>{" "}
+              for students, creators, and small businesses.
+            </h1>
+          </ScrollReveal>
+          
+          <ScrollReveal direction="up" delay={0.3}>
+            <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-light-gray/70">
+              We keep our focus sharp and our output sharper. Here is exactly what
+              Rynix brings to the table - nothing bloated, nothing vague.
+            </p>
+          </ScrollReveal>
 
-          <div className="mt-10 flex flex-wrap justify-center gap-4">
-            <Link to="/book">
-              <Button>
-                View Services <ArrowRight size={16} />
-              </Button>
-            </Link>
-            <a
-              href={`https://wa.me/${CONTACT_INFO.whatsappNumber}`}
-              target="_blank"
-              rel="noreferrer"
-            >
-              <Button variant="outline">Contact Us</Button>
-            </a>
-          </div>
-
-          <div className="mt-10 flex flex-wrap justify-center gap-3">
-            {SERVICE_CATEGORIES.map((category) => (
+          <ScrollReveal direction="up" delay={0.4}>
+            <div className="mt-10 flex flex-wrap justify-center gap-4">
+              <Link to="/book">
+                <Button>
+                  View Services <ArrowRight size={16} />
+                </Button>
+              </Link>
               <a
-                key={category.id}
-                href={`#${category.id}`}
-                className="rounded-full border border-white/10 bg-black/45 px-4 py-2 text-[11px] font-mono uppercase tracking-[0.18em] text-light-gray/65 transition-colors hover:border-cyan-primary/20 hover:text-cyan-primary"
+                href={`https://wa.me/${CONTACT_INFO.whatsappNumber}`}
+                target="_blank"
+                rel="noreferrer"
               >
-                {category.navLabel}
+                <Button variant="outline">Contact Us</Button>
               </a>
-            ))}
-          </div>
+            </div>
+          </ScrollReveal>
+
+          <ScrollReveal direction="up" delay={0.5}>
+            <div className="mt-10 flex flex-wrap justify-center gap-3">
+              {SERVICE_CATEGORIES.map((category) => (
+                <a
+                  key={category.id}
+                  href={`#${category.id}`}
+                  className="rounded-full border border-white/10 bg-black/45 px-4 py-2 text-[11px] font-mono uppercase tracking-[0.18em] text-light-gray/65 transition-colors hover:border-cyan-primary/20 hover:text-cyan-primary"
+                >
+                  {category.navLabel}
+                </a>
+              ))}
+            </div>
+          </ScrollReveal>
         </div>
       </section>
 
