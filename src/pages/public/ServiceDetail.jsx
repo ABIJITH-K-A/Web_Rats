@@ -4,6 +4,7 @@ import { Link, useParams } from "react-router-dom";
 import BackButton from "../../components/ui/BackButton";
 import ServiceCard from "../../components/ui/ServiceCard";
 import { Button, Card } from "../../components/ui/Primitives";
+import { ScrollReveal, StaggerContainer, StaggerItem, GradientText } from "../../components/ui/ScrollReveal";
 import {
   getCategoryById,
   getServiceById,
@@ -41,16 +42,25 @@ const ServiceDetail = () => {
 
           <div className="grid gap-10 lg:grid-cols-[0.95fr_1.05fr]">
           <div>
-            <div className="mb-5 inline-flex rounded-full border border-cyan-primary/18 bg-cyan-primary/8 px-4 py-2 text-[10px] font-mono uppercase tracking-[0.22em] text-cyan-primary">
-              {category?.name}
-            </div>
+            <ScrollReveal direction="up" delay={0.1}>
+              <div className="mb-5 inline-flex rounded-full border border-cyan-primary/18 bg-cyan-primary/8 px-4 py-2 text-[10px] font-mono uppercase tracking-[0.22em] text-cyan-primary">
+                {category?.name}
+              </div>
+            </ScrollReveal>
+            
+            <ScrollReveal direction="up" delay={0.2}>
               <h1 className="text-5xl font-black leading-[1.05] text-white md:text-6xl">
-                {service.name}
+                <GradientText>{service.name}</GradientText>
               </h1>
+            </ScrollReveal>
+            
+            <ScrollReveal direction="up" delay={0.3}>
               <p className="mt-6 max-w-2xl text-lg leading-8 text-light-gray/70">
                 {service.summary}
               </p>
+            </ScrollReveal>
 
+            <ScrollReveal direction="up" delay={0.4}>
               <div className="mt-8 flex flex-wrap gap-4">
                 <Link
                   to={`/book?category=${service.categoryId}&service=${service.id}`}
@@ -63,7 +73,9 @@ const ServiceDetail = () => {
                   <Button variant="outline">Compare Within Category</Button>
                 </Link>
               </div>
+            </ScrollReveal>
 
+            <ScrollReveal direction="up" delay={0.5}>
               <div className="mt-10 grid gap-4 sm:grid-cols-2">
                 <Card className="border-white/8 bg-secondary-dark/70">
                   <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-cyan-primary/70">
@@ -85,6 +97,7 @@ const ServiceDetail = () => {
                   </p>
                 </Card>
               </div>
+            </ScrollReveal>
           </div>
 
           <div>
