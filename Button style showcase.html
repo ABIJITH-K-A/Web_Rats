@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interactive Gradient Palette Showcase</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --preview-gradient-from: #9BFF57;
+      --preview-gradient-to: #2F5E22;
+      --preview-gradient-via: #0B120C;
+    }
+    
+    /* Base Styles */
+    body {
+      font-family: 'Rajdhani', sans-serif;
+      background: #0B120C;
+    }
+    
+    /* ===== MAGNETIC BORDER CARD ===== */
+    .magnetic-card {
+      position: relative;
+      background: #0B120C;
+      border-radius: 1rem;
+      z-index: 1;
+      transition: transform 0.3s ease;
+    }
+    .magnetic-card::before {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      border-radius: 1rem;
+      z-index: -1;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      background: linear-gradient(45deg, var(--preview-gradient-from), var(--preview-gradient-to), var(--preview-gradient-from));
+      background-size: 200% 200%;
+      animation: gradient-rotate 3s ease infinite;
+    }
+    .magnetic-card:hover::before {
+      opacity: 1;
+    }
+    .magnetic-card:hover {
+      transform: translateY(-4px);
+    }
+    @keyframes gradient-rotate {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+    
+    /* ===== SPOTLIGHT CARD ===== */
+    .spotlight-card {
+      background: #0B120C;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      border: 1px solid rgba(155, 255, 87, 0.1);
+    }
+    .spotlight-card:hover {
+      border-color: rgba(155, 255, 87, 0.3);
+      transform: translateY(-2px);
+    }
+    .spotlight {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+    .spotlight-card:hover .spotlight {
+      opacity: 1;
+    }
+    
+    /* ===== BUTTON STYLES ===== */
+    .preview-btn {
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      background: linear-gradient(135deg, var(--preview-gradient-from), var(--preview-gradient-to));
+    }
+    .preview-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      transition: left 0.5s ease;
+    }
+    .preview-btn:hover::before {
+      left: 100%;
+    }
+    .preview-btn:hover {
+      box-shadow: 0 0 30px rgba(155, 255, 87, 0.4);
+      transform: translateY(-2px);
+    }
+    
+    .preview-btn-outline {
+      position: relative;
+      background: transparent;
+      border: 2px solid var(--preview-gradient-from);
+      color: var(--preview-gradient-from);
+      transition: all 0.3s ease;
+      overflow: hidden;
+    }
+    .preview-btn-outline::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, var(--preview-gradient-from), var(--preview-gradient-to));
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      z-index: -1;
+    }
+    .preview-btn-outline:hover::before {
+      opacity: 1;
+    }
+    .preview-btn-outline:hover {
+      color: #0B120C;
+      border-color: transparent;
+    }
+    
+    /* ===== PALETTE ITEMS ===== */
+    .palette-item {
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 2px solid transparent;
+    }
+    .palette-item:hover {
+      transform: scale(1.05);
+      border-color: #9BFF57;
+    }
+    .palette-item.active {
+      border-color: #9BFF57;
+      box-shadow: 0 0 20px rgba(155, 255, 87, 0.3);
+    }
+    
+    /* ===== SCROLLBAR ===== */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0B120C;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #2F5E22;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #9BFF57;
+    }
+    
+    /* ===== UTILITY ===== */
+    .text-gradient-brand {
+      background: linear-gradient(90deg, #9BFF57, #2F5E22);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    /* Animation for preview area */
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 20px rgba(155, 255, 87, 0.2); }
+      50% { box-shadow: 0 0 40px rgba(155, 255, 87, 0.4); }
+    }
+    .preview-area {
+      animation: pulse-glow 4s ease-in-out infinite;
+    }
+  </style>
+</head>
+<body class="text-gray-100 min-h-screen">
+  
+  <!-- ===== TOP HALF: PREVIEW AREA ===== -->
+  <div class="preview-area bg-gradient-to-b from-[#0B120C] to-[#0f1a10] border-b border-[#2F5E22]/30">
+    <div class="max-w-7xl mx-auto px-6 py-8">
+      
+      <!-- Header -->
+      <header class="text-center mb-10">
+        <h1 class="text-4xl md:text-5xl font-bold text-gradient-brand mb-3">Gradient Palette Showcase</h1>
+        <p class="text-[#F4FFF1]/70 text-lg">Select a palette below to preview on cards & buttons</p>
+        <div class="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-[#2F5E22]/20 rounded-full text-sm text-[#9BFF57]">
+          <span class="w-2 h-2 bg-[#9BFF57] rounded-full animate-pulse"></span>
+          <span id="current-palette-name">Nature Green (Default)</span>
+        </div>
+      </header>
+      
+      <!-- Preview Components Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+        
+        <!-- MAGNETIC BORDER CARD -->
+        <div class="magnetic-card p-6 rounded-2xl">
+          <div class="flex items-center justify-between mb-4">
+            <div class="p-3 bg-[#2F5E22]/20 rounded-xl">
+              <svg class="w-6 h-6" style="color: var(--preview-gradient-from)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+              </svg>
+            </div>
+            <span class="text-xs font-medium px-2 py-1 rounded" style="background: var(--preview-gradient-from); color: #0B120C;">Live</span>
+          </div>
+          <h3 class="text-sm font-medium text-[#F4FFF1]/70">Magnetic Border</h3>
+          <p class="text-3xl font-bold mt-1" style="color: var(--preview-gradient-from)">$24.5k</p>
+          <p class="text-xs text-[#F4FFF1]/50 mt-2">Revenue this month</p>
+        </div>
+        
+        <!-- SPOTLIGHT CARD -->
+        <div class="spotlight-card rounded-2xl p-6 cursor-pointer" id="spotlight-preview-card">
+          <div class="spotlight" id="spotlight-preview"></div>
+          <div class="relative z-10">
+            <div class="flex items-center justify-between mb-4">
+              <div class="p-3 bg-[#2F5E22]/20 rounded-xl">
+                <svg class="w-6 h-6 text-[#F4FFF1]/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                </svg>
+              </div>
+              <span class="text-xs font-medium text-[#F4FFF1]/60 bg-[#2F5E22]/20 px-2 py-1 rounded">Active</span>
+            </div>
+            <h3 class="text-sm font-medium text-[#F4FFF1]/60">Spotlight Hover</h3>
+            <p class="text-3xl font-bold text-[#F4FFF1] mt-1">1,847</p>
+            <p class="text-xs text-[#F4FFF1]/40 mt-2">Profile views</p>
+          </div>
+        </div>
+        
+        <!-- GRADIENT FILL CARD -->
+        <div class="rounded-2xl p-6 text-[#0B120C] cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1"
+             id="gradient-fill-card">
+          <div class="flex items-center justify-between mb-4">
+            <div class="p-3 bg-[#0B120C]/10 rounded-xl">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+              </svg>
+            </div>
+            <span class="text-xs font-medium bg-[#0B120C]/20 px-2 py-1 rounded">+24%</span>
+          </div>
+          <h3 class="text-sm font-medium opacity-80">Gradient Fill</h3>
+          <p class="text-3xl font-bold mt-1">3,429</p>
+          <p class="text-xs opacity-70 mt-2">New users</p>
+        </div>
+        
+      </div>
+      
+      <!-- BUTTON SHOWCASE -->
+      <div class="flex flex-wrap justify-center gap-4 mb-8">
+        <button class="preview-btn px-8 py-3 rounded-full font-semibold text-[#0B120C]">
+          Primary Button
+        </button>
+        <button class="preview-btn-outline px-8 py-3 rounded-full font-semibold">
+          Outline Button
+        </button>
+        <button class="px-8 py-3 rounded-full font-semibold border border-[#2F5E22] text-[#F4FFF1] hover:border-[#9BFF57] hover:text-[#9BFF57] transition-all duration-300">
+          Ghost Button
+        </button>
+      </div>
+      
+      <!-- CSS CODE DISPLAY -->
+      <div class="bg-[#0B120C] rounded-xl p-4 border border-[#2F5E22]/30">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs text-[#F4FFF1]/50 uppercase tracking-wider">Current Gradient CSS</span>
+          <button onclick="copyCSS()" class="text-xs text-[#9BFF57] hover:underline">Copy to Clipboard</button>
+        </div>
+        <code id="css-code" class="text-sm text-[#9BFF57] font-mono block">
+          background: linear-gradient(135deg, #9BFF57 0%, #2F5E22 100%);
+        </code>
+      </div>
+      
+    </div>
+  </div>
+  
+  <!-- ===== MIDDLE: MORE COMPONENTS SHOWCASE ===== -->
+  <div class="bg-[#0f1a10] border-y border-[#2F5E22]/20">
+    <div class="max-w-7xl mx-auto px-6 py-8">
+      <h2 class="text-2xl font-bold text-[#F4FFF1] mb-6">Extended Component Library</h2>
+      
+      <!-- Badges & Tags -->
+      <div class="mb-8">
+        <h3 class="text-sm font-medium text-[#F4FFF1]/50 mb-3 uppercase tracking-wider">Badges & Tags</h3>
+        <div class="flex flex-wrap gap-3">
+          <span class="px-3 py-1 rounded-full text-xs font-medium" style="background: var(--preview-gradient-from); color: #0B120C;">Success</span>
+          <span class="px-3 py-1 rounded-full text-xs font-medium bg-[#2F5E22]/30" style="color: var(--preview-gradient-from); border: 1px solid var(--preview-gradient-from)">Warning</span>
+          <span class="px-3 py-1 rounded-full text-xs font-medium bg-[#0B120C] border border-[#2F5E22] text-[#F4FFF1]">Default</span>
+          <span class="px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-red-500 to-orange-500 text-white">Error</span>
+          <span class="px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r" style="background: linear-gradient(90deg, var(--preview-gradient-from), var(--preview-gradient-to)); color: #0B120C;">New</span>
+        </div>
+      </div>
+      
+      <!-- Input Fields -->
+      <div class="mb-8">
+        <h3 class="text-sm font-medium text-[#F4FFF1]/50 mb-3 uppercase tracking-wider">Form Inputs</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="relative">
+            <input type="text" placeholder="Enter your name..." 
+                   class="w-full bg-[#0B120C] border border-[#2F5E22]/50 rounded-lg px-4 py-3 text-[#F4FFF1] placeholder-[#F4FFF1]/30 focus:outline-none transition-all"
+                   style="focus:border-color: var(--preview-gradient-from); focus:box-shadow: 0 0 0 3px var(--preview-gradient-from)20;">
+          </div>
+          <div class="relative">
+            <input type="email" placeholder="Email address..." 
+                   class="w-full bg-[#0B120C] border border-[#2F5E22]/50 rounded-lg px-4 py-3 text-[#F4FFF1] placeholder-[#F4FFF1]/30 focus:outline-none transition-all">
+            <div class="absolute right-3 top-1/2 -translate-y-1/2">
+              <div class="w-5 h-5 rounded-full flex items-center justify-center text-xs" style="background: var(--preview-gradient-from); color: #0B120C;">✓</div>
+            </div>
+          </div>
+          <div class="relative">
+            <select class="w-full bg-[#0B120C] border border-[#2F5E22]/50 rounded-lg px-4 py-3 text-[#F4FFF1] appearance-none cursor-pointer focus:outline-none">
+              <option>Select option</option>
+              <option>Option 1</option>
+              <option>Option 2</option>
+            </select>
+            <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" style="color: var(--preview-gradient-from);">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Toggle Switches -->
+      <div class="mb-8">
+        <h3 class="text-sm font-medium text-[#F4FFF1]/50 mb-3 uppercase tracking-wider">Toggles & Checkboxes</h3>
+        <div class="flex flex-wrap gap-6">
+          <!-- Toggle 1 -->
+          <label class="flex items-center cursor-pointer">
+            <input type="checkbox" class="sr-only peer" checked>
+            <div class="w-11 h-6 bg-[#2F5E22]/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all relative" style="peer-checked: background: var(--preview-gradient-from);"></div>
+            <span class="ml-3 text-sm text-[#F4FFF1]">Notifications</span>
+          </label>
+          
+          <!-- Toggle 2 -->
+          <label class="flex items-center cursor-pointer">
+            <input type="checkbox" class="sr-only peer">
+            <div class="w-11 h-6 bg-[#2F5E22]/30 rounded-full peer relative after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
+            <span class="ml-3 text-sm text-[#F4FFF1]">Dark Mode</span>
+          </label>
+          
+          <!-- Radio -->
+          <label class="flex items-center cursor-pointer">
+            <input type="radio" name="radio" class="sr-only peer" checked>
+            <div class="w-5 h-5 border-2 border-[#2F5E22] rounded-full flex items-center justify-center peer-checked:border-[#9BFF57]">
+              <div class="w-2.5 h-2.5 rounded-full" style="background: var(--preview-gradient-from); opacity: 0; transition: opacity 0.2s;" class="peer-checked:opacity-100"></div>
+            </div>
+            <span class="ml-2 text-sm text-[#F4FFF1]">Selected</span>
+          </label>
+        </div>
+      </div>
+      
+      <!-- Progress Bars -->
+      <div class="mb-8">
+        <h3 class="text-sm font-medium text-[#F4FFF1]/50 mb-3 uppercase tracking-wider">Progress Indicators</h3>
+        <div class="space-y-3 max-w-md">
+          <div class="w-full bg-[#0B120C] rounded-full h-2">
+            <div class="h-2 rounded-full transition-all duration-500" style="width: 75%; background: linear-gradient(90deg, var(--preview-gradient-from), var(--preview-gradient-to));"></div>
+          </div>
+          <div class="w-full bg-[#0B120C] rounded-full h-2">
+            <div class="h-2 rounded-full bg-[#2F5E22]/50" style="width: 45%;"></div>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-full border-2 border-[#2F5E22] border-t-transparent animate-spin" style="border-top-color: var(--preview-gradient-from);"></div>
+            <span class="text-sm text-[#F4FFF1]/70">Loading...</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Data Cards -->
+      <div class="mb-8">
+        <h3 class="text-sm font-medium text-[#F4FFF1]/50 mb-3 uppercase tracking-wider">Data Display Cards</h3>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <!-- Stat Card 1 -->
+          <div class="bg-[#0B120C] border border-[#2F5E22]/30 rounded-xl p-4 hover:border-[#9BFF57]/50 transition-all cursor-pointer">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs text-[#F4FFF1]/50">Revenue</span>
+              <span class="text-xs px-2 py-0.5 rounded bg-green-500/20 text-green-400">+12%</span>
+            </div>
+            <p class="text-2xl font-bold text-[#F4FFF1]">$48.2k</p>
+            <div class="mt-2 h-1 bg-[#2F5E22]/30 rounded-full overflow-hidden">
+              <div class="h-full rounded-full" style="width: 70%; background: var(--preview-gradient-from);"></div>
+            </div>
+          </div>
+          
+          <!-- Stat Card 2 -->
+          <div class="bg-[#0B120C] border border-[#2F5E22]/30 rounded-xl p-4">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs text-[#F4FFF1]/50">Users</span>
+              <span class="text-xs px-2 py-0.5 rounded" style="background: var(--preview-gradient-from)20; color: var(--preview-gradient-from);">+24%</span>
+            </div>
+            <p class="text-2xl font-bold text-[#F4FFF1]">2,847</p>
+            <div class="mt-2 flex gap-1">
+              <div class="h-6 w-1 rounded-full" style="background: var(--preview-gradient-from); opacity: 0.3;"></div>
+              <div class="h-8 w-1 rounded-full" style="background: var(--preview-gradient-from); opacity: 0.5;"></div>
+              <div class="h-5 w-1 rounded-full" style="background: var(--preview-gradient-from); opacity: 0.4;"></div>
+              <div class="h-10 w-1 rounded-full" style="background: var(--preview-gradient-from);"></div>
+              <div class="h-6 w-1 rounded-full" style="background: var(--preview-gradient-from); opacity: 0.6;"></div>
+            </div>
+          </div>
+          
+          <!-- Avatar Stack Card -->
+          <div class="bg-[#0B120C] border border-[#2F5E22]/30 rounded-xl p-4">
+            <span class="text-xs text-[#F4FFF1]/50 mb-2 block">Team</span>
+            <div class="flex -space-x-2">
+              <div class="w-8 h-8 rounded-full border-2 border-[#0B120C] flex items-center justify-center text-xs font-bold" style="background: var(--preview-gradient-from); color: #0B120C;">JD</div>
+              <div class="w-8 h-8 rounded-full border-2 border-[#0B120C] bg-[#2F5E22] flex items-center justify-center text-xs font-bold text-[#F4FFF1]">MK</div>
+              <div class="w-8 h-8 rounded-full border-2 border-[#0B120C] bg-[#F4FFF1]/20 flex items-center justify-center text-xs font-bold text-[#F4FFF1]">AS</div>
+              <div class="w-8 h-8 rounded-full border-2 border-[#0B120C] flex items-center justify-center text-xs font-bold" style="background: var(--preview-gradient-to); color: #F4FFF1;">+5</div>
+            </div>
+          </div>
+          
+          <!-- Alert Card -->
+          <div class="rounded-xl p-4 border-l-4" style="background: var(--preview-gradient-from)10; border-color: var(--preview-gradient-from);">
+            <div class="flex items-start gap-3">
+              <svg class="w-5 h-5 mt-0.5 flex-shrink-0" style="color: var(--preview-gradient-from);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <div>
+                <p class="text-sm font-medium text-[#F4FFF1]">System Update</p>
+                <p class="text-xs text-[#F4FFF1]/60 mt-1">New features available</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Navigation Pills -->
+      <div class="mb-8">
+        <h3 class="text-sm font-medium text-[#F4FFF1]/50 mb-3 uppercase tracking-wider">Navigation</h3>
+        <div class="flex flex-wrap gap-2">
+          <button class="px-4 py-2 rounded-full text-sm font-medium transition-all" style="background: var(--preview-gradient-from); color: #0B120C;">Dashboard</button>
+          <button class="px-4 py-2 rounded-full text-sm font-medium bg-[#2F5E22]/20 text-[#F4FFF1]/70 hover:bg-[#2F5E22]/40 transition-all">Projects</button>
+          <button class="px-4 py-2 rounded-full text-sm font-medium bg-[#2F5E22]/20 text-[#F4FFF1]/70 hover:bg-[#2F5E22]/40 transition-all">Team</button>
+          <button class="px-4 py-2 rounded-full text-sm font-medium bg-[#2F5E22]/20 text-[#F4FFF1]/70 hover:bg-[#2F5E22]/40 transition-all">Settings</button>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+  
+  <!-- ===== PALETTE GENERATOR ===== -->
+  <div class="bg-[#0B120C] border-y border-[#2F5E22]/30">
+    <div class="max-w-7xl mx-auto px-6 py-8">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-bold text-[#F4FFF1]">🎨 Palette Generator</h2>
+        <span class="text-sm text-[#F4FFF1]/50">Create custom gradients</span>
+      </div>
+      
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Generator Controls -->
+        <div class="bg-[#0f1a10] rounded-2xl p-6 border border-[#2F5E22]/30">
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm text-[#F4FFF1]/70 mb-2">Palette Name</label>
+              <input type="text" id="generator-name" placeholder="My Custom Gradient" 
+                     class="w-full bg-[#0B120C] border border-[#2F5E22]/50 rounded-lg px-4 py-3 text-[#F4FFF1] placeholder-[#F4FFF1]/30 focus:outline-none">
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm text-[#F4FFF1]/70 mb-2">From Color</label>
+                <div class="flex gap-2">
+                  <input type="color" id="generator-from" value="#9BFF57" class="h-12 w-16 rounded cursor-pointer bg-transparent">
+                  <input type="text" id="generator-from-text" value="#9BFF57" class="flex-1 bg-[#0B120C] border border-[#2F5E22]/50 rounded-lg px-3 text-[#F4FFF1] text-sm font-mono">
+                </div>
+              </div>
+              <div>
+                <label class="block text-sm text-[#F4FFF1]/70 mb-2">To Color</label>
+                <div class="flex gap-2">
+                  <input type="color" id="generator-to" value="#2F5E22" class="h-12 w-16 rounded cursor-pointer bg-transparent">
+                  <input type="text" id="generator-to-text" value="#2F5E22" class="flex-1 bg-[#0B120C] border border-[#2F5E22]/50 rounded-lg px-3 text-[#F4FFF1] text-sm font-mono">
+                </div>
+              </div>
+            </div>
+            
+            <div>
+              <label class="block text-sm text-[#F4FFF1]/70 mb-2">Angle: <span id="angle-value">135°</span></label>
+              <input type="range" id="generator-angle" min="0" max="360" value="135" class="w-full h-2 bg-[#2F5E22]/30 rounded-lg appearance-none cursor-pointer accent-[#9BFF57]">
+            </div>
+            
+            <div class="flex gap-3 pt-2">
+              <button onclick="addCustomPalette()" class="flex-1 py-3 rounded-lg font-semibold text-[#0B120C] transition-all hover:opacity-90" style="background: var(--preview-gradient-from);">
+                Add to Collection
+              </button>
+              <button onclick="previewCustomPalette()" class="px-6 py-3 rounded-lg font-semibold border border-[#2F5E22] text-[#F4FFF1] hover:border-[#9BFF57] transition-all">
+                Preview
+              </button>
+              <button onclick="randomizePalette()" class="px-4 py-3 rounded-lg font-semibold bg-[#2F5E22]/20 text-[#F4FFF1] hover:bg-[#2F5E22]/40 transition-all" title="Randomize">
+                🎲
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Live Preview -->
+        <div class="bg-[#0f1a10] rounded-2xl p-6 border border-[#2F5E22]/30">
+          <h3 class="text-sm font-medium text-[#F4FFF1]/50 mb-4 uppercase tracking-wider">Live Preview</h3>
+          <div id="generator-preview" class="h-32 rounded-xl mb-4 transition-all" style="background: linear-gradient(135deg, #9BFF57, #2F5E22);"></div>
+          
+          <div class="grid grid-cols-2 gap-4">
+            <div class="flex items-center gap-3 p-3 bg-[#0B120C] rounded-lg">
+              <div class="w-10 h-10 rounded-lg" id="generator-preview-icon" style="background: linear-gradient(135deg, #9BFF57, #2F5E22);"></div>
+              <div>
+                <p class="text-xs text-[#F4FFF1]/50">Icon</p>
+                <p class="text-sm font-medium text-[#F4FFF1]">Preview</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3 p-3 bg-[#0B120C] rounded-lg">
+              <button id="generator-preview-btn" class="px-4 py-2 rounded-full text-xs font-semibold text-[#0B120C]" style="background: linear-gradient(135deg, #9BFF57, #2F5E22);">
+                Button
+              </button>
+              <div>
+                <p class="text-xs text-[#F4FFF1]/50">Button</p>
+                <p class="text-sm font-medium text-[#F4FFF1]">CTA Style</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- ===== BOTTOM HALF: PALETTE SELECTOR ===== -->
+  <div class="bg-[#0B120C] min-h-[50vh]">
+    <div class="max-w-7xl mx-auto px-6 py-8">
+      
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-bold text-[#F4FFF1]">Select a Gradient Palette</h2>
+        <div class="flex items-center gap-3">
+          <span class="text-sm text-[#F4FFF1]/50" id="palette-count">100 palettes</span>
+          <button onclick="exportPalettes()" class="text-sm text-[#9BFF57] hover:underline">Export JSON</button>
+        </div>
+      </div>
+      
+      <!-- Filter Tabs -->
+      <div class="flex flex-wrap gap-2 mb-6">
+        <button class="filter-btn active px-4 py-2 rounded-full text-sm font-medium bg-[#2F5E22] text-[#9BFF57] transition-all" data-filter="all">All</button>
+        <button class="filter-btn px-4 py-2 rounded-full text-sm font-medium bg-[#2F5E22]/20 text-[#F4FFF1]/70 hover:bg-[#2F5E22]/40 transition-all" data-filter="nature">Nature</button>
+        <button class="filter-btn px-4 py-2 rounded-full text-sm font-medium bg-[#2F5E22]/20 text-[#F4FFF1]/70 hover:bg-[#2F5E22]/40 transition-all" data-filter="neon">Neon</button>
+        <button class="filter-btn px-4 py-2 rounded-full text-sm font-medium bg-[#2F5E22]/20 text-[#F4FFF1]/70 hover:bg-[#2F5E22]/40 transition-all" data-filter="sunset">Sunset</button>
+        <button class="filter-btn px-4 py-2 rounded-full text-sm font-medium bg-[#2F5E22]/20 text-[#F4FFF1]/70 hover:bg-[#2F5E22]/40 transition-all" data-filter="ocean">Ocean</button>
+        <button class="filter-btn px-4 py-2 rounded-full text-sm font-medium bg-[#2F5E22]/20 text-[#F4FFF1]/70 hover:bg-[#2F5E22]/40 transition-all" data-filter="cosmic">Cosmic</button>
+        <button class="filter-btn px-4 py-2 rounded-full text-sm font-medium bg-[#2F5E22]/20 text-[#F4FFF1]/70 hover:bg-[#2F5E22]/40 transition-all" data-filter="earth">Earth</button>
+        <button class="filter-btn px-4 py-2 rounded-full text-sm font-medium bg-[#2F5E22]/20 text-[#F4FFF1]/70 hover:bg-[#2F5E22]/40 transition-all" data-filter="pastel">Pastel</button>
+        <button class="filter-btn px-4 py-2 rounded-full text-sm font-medium bg-[#2F5E22]/20 text-[#F4FFF1]/70 hover:bg-[#2F5E22]/40 transition-all" data-filter="metal">Metal</button>
+        <button class="filter-btn px-4 py-2 rounded-full text-sm font-medium bg-[#2F5E22]/20 text-[#F4FFF1]/70 hover:bg-[#2F5E22]/40 transition-all" data-filter="custom">Custom</button>
+      </div>
+      
+      <!-- Palette Grid -->
+      <div id="palette-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        <!-- Palettes will be generated by JavaScript -->
+      </div>
+      
+    </div>
+  </div>
+  
+  <!-- ===== JAVASCRIPT ===== -->
+  <script>
+    // ===== 100+ GRADIENT PALETTES =====
+    const palettes = [
+      // NATURE (Green-based - Match your current theme)
+      { name: "Nature Green", from: "#9BFF57", to: "#2F5E22", via: "#0B120C", category: "nature" },
+      { name: "Forest Depth", from: "#56ab2f", to: "#0f2027", via: "#203a43", category: "nature" },
+      { name: "Mint Fresh", from: "#00b09b", to: "#96c93d", via: "#56ab2f", category: "nature" },
+      { name: "Lime Zest", from: "#a8e063", to: "#56ab2f", via: "#11998e", category: "nature" },
+      { name: "Evergreen", from: "#134e5e", to: "#71b280", via: "#2d5a4a", category: "nature" },
+      { name: "Jungle Night", from: "#0f3057", to: "#008891", via: "#00587a", category: "nature" },
+      { name: "Sage Wisdom", from: "#d4fc79", to: "#96e6a1", via: "#84fab0", category: "nature" },
+      { name: "Tropical Leaf", from: "#11998e", to: "#38ef7d", via: "#0f9b0f", category: "nature" },
+      { name: "Moss Garden", from: "#606c88", to: "#3f4c6b", via: "#2c3e50", category: "nature" },
+      { name: "Bamboo Grove", from: "#76b852", to: "#8dc26f", via: "#56ab2f", category: "nature" },
+      { name: "Olive Grove", from: "#808000", to: "#556b2f", via: "#6b8e23", category: "nature" },
+      { name: "Pine Forest", from: "#2d5a4a", to: "#1e3d2f", via: "#0f2019", category: "nature" },
+      { name: "Fern Frond", from: "#4f7942", to: "#228b22", via: "#006400", category: "nature" },
+      { name: "Cactus Bloom", from: "#8fbc8f", to: "#2e8b57", via: "#556b2f", category: "nature" },
+      { name: "Aloe Vera", from: "#98fb98", to: "#3cb371", via: "#2e8b57", category: "nature" },
+      
+      // NEON (High contrast, vibrant)
+      { name: "Cyberpunk", from: "#f72585", to: "#7209b7", via: "#3a0ca3", category: "neon" },
+      { name: "Neon Nights", from: "#00f5ff", to: "#ff00ff", via: "#7900ff", category: "neon" },
+      { name: "Electric Blue", from: "#00d2ff", to: "#3a7bd5", via: "#00d2ff", category: "neon" },
+      { name: "Hot Pink", from: "#ff006e", to: "#8338ec", via: "#3a86ff", category: "neon" },
+      { name: "Acid Green", from: "#ccff00", to: "#9d00ff", via: "#00ff9d", category: "neon" },
+      { name: "Laser Red", from: "#ff0844", to: "#ffb199", via: "#ff512f", category: "neon" },
+      { name: "Plasma", from: "#4776e6", to: "#8e54e9", via: "#6a11cb", category: "neon" },
+      { name: "Toxic", from: "#39ff14", to: "#ff00ff", via: "#00ffff", category: "neon" },
+      { name: "Synthwave", from: "#ff00cc", to: "#333399", via: "#00ffff", category: "neon" },
+      { name: "Matrix", from: "#00ff41", to: "#008f11", via: "#003b00", category: "neon" },
+      { name: "Laser Beam", from: "#ff073a", to: "#ff4d00", via: "#ff9500", category: "neon" },
+      { name: "Neon Sign", from: "#ff006e", to: "#fb5607", via: "#ffbe0b", category: "neon" },
+      { name: "Digital Rain", from: "#03a9f4", to: "#00bcd4", via: "#009688", category: "neon" },
+      { name: "Cyber City", from: "#8e2de2", to: "#4a00e0", via: "#1a1a2e", category: "neon" },
+      { name: "Vaporwave", from: "#ff00ff", to: "#00ffff", via: "#ff0080", category: "neon" },
+      
+      // SUNSET (Warm tones)
+      { name: "Golden Hour", from: "#f12711", to: "#f5af19", via: "#ff6b35", category: "sunset" },
+      { name: "Peachy", from: "#ed4264", to: "#ffedbc", via: "#ff6b6b", category: "sunset" },
+      { name: "Desert Dusk", from: "#ff512f", to: "#dd2476", via: "#ff6b35", category: "sunset" },
+      { name: "Coral Reef", from: "#ff9a9e", to: "#fecfef", via: "#fecfef", category: "sunset" },
+      { name: "Autumn Blaze", from: "#d31027", to: "#ea384d", via: "#f5576c", category: "sunset" },
+      { name: "Sahara", from: "#ffe259", to: "#ffa751", via: "#f5af19", category: "sunset" },
+      { name: "Mango", from: "#fddb92", to: "#d1fdff", via: "#f6d365", category: "sunset" },
+      { name: "Crimson", from: "#e52d27", to: "#b31217", via: "#8e0e00", category: "sunset" },
+      { name: "Peach Fuzz", from: "#ffecd2", to: "#fcb69f", via: "#ff9a9e", category: "sunset" },
+      { name: "Blood Moon", from: "#ff416c", to: "#ff4b2b", via: "#c31432", category: "sunset" },
+      { name: "Tequila Sunrise", from: "#f857a6", to: "#ff5858", via: "#f09819", category: "sunset" },
+      { name: "Arizona", from: "#ed4264", to: "#ffedbc", via: "#ff9966", category: "sunset" },
+      { name: "Tuscan Sun", from: "#f5af19", to: "#f12711", via: "#c0392b", category: "sunset" },
+      { name: "Cayenne", from: "#e65c00", to: "#f9d423", via: "#ff4e50", category: "sunset" },
+      { name: "Flame", from: "#ff416c", to: "#ff4b1f", via: "#ff9068", category: "sunset" },
+      
+      // OCEAN (Cool tones)
+      { name: "Deep Ocean", from: "#2193b0", to: "#6dd5ed", via: "#2c3e50", category: "ocean" },
+      { name: "Arctic Blue", from: "#83a4d4", to: "#b6fbff", via: "#4ca1af", category: "ocean" },
+      { name: "Midnight", from: "#232526", to: "#414345", via: "#2c3e50", category: "ocean" },
+      { name: "Glacier", from: "#2980b9", to: "#6dd5fa", via: "#85d8ce", category: "ocean" },
+      { name: "Navy Storm", from: "#141e30", to: "#243b55", via: "#0f2027", category: "ocean" },
+      { name: "Aqua Marine", from: "#1a2980", to: "#26d0ce", via: "#3a7bd5", category: "ocean" },
+      { name: "Sea Foam", from: "#40e0d0", to: "#ff8c00", via: "#ff0080", category: "ocean" },
+      { name: "Blue Lagoon", from: "#43cea2", to: "#185a9d", via: "#2e8b57", category: "ocean" },
+      { name: "Arctic Night", from: "#0f2027", to: "#203a43", via: "#2c5364", category: "ocean" },
+      { name: "Pacific", from: "#34e89e", to: "#0f3443", via: "#2d3436", category: "ocean" },
+      { name: "Iceberg", from: "#83a4d4", to: "#b6fbff", via: "#e0f7fa", category: "ocean" },
+      { name: "Deep Sea", from: "#000428", to: "#004e92", via: "#002b5e", category: "ocean" },
+      { name: "Tidal Wave", from: "#4facfe", to: "#00f2fe", via: "#00c6fb", category: "ocean" },
+      { name: "Mermaid", from: "#40e0d0", to: "#ff8c00", via: "#9b59b6", category: "ocean" },
+      { name: "Atlantis", from: "#5d4157", to: "#a8caba", via: "#2c3e50", category: "ocean" },
+      
+      // COSMIC (Purple/Pink/Blue)
+      { name: "Galaxy", from: "#654ea3", to: "#eaafc8", via: "#a18cd1", category: "cosmic" },
+      { name: "Nebula", from: "#f093fb", to: "#f5576c", via: "#4facfe", category: "cosmic" },
+      { name: "Purple Haze", from: "#c471ed", to: "#f64f59", via: "#12c2e9", category: "cosmic" },
+      { name: "Northern Lights", from: "#43e97b", to: "#38f9d7", via: "#0af", category: "cosmic" },
+      { name: "Aurora", from: "#00dbde", to: "#fc00ff", via: "#6a11cb", category: "cosmic" },
+      { name: "Violet Dream", from: "#4776e6", to: "#8e54e9", via: "#a18cd1", category: "cosmic" },
+      { name: "Cosmic Dust", from: "#ff9a9e", to: "#fecfef", via: "#fecfef", category: "cosmic" },
+      { name: "Stardust", from: "#4facfe", to: "#00f2fe", via: "#43e97b", category: "cosmic" },
+      { name: "Orion", from: "#30cfd0", to: "#330867", via: "#7f00ff", category: "cosmic" },
+      { name: "Andromeda", from: "#ff00cc", to: "#333399", via: "#ff512f", category: "cosmic" },
+      { name: "Black Hole", from: "#2c3e50", to: "#4ca1af", via: "#c4e0e5", category: "cosmic" },
+      { name: "Supernova", from: "#f093fb", to: "#f5576c", via: "#ff9a9e", category: "cosmic" },
+      { name: "Milky Way", from: "#3a1c71", to: "#d76d77", via: "#ffaf7b", category: "cosmic" },
+      { name: "Event Horizon", from: "#000000", to: "#434343", via: "#1a1a2e", category: "cosmic" },
+      { name: "Celestial", from: "#7f00ff", to: "#e100ff", via: "#bf00ff", category: "cosmic" },
+      
+      // EARTH (Browns, tans, natural earth)
+      { name: "Terracotta", from: "#e07a5f", to: "#3d405b", via: "#81b29a", category: "earth" },
+      { name: "Clay", from: "#d4a373", to: "#ccd5ae", via: "#e9edc9", category: "earth" },
+      { name: "Desert Sand", from: "#edc9af", to: "#d4a574", via: "#c19a6b", category: "earth" },
+      { name: "Coffee Bean", from: "#4b3621", to: "#8b4513", via: "#a0522d", category: "earth" },
+      { name: "Rustic", from: "#8b4513", to: "#cd853f", via: "#d2691e", category: "earth" },
+      { name: "Wood Grain", from: "#8b5a2b", to: "#d2b48c", via: "#deb887", category: "earth" },
+      { name: "Adobe", from: "#e74c3c", to: "#c0392b", via: "#a93226", category: "earth" },
+      { name: "Stone", from: "#7f8c8d", to: "#95a5a6", via: "#bdc3c7", category: "earth" },
+      { name: "Sienna", from: "#a0522d", to: "#cd853f", via: "#d2691e", category: "earth" },
+      { name: "Umber", from: "#635147", to: "#8b7355", via: "#a0826d", category: "earth" },
+      
+      // PASTEL (Soft, light colors)
+      { name: "Cotton Candy", from: "#ffc3a0", to: "#ffafbd", via: "#ffe4e1", category: "pastel" },
+      { name: "Baby Blue", from: "#e0f7fa", to: "#b2ebf2", via: "#80deea", category: "pastel" },
+      { name: "Lavender", from: "#e6e6fa", to: "#d8bfd8", via: "#dda0dd", category: "pastel" },
+      { name: "Mint Cream", from: "#f5fffa", to: "#98fb98", via: "#90ee90", category: "pastel" },
+      { name: "Peach", from: "#ffdab9", to: "#ffe4e1", via: "#ffefd5", category: "pastel" },
+      { name: "Rose", from: "#ffe4e1", to: "#ffb6c1", via: "#ffc0cb", category: "pastel" },
+      { name: "Lemon", from: "#fffacd", to: "#fafad2", via: "#ffffe0", category: "pastel" },
+      { name: "Sky", from: "#87ceeb", to: "#add8e6", via: "#b0e0e6", category: "pastel" },
+      { name: "Unicorn", from: "#e0c3fc", to: "#8ec5fc", via: "#bbf0f3", category: "pastel" },
+      { name: "Macaron", from: "#fce38a", to: "#f38181", via: "#eaffd0", category: "pastel" },
+      
+      // METAL (Industrial, metallic sheens)
+      { name: "Chrome", from: "#e8e8e8", to: "#b8b8b8", via: "#d0d0d0", category: "metal" },
+      { name: "Gold", from: "#ffd700", to: "#ffed4e", via: "#daa520", category: "metal" },
+      { name: "Copper", from: "#b87333", to: "#cd853f", via: "#d2691e", category: "metal" },
+      { name: "Silver", from: "#c0c0c0", to: "#dcdcdc", via: "#a9a9a9", category: "metal" },
+      { name: "Bronze", from: "#cd7f32", to: "#d4af37", via: "#b8860b", category: "metal" },
+      { name: "Steel", from: "#708090", to: "#778899", via: "#b0c4de", category: "metal" },
+      { name: "Titanium", from: "#8e8e8e", to: "#a9a9a9", via: "#c0c0c0", category: "metal" },
+      { name: "Platinum", from: "#e5e4e2", to: "#d3d3d3", via: "#c0c0c0", category: "metal" },
+      { name: "Brass", from: "#b5a642", to: "#d4af37", via: "#c9b037", category: "metal" },
+      { name: "Gunmetal", from: "#2a3439", to: "#4a5459", via: "#6a7479", category: "metal" },
+      
+      // MONOCHROME (Black/Gray/White)
+      { name: "Carbon", from: "#434343", to: "#000000", via: "#2c3e50", category: "all" },
+      { name: "Silver", from: "#e0e0e0", to: "#f5f5f5", via: "#bdbdbd", category: "all" },
+      { name: "Obsidian", from: "#000000", to: "#434343", via: "#1a1a2e", category: "all" },
+      { name: "Pearl", from: "#f5f5f5", to: "#e0e0e0", via: "#fafafa", category: "all" },
+      { name: "Slate", from: "#2c3e50", to: "#4ca1af", via: "#34495e", category: "all" },
+    ];
+    
+    // Load custom palettes from localStorage
+    let customPalettes = JSON.parse(localStorage.getItem('customPalettes') || '[]');
+    customPalettes.forEach(p => p.category = 'custom');
+    palettes.push(...customPalettes);
+    
+    let currentFilter = 'all';
+    let activePalette = palettes[0];
+    
+    // ===== INITIALIZE PALETTE GRID =====
+    function renderPalettes() {
+      const grid = document.getElementById('palette-grid');
+      const filtered = currentFilter === 'all' 
+        ? palettes 
+        : palettes.filter(p => p.category === currentFilter || p.category === 'all');
+      
+      grid.innerHTML = filtered.map((palette, index) => `
+        <div class="palette-item ${palette.name === activePalette.name ? 'active' : ''} rounded-xl overflow-hidden bg-[#2F5E22]/10" 
+             onclick="selectPalette(${palettes.indexOf(palette)})">
+          <div class="h-20 w-full" style="background: linear-gradient(135deg, ${palette.from} 0%, ${palette.to} 100%)"></div>
+          <div class="p-3">
+            <p class="text-sm font-medium text-[#F4FFF1] truncate">${palette.name}</p>
+            <p class="text-xs text-[#F4FFF1]/50">${palette.from} → ${palette.to}</p>
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    // ===== SELECT PALETTE =====
+    function selectPalette(index) {
+      activePalette = palettes[index];
+      
+      // Update CSS variables
+      document.documentElement.style.setProperty('--preview-gradient-from', activePalette.from);
+      document.documentElement.style.setProperty('--preview-gradient-to', activePalette.to);
+      document.documentElement.style.setProperty('--preview-gradient-via', activePalette.via);
+      
+      // Update UI
+      document.getElementById('current-palette-name').textContent = activePalette.name;
+      document.getElementById('css-code').textContent = 
+        `background: linear-gradient(135deg, ${activePalette.from} 0%, ${activePalette.to} 100%);`;
+      
+      // Update gradient fill card
+      document.getElementById('gradient-fill-card').style.background = 
+        `linear-gradient(135deg, ${activePalette.from} 0%, ${activePalette.to} 100%)`;
+      
+      // Update active state
+      renderPalettes();
+      
+      // Scroll preview into view on mobile
+      if (window.innerWidth < 768) {
+        document.querySelector('.preview-area').scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+    
+    // ===== FILTER BUTTONS =====
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        // Update active state
+        document.querySelectorAll('.filter-btn').forEach(b => {
+          b.classList.remove('active', 'bg-[#2F5E22]', 'text-[#9BFF57]');
+          b.classList.add('bg-[#2F5E22]/20', 'text-[#F4FFF1]/70');
+        });
+        btn.classList.add('active', 'bg-[#2F5E22]', 'text-[#9BFF57]');
+        btn.classList.remove('bg-[#2F5E22]/20', 'text-[#F4FFF1]/70');
+        
+        // Apply filter
+        currentFilter = btn.dataset.filter;
+        renderPalettes();
+      });
+    });
+    
+    // ===== SPOTLIGHT EFFECT =====
+    const spotlightCard = document.getElementById('spotlight-preview-card');
+    const spotlight = document.getElementById('spotlight-preview');
+    
+    spotlightCard.addEventListener('mousemove', (e) => {
+      const rect = spotlightCard.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) / rect.width) * 100;
+      const y = ((e.clientY - rect.top) / rect.height) * 100;
+      spotlight.style.background = 
+        `radial-gradient(circle at ${x}% ${y}%, ${activePalette.from}33 0%, transparent 50%)`;
+    });
+    
+    // ===== COPY CSS =====
+    function copyCSS() {
+      const css = document.getElementById('css-code').textContent;
+      navigator.clipboard.writeText(css).then(() => {
+        const btn = document.querySelector('button[onclick="copyCSS()"]');
+        const original = btn.textContent;
+        btn.textContent = 'Copied!';
+        setTimeout(() => btn.textContent = original, 2000);
+      });
+    }
+    
+    // ===== PALETTE GENERATOR FUNCTIONS =====
+    const generatorFrom = document.getElementById('generator-from');
+    const generatorFromText = document.getElementById('generator-from-text');
+    const generatorTo = document.getElementById('generator-to');
+    const generatorToText = document.getElementById('generator-to-text');
+    const generatorAngle = document.getElementById('generator-angle');
+    const angleValue = document.getElementById('angle-value');
+    
+    // Sync color pickers with text inputs
+    generatorFrom.addEventListener('input', (e) => {
+      generatorFromText.value = e.target.value;
+      updateGeneratorPreview();
+    });
+    generatorFromText.addEventListener('input', (e) => {
+      if (/^#[0-9A-F]{6}$/i.test(e.target.value)) {
+        generatorFrom.value = e.target.value;
+        updateGeneratorPreview();
+      }
+    });
+    
+    generatorTo.addEventListener('input', (e) => {
+      generatorToText.value = e.target.value;
+      updateGeneratorPreview();
+    });
+    generatorToText.addEventListener('input', (e) => {
+      if (/^#[0-9A-F]{6}$/i.test(e.target.value)) {
+        generatorTo.value = e.target.value;
+        updateGeneratorPreview();
+      }
+    });
+    
+    generatorAngle.addEventListener('input', (e) => {
+      angleValue.textContent = e.target.value + '°';
+      updateGeneratorPreview();
+    });
+    
+    function updateGeneratorPreview() {
+      const from = generatorFrom.value;
+      const to = generatorTo.value;
+      const angle = generatorAngle.value;
+      
+      const gradient = `linear-gradient(${angle}deg, ${from}, ${to})`;
+      
+      document.getElementById('generator-preview').style.background = gradient;
+      document.getElementById('generator-preview-icon').style.background = gradient;
+      document.getElementById('generator-preview-btn').style.background = gradient;
+    }
+    
+    function addCustomPalette() {
+      const name = document.getElementById('generator-name').value || 'Custom Gradient';
+      const from = generatorFrom.value;
+      const to = generatorTo.value;
+      const via = '#0B120C';
+      
+      const newPalette = { name, from, to, via, category: 'custom' };
+      
+      // Save to localStorage
+      customPalettes.push(newPalette);
+      localStorage.setItem('customPalettes', JSON.stringify(customPalettes));
+      
+      // Add to palettes array
+      palettes.push(newPalette);
+      
+      // Update UI
+      renderPalettes();
+      updatePaletteCount();
+      
+      // Show success
+      alert(`"${name}" added to your collection!`);
+    }
+    
+    function previewCustomPalette() {
+      const from = generatorFrom.value;
+      const to = generatorTo.value;
+      const via = '#0B120C';
+      
+      // Create temporary palette
+      const tempPalette = { 
+        name: 'Custom Preview', 
+        from, 
+        to, 
+        via, 
+        category: 'custom' 
+      };
+      
+      activePalette = tempPalette;
+      
+      // Update CSS variables
+      document.documentElement.style.setProperty('--preview-gradient-from', from);
+      document.documentElement.style.setProperty('--preview-gradient-to', to);
+      document.documentElement.style.setProperty('--preview-gradient-via', via);
+      
+      // Update UI
+      document.getElementById('current-palette-name').textContent = tempPalette.name;
+      document.getElementById('css-code').textContent = 
+        `background: linear-gradient(${generatorAngle.value}deg, ${from} 0%, ${to} 100%);`;
+      
+      // Update gradient fill card
+      document.getElementById('gradient-fill-card').style.background = 
+        `linear-gradient(${generatorAngle.value}deg, ${from} 0%, ${to} 100%)`;
+      
+      // Scroll to preview
+      document.querySelector('.preview-area').scrollIntoView({ behavior: 'smooth' });
+    }
+    
+    function randomizePalette() {
+      const randomColor = () => '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
+      const from = randomColor();
+      const to = randomColor();
+      
+      generatorFrom.value = from;
+      generatorFromText.value = from;
+      generatorTo.value = to;
+      generatorToText.value = to;
+      
+      updateGeneratorPreview();
+    }
+    
+    function updatePaletteCount() {
+      document.getElementById('palette-count').textContent = palettes.length + ' palettes';
+    }
+    
+    function exportPalettes() {
+      const dataStr = JSON.stringify(palettes, null, 2);
+      const blob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'gradient-palettes.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+    
+    // ===== INITIALIZE =====
+    updatePaletteCount();
+    renderPalettes();
+    selectPalette(0); // Set default
+    updateGeneratorPreview();
+    
+    // ===== MAKE COMPONENTS INTERACTIVE =====
+    
+    // Button click animations
+    document.querySelectorAll('.preview-btn, .preview-btn-outline, button[onclick^="selectPalette"], .filter-btn').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        // Add press animation
+        this.style.transform = 'scale(0.95)';
+        setTimeout(() => {
+          this.style.transform = '';
+        }, 150);
+      });
+    });
+    
+    // Primary button shine effect on click
+    document.querySelectorAll('.preview-btn').forEach(btn => {
+      btn.addEventListener('mousedown', function() {
+        this.style.transform = 'scale(0.95) translateY(2px)';
+        this.style.boxShadow = '0 0 15px rgba(155, 255, 87, 0.6)';
+      });
+      btn.addEventListener('mouseup', function() {
+        this.style.transform = '';
+        this.style.boxShadow = '';
+      });
+      btn.addEventListener('mouseleave', function() {
+        this.style.transform = '';
+        this.style.boxShadow = '';
+      });
+    });
+    
+    // Toggle switches functionality
+    document.querySelectorAll('input[type="checkbox"].sr-only').forEach(toggle => {
+      const toggleBg = toggle.nextElementSibling;
+      if (toggleBg) {
+        // Initialize state
+        updateToggleVisual(toggle, toggleBg);
+        
+        toggle.addEventListener('change', function() {
+          updateToggleVisual(this, toggleBg);
+        });
+      }
+    });
+    
+    function updateToggleVisual(toggle, bg) {
+      const fromColor = getComputedStyle(document.documentElement).getPropertyValue('--preview-gradient-from').trim() || '#9BFF57';
+      if (toggle.checked) {
+        bg.style.background = fromColor;
+        bg.style.boxShadow = `0 0 10px ${fromColor}50`;
+        bg.querySelector('.toggle-thumb')?.style?.setProperty('transform', 'translateX(20px)');
+      } else {
+        bg.style.background = 'rgba(47, 94, 34, 0.3)';
+        bg.style.boxShadow = 'none';
+        bg.querySelector('.toggle-thumb')?.style?.setProperty('transform', 'translateX(0)');
+      }
+    }
+    
+    // Radio buttons functionality
+    document.querySelectorAll('input[type="radio"].sr-only').forEach(radio => {
+      radio.addEventListener('change', function() {
+        // Update all radios in same group
+        const name = this.name;
+        document.querySelectorAll(`input[type="radio"][name="${name}"]`).forEach(r => {
+          const indicator = r.nextElementSibling?.querySelector('.radio-indicator');
+          const fromColor = getComputedStyle(document.documentElement).getPropertyValue('--preview-gradient-from').trim() || '#9BFF57';
+          if (indicator) {
+            if (r.checked) {
+              indicator.style.background = fromColor;
+              indicator.style.transform = 'scale(1)';
+            } else {
+              indicator.style.background = 'transparent';
+              indicator.style.transform = 'scale(0)';
+            }
+          }
+        });
+      });
+    });
+    
+    // Input field focus effects
+    document.querySelectorAll('input[type="text"], input[type="email"], select').forEach(input => {
+      input.addEventListener('focus', function() {
+        const fromColor = getComputedStyle(document.documentElement).getPropertyValue('--preview-gradient-from').trim() || '#9BFF57';
+        this.style.borderColor = fromColor;
+        this.style.boxShadow = `0 0 0 3px ${fromColor}30`;
+      });
+      
+      input.addEventListener('blur', function() {
+        this.style.borderColor = '';
+        this.style.boxShadow = '';
+      });
+      
+      // Email validation animation
+      if (input.type === 'email') {
+        input.addEventListener('input', function() {
+          const checkIcon = this.parentElement?.querySelector('.check-icon');
+          if (checkIcon) {
+            if (this.value.includes('@') && this.value.includes('.')) {
+              checkIcon.style.transform = 'scale(1)';
+              checkIcon.style.opacity = '1';
+            } else {
+              checkIcon.style.transform = 'scale(0)';
+              checkIcon.style.opacity = '0';
+            }
+          }
+        });
+      }
+    });
+    
+    // Card hover effects with sound-like feedback (visual)
+    document.querySelectorAll('.magnetic-card, .spotlight-card, #gradient-fill-card').forEach(card => {
+      card.addEventListener('mouseenter', function() {
+        this.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+      });
+      
+      card.addEventListener('mousedown', function() {
+        this.style.transform = 'scale(0.98) translateY(2px)';
+      });
+      
+      card.addEventListener('mouseup', function() {
+        this.style.transform = '';
+      });
+      
+      card.addEventListener('mouseleave', function() {
+        this.style.transform = '';
+      });
+    });
+    
+    // Navigation pills active state
+    const navButtons = document.querySelectorAll('.preview-area button:not([onclick])');
+    navButtons.forEach((btn, index) => {
+      if (!btn.classList.contains('preview-btn') && !btn.classList.contains('preview-btn-outline')) {
+        btn.addEventListener('click', function() {
+          // Remove active from siblings
+          navButtons.forEach(b => {
+            if (b !== this && !b.classList.contains('preview-btn') && !b.classList.contains('preview-btn-outline')) {
+              b.style.background = '';
+              b.style.color = '';
+              b.classList.remove('nav-active');
+            }
+          });
+          
+          // Add active to clicked
+          const fromColor = getComputedStyle(document.documentElement).getPropertyValue('--preview-gradient-from').trim() || '#9BFF57';
+          this.style.background = fromColor;
+          this.style.color = '#0B120C';
+          this.classList.add('nav-active');
+        });
+      }
+    });
+    
+    // Progress bar animation on load
+    setTimeout(() => {
+      document.querySelectorAll('.progress-fill').forEach(bar => {
+        const width = bar.style.width;
+        bar.style.width = '0';
+        setTimeout(() => {
+          bar.style.transition = 'width 1s ease-out';
+          bar.style.width = width;
+        }, 100);
+      });
+    }, 500);
+    
+    // Data card click feedback
+    document.querySelectorAll('.stat-card').forEach(card => {
+      card.addEventListener('click', function() {
+        this.style.transform = 'scale(0.98)';
+        setTimeout(() => {
+          this.style.transform = '';
+        }, 150);
+      });
+    });
+    
+    // Select dropdown functionality
+    document.querySelectorAll('select').forEach(select => {
+      select.addEventListener('change', function() {
+        // Visual feedback
+        const fromColor = getComputedStyle(document.documentElement).getPropertyValue('--preview-gradient-from').trim() || '#9BFF57';
+        this.style.borderColor = fromColor;
+        setTimeout(() => {
+          this.style.borderColor = '';
+        }, 300);
+      });
+    });
+    
+    // Palette item selection feedback
+    document.addEventListener('click', function(e) {
+      if (e.target.closest('.palette-item')) {
+        const item = e.target.closest('.palette-item');
+        item.style.transform = 'scale(0.95)';
+        setTimeout(() => {
+          item.style.transform = '';
+        }, 150);
+      }
+    });
+    
+    // Add ripple effect to all buttons
+    function createRipple(e) {
+      const button = e.currentTarget;
+      const circle = document.createElement('span');
+      const diameter = Math.max(button.clientWidth, button.clientHeight);
+      const radius = diameter / 2;
+      
+      circle.style.width = circle.style.height = `${diameter}px`;
+      circle.style.left = `${e.clientX - button.getBoundingClientRect().left - radius}px`;
+      circle.style.top = `${e.clientY - button.getBoundingClientRect().top - radius}px`;
+      circle.classList.add('ripple');
+      
+      const ripple = button.getElementsByClassName('ripple')[0];
+      if (ripple) {
+        ripple.remove();
+      }
+      
+      button.appendChild(circle);
+    }
+    
+    // Add ripple styles
+    const rippleStyle = document.createElement('style');
+    rippleStyle.textContent = `
+      .ripple {
+        position: absolute;
+        border-radius: 50%;
+        transform: scale(0);
+        animation: ripple 0.6s linear;
+        background-color: rgba(255, 255, 255, 0.4);
+        pointer-events: none;
+      }
+      @keyframes ripple {
+        to {
+          transform: scale(4);
+          opacity: 0;
+        }
+      }
+      .nav-active {
+        position: relative;
+        overflow: hidden;
+      }
+    `;
+    document.head.appendChild(rippleStyle);
+    
+    // Apply ripple to buttons
+    document.querySelectorAll('button').forEach(btn => {
+      btn.style.position = 'relative';
+      btn.style.overflow = 'hidden';
+      btn.addEventListener('click', createRipple);
+    });
+    
+    console.log('✨ Interactive components initialized!');
+  </script>
+  
+</body>
+</html>

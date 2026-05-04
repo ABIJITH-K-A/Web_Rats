@@ -1,26 +1,65 @@
-import { Children, isValidElement } from 'react';
+import { Children, isValidElement, useRef, useCallback } from 'react';
 
 const Button = ({ children, variant = 'primary', className = '', ...props }) => {
+  const buttonRef = useRef(null);
   const isGalaxy = variant === 'galaxy';
   const isCardCta = variant === 'cardCta';
   const isStartProject = variant === 'startProject';
   const variants = {
-    primary: 'bg-primary-dark border border-cyan-primary/80 text-cyan-primary btn-dark-hover active:scale-95',
-    outline: 'bg-black/25 border border-cyan-primary/55 text-cyan-primary btn-dark-outline-hover active:scale-95',
-    ghost: 'text-light-gray hover:text-cyan-primary active:scale-95',
-    galaxy: 'tn-galaxy-btn min-h-[58px] px-8 py-4 text-white',
-    cardCta: 'tn-card-cta-btn text-white rounded-[0.95rem]',
-    startProject: 'tn-start-btn min-h-[3.1rem] text-white',
+    primary: 'bg-primary-dark border border-cyan-primary/80 text-cyan-primary btn-dark-hover btn-ripple active:scale-95',
+    outline: 'bg-black/25 border border-cyan-primary/55 text-cyan-primary btn-dark-outline-hover btn-ripple active:scale-95',
+    ghost: 'text-light-gray hover:text-cyan-primary btn-ripple active:scale-95',
+    galaxy: 'tn-galaxy-btn min-h-[58px] px-8 py-4 text-white btn-ripple',
+    cardCta: 'tn-card-cta-btn text-white rounded-[0.95rem] btn-ripple',
+    startProject: 'tn-start-btn min-h-[3.1rem] text-white btn-ripple',
   };
   const childNodes = Children.toArray(children);
   const lastChild = childNodes[childNodes.length - 1];
   const startProjectIcon = isStartProject && isValidElement(lastChild) ? childNodes.pop() : null;
   const startProjectText = childNodes.length > 0 ? childNodes : children;
 
+  // Ripple effect handler
+  const createRipple = useCallback((event) => {
+    const button = buttonRef.current;
+    if (!button) return;
+
+    const rect = button.getBoundingClientRect();
+    const diameter = Math.max(rect.width, rect.height);
+    const radius = diameter / 2;
+
+    const circle = document.createElement('span');
+    circle.style.width = circle.style.height = `${diameter}px`;
+    circle.style.left = `${event.clientX - rect.left - radius}px`;
+    circle.style.top = `${event.clientY - rect.top - radius}px`;
+    circle.classList.add('ripple-effect');
+
+    // Remove existing ripple
+    const existingRipple = button.getElementsByClassName('ripple-effect')[0];
+    if (existingRipple) {
+      existingRipple.remove();
+    }
+
+    button.appendChild(circle);
+
+    // Remove ripple after animation
+    setTimeout(() => {
+      circle.remove();
+    }, 600);
+  }, []);
+
+  // Combined click handler
+  const handleClick = (event) => {
+    createRipple(event);
+    // Call original onClick if provided
+    props.onClick?.(event);
+  };
+
   return (
     <button
+      ref={buttonRef}
       className={`relative isolate overflow-hidden font-bold transition-all duration-150 flex items-center justify-center gap-2 ${isGalaxy || isCardCta || isStartProject ? '' : 'px-8 py-3 rounded-full'} ${variants[variant]} ${className}`}
       {...props}
+      onClick={handleClick}
     >
       {isGalaxy ? (
         <>

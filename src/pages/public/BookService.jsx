@@ -19,35 +19,21 @@ import {
   User,
 } from "lucide-react";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import {
-  doc,
-  updateDoc,
-} from "firebase/firestore";
+import { doc, updateDoc } from "firebase/firestore";
 import { getDownloadURL, ref as storageRef, uploadBytes } from "firebase/storage";
 import { db, storage } from "../../config/firebase";
 import { useAuth } from "../../context/AuthContext";
 import AnimatedPaymentButton from "../../components/ui/AnimatedPaymentButton";
 import BackButton from "../../components/ui/BackButton";
 import { Button, Card, SectionHeading } from "../../components/ui/Primitives";
+import { ScrollReveal, GradientText } from "../../components/ui/ScrollReveal";
 import Stepper, { Step } from "../../components/ui/Stepper";
 import QRPaymentStep from "../../components/temp/QRPaymentStep";
 import { apiRequest } from "../../services/apiClient";
 import { createOrder } from "../../services/orderService";
-import {
-  BOOKING_STEP_LABELS,
-  buildPaymentBreakdown,
-  CONTACT_INFO,
-  getCategoryById,
-  getServiceById,
-  SERVICE_CATEGORIES,
-  TERMS_POINTS,
-} from "../../data/siteData";
+import { BOOKING_STEP_LABELS, buildPaymentBreakdown, CONTACT_INFO, getCategoryById, getServiceById, SERVICE_CATEGORIES, TERMS_POINTS } from "../../data/siteData";
 import { buildReorderDraft } from "../../utils/orderHelpers";
-import {
-  clampReferralDiscountPercent,
-  getEligibleReferralDiscount,
-  getStudentStartupDiscount,
-} from "../../utils/systemRules";
+import { clampReferralDiscountPercent, getEligibleReferralDiscount, getStudentStartupDiscount } from "../../utils/systemRules";
 
 const formatPrice = (price) => `Rs ${price.toLocaleString("en-IN")}`;
 

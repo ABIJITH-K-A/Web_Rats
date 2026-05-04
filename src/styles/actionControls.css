@@ -821,3 +821,93 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ===== BUTTON RIPPLE EFFECT ===== */
+
+/* Base ripple button styling */
+.btn-ripple {
+  position: relative;
+  overflow: hidden;
+  transform: translateZ(0);
+}
+
+/* Ripple animation */
+@keyframes ripple-animation {
+  0% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* The ripple element */
+.ripple-effect {
+  position: absolute;
+  border-radius: 50%;
+  background-color: rgba(155, 255, 87, 0.4);
+  pointer-events: none;
+  animation: ripple-animation 0.6s ease-out forwards;
+  z-index: 10;
+}
+
+/* Button press animation */
+.btn-ripple:active {
+  transform: scale(0.95);
+  transition: transform 0.1s ease;
+}
+
+/* Primary button glow on click */
+.btn-ripple:active::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(155, 255, 87, 0.1);
+  border-radius: inherit;
+  z-index: 5;
+}
+
+/* Galaxy button ripple customization */
+.tn-galaxy-btn .ripple-effect {
+  background-color: rgba(244, 255, 241, 0.3);
+}
+
+/* Card CTA button ripple customization */
+.tn-card-cta-btn .ripple-effect {
+  background-color: rgba(155, 255, 87, 0.35);
+}
+
+/* Start project button ripple customization */
+.tn-start-btn .ripple-effect {
+  background-color: rgba(155, 255, 87, 0.4);
+}
+
+/* Dark buttons ripple (primary/outline) */
+.btn-dark-hover .ripple-effect,
+.btn-dark-outline-hover .ripple-effect {
+  background-color: rgba(155, 255, 87, 0.25);
+}
+
+/* Ghost button ripple */
+.btn-ripple:not(.btn-dark-hover):not(.btn-dark-outline-hover):not(.tn-galaxy-btn):not(.tn-card-cta-btn):not(.tn-start-btn) .ripple-effect {
+  background-color: rgba(155, 255, 87, 0.2);
+}
+
+/* Button hover lift effect */
+.btn-ripple:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(155, 255, 87, 0.15);
+}
+
+.btn-ripple:active:hover {
+  transform: scale(0.95) translateY(0);
+  box-shadow: 0 2px 10px rgba(155, 255, 87, 0.1);
+}
+
+/* Ensure text stays above ripple */
+.btn-ripple > * {
+  position: relative;
+  z-index: 2;
+}
