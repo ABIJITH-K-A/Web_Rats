@@ -1,8 +1,10 @@
 import { useAuth } from '../../context/AuthContext';
 import { Navigate } from 'react-router-dom';
-import AdminDashboard from '../../pages/dashboard/AdminDashboard';
-import WorkerDashboard from '../../pages/dashboard/WorkerDashboard';
+import { lazy, Suspense } from 'react';
 import { normalizeRole } from '../../utils/systemRules';
+
+const AdminDashboard = lazy(() => import('../../pages/dashboard/AdminDashboard'));
+const WorkerDashboard = lazy(() => import('../../pages/dashboard/WorkerDashboard'));
 
 const RoleBasedDashboard = () => {
   const { userProfile, loading } = useAuth();
@@ -17,12 +19,26 @@ const RoleBasedDashboard = () => {
 
   const role = normalizeRole(userProfile?.role);
 
+  const dashboardFallback = (
+    <div className="min-h-screen bg-[#262B25] flex items-center justify-center">
+      <div className="text-cyan-primary text-sm font-mono animate-pulse">Loading dashboard...</div>
+    </div>
+  );
+
   if (role === 'admin' || role === 'owner') {
-    return <AdminDashboard />;
+    return (
+      <Suspense fallback={dashboardFallback}>
+        <AdminDashboard />
+      </Suspense>
+    );
   }
 
   if (role === 'worker') {
-    return <WorkerDashboard />;
+    return (
+      <Suspense fallback={dashboardFallback}>
+        <WorkerDashboard />
+      </Suspense>
+    );
   }
 
   return <Navigate to="/profile" replace />;
