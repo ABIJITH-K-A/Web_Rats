@@ -10,20 +10,40 @@ export default defineConfig({
   ],
   optimizeDeps: {
     include: ['recharts', 'react-is', 'lenis/react', 'firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/storage'],
+    exclude: ['@vercel/analytics/react'], // Lazy load analytics
   },
   build: {
     target: 'esnext',
     minify: 'terser',
     cssMinify: true,
+    brotliSize: true,
     rollupOptions: {
       output: {
         manualChunks: {
-          'firebase': ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/storage'],
-          'ui-vendor': ['lucide-react', '@vercel/analytics/react'],
+          'firebase-core': ['firebase/app', 'firebase/auth'],
+          'firebase-db': ['firebase/firestore', 'firebase/storage'],
+          'ui-vendor': ['lucide-react'],
           'animation': ['gsap', '@studio-freight/lenis', 'lenis/react'],
+          'analytics': ['@vercel/analytics/react'],
+          'charts': ['recharts', 'react-is'],
         },
+        assetFileNames: (assetInfo) => {
+          const info = assetInfo.name.split('.')
+          const ext = info[info.length - 1]
+          if (/\.png|jpe?g|svg|gif|tiff?|bmp|ico$/i.test(ext)) {
+            return `assets/images/[name]-[hash][extname]`
+          }
+          return `assets/[name]-[hash][extname]`
+        },
+        chunkFileNames: 'assets/js/[name]-[hash].js',
+        entryFileNames: 'assets/js/[name]-[hash].js',
       },
     },
-    chunkSizeWarningLimit: 1000,
+    chunkSizeWarningLimit: 500,
+    sourcemap: false, // Disable sourcemaps for production to reduce size
+  },
+  server: {
+    // Enable compression for dev server testing
+    compress: true,
   },
 })

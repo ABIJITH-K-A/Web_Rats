@@ -3,14 +3,13 @@ import { AuthProvider } from './context/AuthProvider';
 import { DashboardProvider } from './context/DashboardProvider';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import RootLayout from './components/layout/RootLayout';
-import Home from './pages/public/Home';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import ScrollToTop from './components/utils/ScrollToTop';
 import ErrorBoundary from './components/ui/ErrorBoundary';
-import CookieConsent from './components/ui/CookieConsent';
-import { Analytics } from "@vercel/analytics/react"
+import LoadingSpinner from './components/ui/LoadingSpinner';
 
-// Lazy load non-critical routes
+// Lazy load ALL routes for better code splitting
+const Home = lazy(() => import('./pages/public/Home'));
 const Services = lazy(() => import('./pages/public/Services'));
 const ServiceDetail = lazy(() => import('./pages/public/ServiceDetail'));
 const About = lazy(() => import('./pages/public/About'));
@@ -29,6 +28,10 @@ const Profile = lazy(() => import('./pages/auth/Profile'));
 const RoleBasedDashboard = lazy(() => import('./components/dashboard/RoleBasedDashboard'));
 const PaymentSuccess = lazy(() => import('./pages/payment/PaymentSuccess'));
 
+// Lazy load non-critical components
+const Analytics = lazy(() => import('@vercel/analytics/react').then(m => ({ default: m.Analytics })));
+const CookieConsent = lazy(() => import('./components/ui/CookieConsent'));
+
 function App() {
   return (
     <BrowserRouter>
@@ -37,7 +40,7 @@ function App() {
           <DashboardProvider>
             <ScrollToTop />
             <RootLayout>
-              <Suspense fallback={<div className="min-h-screen bg-primary-dark" />}>
+              <Suspense fallback={<LoadingSpinner />}>
                 <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/services" element={<Services />} />
@@ -67,9 +70,13 @@ function App() {
                     <Route path="/privacy" element={<Privacy />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
+                <Suspense fallback={null}>
+                  <Analytics />
                 </Suspense>
-                <Analytics />
-                <CookieConsent />
+                <Suspense fallback={null}>
+                  <CookieConsent />
+                </Suspense>
+              </Suspense>
               </RootLayout>
             </DashboardProvider>
           </AuthProvider>
