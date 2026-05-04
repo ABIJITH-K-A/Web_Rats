@@ -7,6 +7,7 @@ import Home from './pages/public/Home';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import ScrollToTop from './components/utils/ScrollToTop';
 import ErrorBoundary from './components/ui/ErrorBoundary';
+import CookieConsent from './components/ui/CookieConsent';
 import { Analytics } from "@vercel/analytics/react"
 
 // Lazy load non-critical routes
@@ -68,6 +69,7 @@ function App() {
                   </Routes>
                 </Suspense>
                 <Analytics />
+                <CookieConsent />
               </RootLayout>
             </DashboardProvider>
           </AuthProvider>

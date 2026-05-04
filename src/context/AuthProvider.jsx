@@ -67,12 +67,23 @@ const wrapAuthError = (error) => {
   return new Error(userFriendlyError(error?.code));
 };
 
+const SESSION_KEY = 'rynix_session_start';
+const SESSION_DURATION_MS = 60 * 60 * 1000; // 1 hour
+
+const isSessionExpired = () => {
+  const sessionStart = localStorage.getItem(SESSION_KEY);
+  if (!sessionStart) return true;
+  const elapsed = Date.now() - parseInt(sessionStart, 10);
+  return elapsed > SESSION_DURATION_MS;
+};
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
   const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState(null);
+  const [sessionExpired, setSessionExpired] = useState(false);
 
   const refreshProfile = useCallback(
     async (uid) => {
@@ -96,18 +107,75 @@ export const AuthProvider = ({ children }) => {
     [user?.uid]
   );
 
+  const logout = useCallback(async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      // Always clear session data even if signOut fails
+      localStorage.removeItem(SESSION_KEY);
+      sessionStorage.clear();
+      indexedDB.deleteDatabase('firebaseLocalStorageDb');
+      // Clear all cookies
+      document.cookie.split(';').forEach((cookie) => {
+        const [name] = cookie.split('=');
+        document.cookie = `${name.trim()}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+        document.cookie = `${name.trim()}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname};`;
+      });
+      setUser(null);
+      setUserProfile(null);
+      setRole(null);
+    }
+  }, []);
+
+  // Session expiry check interval (every minute)
+  useEffect(() => {
+    if (!user) return;
+    
+    const interval = setInterval(async () => {
+      if (isSessionExpired()) {
+        await logout();
+        setSessionExpired(true);
+      }
+    }, 60000);
+    
+    return () => clearInterval(interval);
+  }, [user, logout]);
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
+        // Check session expiry on auth state change
+        if (isSessionExpired()) {
+          await logout();
+          setSessionExpired(true);
+          setLoading(false);
+          return;
+        }
+        
+        // Set session start time if not set
+        if (!localStorage.getItem(SESSION_KEY)) {
+          localStorage.setItem(SESSION_KEY, Date.now().toString());
+        }
+        
         setUser(currentUser);
-        refreshProfile(currentUser.uid).finally(() => setLoading(false));
+        try {
+          const profileData = await fetchUserProfile(currentUser.uid);
+          if (profileData) {
+            setUserProfile(profileData);
+            setRole(normalizeRole(profileData.role));
+          }
+        } catch (error) {
+          setFetchError(error.message);
+        }
       } else {
         setUser(null);
         setUserProfile(null);
         setRole(null);
-        setFetchError(null);
-        setLoading(false);
+        localStorage.removeItem(SESSION_KEY);
       }
+      setLoading(false);
     });
 
     return unsubscribe;
@@ -230,7 +298,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = () => signOut(auth);
 
   const resendVerificationEmail = async () => {
     if (auth.currentUser) {
@@ -260,6 +327,8 @@ export const AuthProvider = ({ children }) => {
     isStaff: ["admin", "worker", "owner"].includes(normalizedRole),
     fetchError,
     refreshProfile,
+    sessionExpired,
+    setSessionExpired,
   };
 
   return (
