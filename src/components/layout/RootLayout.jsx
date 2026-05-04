@@ -68,17 +68,23 @@ const RootLayout = ({ children }) => {
     location.pathname === '/messages';
 
   return (
-    <ReactLenis root>
+    <ReactLenis 
+      root 
+      options={{ 
+        lerp: 0.1, 
+        duration: 1.2,
+        smoothWheel: true,
+        syncTouch: true,
+        touchMultiplier: 2,
+      }}
+    >
       <div className="relative min-h-screen bg-primary-dark font-sans selection:bg-cyan-primary selection:text-primary-dark">
         
         <div className="relative z-10 flex flex-col min-h-screen overflow-x-hidden">
           <VerificationBanner />
           {!isDashboardRoute && <Navbar />}
           
-          <main 
-            key={location.pathname}
-            className={`grow ${isDashboardRoute ? '' : 'pt-24'}`}
-          >
+          <main className={`grow ${isDashboardRoute ? '' : 'pt-24'}`}>
             {children}
           </main>
 
