@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button, Card, SectionHeading } from "../../components/ui/Primitives";
+import { ScrollReveal, StaggerContainer, StaggerItem, GradientText, GlowText, AnimatedCounter } from "../../components/ui/ScrollReveal";
 import backgroundTheme from "../../config/backgroundTheme";
 import {
   FEATURED_PROJECTS,
@@ -47,47 +48,58 @@ const Home = () => {
 
         <div className="container relative z-10 mx-auto flex min-h-[82vh] flex-col items-center justify-center gap-14 px-6 text-center md:min-h-[96vh]">
           <div className="flex flex-col items-center">
-            <h1 className="max-w-4xl text-5xl font-black leading-[1.05] text-white md:text-7xl text-center ">
-              We{" "}<span className="text-gradient-brand inline-block">Build</span>. We{" "}<span className="text-gradient-brand inline-block">Design</span>. We{" "}
-              <span className="text-gradient-brand inline-block">Deliver.</span>
-            </h1>
-            <p className="mt-7 max-w-2xl text-lg leading-8 text-light-gray/74 md:text-xl text-center">
-             We Build. We Design. We Deliver.
-             Crafted by two dedicated builders,
-             we transform ideas into refined digital
-             experiences — from high-performing websites
-             to polished presentations and visual assets,
-             all delivered with precision and speed.
-            </p>
+            <ScrollReveal direction="up" delay={0.1}>
+              <h1 className="max-w-4xl text-5xl font-black leading-[1.05] text-white md:text-7xl text-center">
+                We{" "}<GradientText className="inline-block">Build</GradientText>. We{" "}<GradientText className="inline-block">Design</GradientText>. We{" "}
+                <GradientText className="inline-block">Deliver.</GradientText>
+              </h1>
+            </ScrollReveal>
+            
+            <ScrollReveal direction="up" delay={0.2}>
+              <p className="mt-7 max-w-2xl text-lg leading-8 text-light-gray/74 md:text-xl text-center">
+               We Build. We Design. We Deliver.
+               Crafted by two dedicated builders,
+               we transform ideas into refined digital
+               experiences — from high-performing websites
+               to polished presentations and visual assets,
+               all delivered with precision and speed.
+              </p>
+            </ScrollReveal>
 
-            <div className="mt-20 flex flex-wrap justify-center gap-8">
-              <Link to="/services">
-                <Button variant="galaxy" className="min-w-[224px]">
-                  Explore Our Services <ArrowRight size={18} />
-                </Button>
-              </Link>
-              <Link to="/projects">
-                <Button variant="galaxy" className="min-w-[224px]">See Our Projects <ArrowRight size={18} /></Button>
-              </Link>
-            </div>
+            <ScrollReveal direction="up" delay={0.3}>
+              <div className="mt-20 flex flex-wrap justify-center gap-8">
+                <Link to="/services">
+                  <Button variant="galaxy" className="min-w-[224px]">
+                    Explore Our Services <ArrowRight size={18} />
+                  </Button>
+                </Link>
+                <Link to="/projects">
+                  <Button variant="galaxy" className="min-w-[224px]">See Our Projects <ArrowRight size={18} /></Button>
+                </Link>
+              </div>
+            </ScrollReveal>
           </div>
         </div>
       </section>
 
       <section className="border-y border-white/6 bg-black/45 py-9">
         <div className="container mx-auto px-6 text-center">
-          <p className="text-2xl font-black italic leading-snug text-white md:text-4xl">
-            "Two minds. One mission.{" "}
-            <span className="text-gradient-brand inline-block">Infinite creativity.</span>"
-          </p>
+          <ScrollReveal direction="scale" duration={0.6}>
+            <p className="text-2xl font-black italic leading-snug text-white md:text-4xl">
+              "Two minds. One mission.{" "}
+              <GlowText color="cyan">Infinite creativity.</GlowText>"
+            </p>
+          </ScrollReveal>
         </div>
       </section>
 
       <section className="py-28">
         <div className="container mx-auto px-6">
-          <SectionHeading subtitle="Rynix is a two-person creative powerhouse built on skill, hustle, and a shared obsession with work that actually feels considered.">
-            Who We <span className="text-white">Are</span>
-          </SectionHeading>
+          <ScrollReveal direction="up">
+            <SectionHeading subtitle="Rynix is a two-person creative powerhouse built on skill, hustle, and a shared obsession with work that actually feels considered.">
+              Who We <GlowText>Are</GlowText>
+            </SectionHeading>
+          </ScrollReveal>
 
           <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
             <Card className="border-cyan-primary/10 bg-secondary-dark/65">
