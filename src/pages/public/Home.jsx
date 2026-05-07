@@ -17,6 +17,7 @@ import {
   STATS,
   VALUE_POINTS,
 } from "../../data/siteData";
+import ImageGallery from "../../components/home_items/img_gallery";
 
 const categoryIcons = {
   "presentation-design": FileStack,
@@ -36,6 +37,15 @@ const Home = () => {
 
   return (
     <div className="flex flex-col">
+      <ScrollReveal direction="down" delay={0.1} duration={0.8}>
+        <div className="w-full px-4 md:px-6 py-4">
+          <img
+            src="/Images/Icons/landscape.png"
+            alt="Rynix Landscape"
+            className="w-full h-auto rounded-3xl border-4 border-transparent shadow-2xl"
+          />
+        </div>
+      </ScrollReveal>
       <section ref={heroRef} className="relative isolate overflow-hidden py-20 md:py-28">
         <div aria-hidden="true" className="absolute inset-0 z-0 overflow-hidden">
           <div
@@ -45,7 +55,7 @@ const Home = () => {
           <div className="absolute inset-0 bg-black opacity-30" />
           <div className="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-b from-transparent via-primary-dark/45 to-primary-dark" />
         </div>
-
+        <ImageGallery/>
         <div className="container relative z-10 mx-auto flex min-h-[82vh] flex-col items-center justify-center gap-14 px-6 text-center md:min-h-[96vh]">
           <div className="flex flex-col items-center">
             <ScrollReveal direction="up" delay={0.1}>
@@ -54,7 +64,7 @@ const Home = () => {
                 <GradientText className="inline-block">deliver.</GradientText>
               </h1>
             </ScrollReveal>
-            
+
             <ScrollReveal direction="up" delay={0.2}>
               <p className="mt-7 max-w-2xl text-lg leading-8 text-light-gray/74 md:text-xl text-center">
                 we build, we design, we deliver.
@@ -104,14 +114,14 @@ const Home = () => {
           <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
             <Card className="border-cyan-primary/10 bg-secondary-dark/65">
               <p className="text-lg leading-8 text-light-gray/72">
-               We're not a large agency — and we don't aim to be.
-               We're two builders who care deeply about what we ship, 
-               how it looks, and whether it truly delivers value to the 
-               people we work with.
+                We're not a large agency — and we don't aim to be.
+                We're two builders who care deeply about what we ship,
+                how it looks, and whether it truly delivers value to the
+                people we work with.
               </p>
               <p className="mt-6 text-lg leading-8 text-light-gray/72">
-                From students to startups — 
-                from a single poster to a complete website 
+                From students to startups —
+                from a single poster to a complete website
                 — we create work that is clear, bold, and built to be seen.
               </p>
             </Card>
@@ -271,6 +281,8 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+      <ImageGallery />
 
       <section className="pb-24 pt-16">
         <div className="container mx-auto px-6">

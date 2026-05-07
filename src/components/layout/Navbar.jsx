@@ -9,7 +9,7 @@ const navLinks = [
   { name: "Projects", path: "/projects" },
   { name: "Templates", path: "/templates" },
   { name: "About", path: "/about" },
-  { name: "Book Service", path: "/book" },
+  { name: "Order", path: "/book" },
   { name: "Help", path: "/help" },
 ];
 
@@ -37,16 +37,20 @@ const Navbar = () => {
     return "/profile";
   };
 
-  const navWidthClass = "w-full rounded-none";
+  const navWidthClass = scrolled
+    ? "w-[94%] max-w-7xl rounded-full mt-4 shadow-2xl"
+    : "w-[96%] max-w-7xl rounded-[2.5rem] mt-6 shadow-xl";
 
   const navSurfaceClass = scrolled
-    ? "border-white/8 bg-[#08090C]/85 py-4 shadow-lg backdrop-blur-xl"
-    : "border-transparent bg-transparent py-5 shadow-none backdrop-blur-none";
+    ? "border-white/20 bg-white/10 py-3 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.8)]"
+    : "border-white/10 bg-white/5 py-4 backdrop-blur-xl";
 
   return (
     <div className="fixed inset-x-0 top-0 z-50 flex justify-center">
       <nav
-        className={`border transition-[width,border-radius,background-color,border-color,padding,box-shadow,backdrop-filter] duration-300 ${navWidthClass} ${navSurfaceClass}`}
+        className={`border transition-[width,border-radius,background-color,border-color,padding,box-shadow,backdrop-filter,margin] duration-500 ease-out ${
+          isOpen ? "w-[96%] rounded-[2rem]" : navWidthClass
+        } ${navSurfaceClass} overflow-hidden`}
       >
         <div className="mx-auto grid grid-cols-3 items-center px-6">
           {/* Logo - Left */}
@@ -59,10 +63,10 @@ const Navbar = () => {
               />
             </div>
             <div>
-              <div className="text-lg font-black tracking-tight text-cyan-primary">
+              <div className="text-xl font-black tracking-tight text-cyan-primary">
                 RYNIX
               </div>
-              <div className="text-[9px] font-mono uppercase tracking-[0.18em] text-light-gray/38">
+              <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-light-gray/38">
                 We Build Your Ideas
               </div>
             </div>
@@ -76,7 +80,7 @@ const Navbar = () => {
                 <Link
                   key={link.path}
                   to={link.path}
-                  className={`text-sm font-semibold transition-colors ${
+                  className={`text-[15px] font-bold transition-colors ${
                     active ? "text-cyan-primary" : "text-light-gray/78 hover:text-cyan-primary"
                   }`}
                 >
@@ -91,7 +95,7 @@ const Navbar = () => {
             {user ? (
               <Link
                 to={getDashboardPath()}
-                className="rounded-full border border-cyan-primary bg-cyan-primary px-6 py-2.5 text-sm font-bold text-primary-dark transition-transform hover:-translate-y-0.5"
+                className="rounded-full border border-cyan-primary bg-cyan-primary px-7 py-3 text-[15px] font-black text-primary-dark transition-transform hover:-translate-y-0.5 shadow-lg shadow-cyan-primary/20"
               >
                 <span className="flex items-center gap-2">
                   <User size={16} /> Dashboard
@@ -101,13 +105,13 @@ const Navbar = () => {
               <>
                 <Link
                   to="/join?tab=register"
-                  className="rounded-full border border-cyan-primary/50 px-4 py-2 text-sm font-semibold text-cyan-primary transition-all hover:bg-cyan-primary/10"
+                  className="rounded-full border border-cyan-primary/50 px-5 py-2.5 text-[15px] font-bold text-cyan-primary transition-all hover:bg-cyan-primary/10"
                 >
                   Join
                 </Link>
                 <Link
                   to="/join?login=1"
-                  className="rounded-full border border-cyan-primary bg-cyan-primary px-4 py-2 text-sm font-bold text-primary-dark transition-transform hover:-translate-y-0.5"
+                  className="rounded-full border border-cyan-primary bg-cyan-primary px-6 py-2.5 text-[15px] font-black text-primary-dark transition-transform hover:-translate-y-0.5 shadow-lg shadow-cyan-primary/20"
                 >
                   Sign In
                 </Link>
@@ -133,7 +137,7 @@ const Navbar = () => {
                 <Link
                   key={link.path}
                   to={link.path}
-                  className={`text-base font-semibold ${
+                  className={`text-lg font-bold ${
                     location.pathname === link.path
                       ? "text-cyan-primary"
                       : "text-light-gray/80"
@@ -146,7 +150,7 @@ const Navbar = () => {
               {user ? (
                 <Link
                   to={getDashboardPath()}
-                  className="mt-2 rounded-2xl border border-cyan-primary bg-cyan-primary px-5 py-3 text-center text-sm font-bold text-primary-dark"
+                  className="mt-2 rounded-2xl border border-cyan-primary bg-cyan-primary px-5 py-4 text-center text-[15px] font-black text-primary-dark"
                 >
                   Open Dashboard
                 </Link>
@@ -154,13 +158,13 @@ const Navbar = () => {
                 <div className="mt-2 flex gap-2">
                   <Link
                     to="/join?tab=register"
-                    className="flex-1 rounded-2xl border border-cyan-primary/50 px-4 py-3 text-center text-sm font-semibold text-cyan-primary transition-all hover:bg-cyan-primary/10"
+                    className="flex-1 rounded-2xl border border-cyan-primary/50 px-4 py-3.5 text-center text-[15px] font-bold text-cyan-primary transition-all hover:bg-cyan-primary/10"
                   >
                     Join
                   </Link>
                   <Link
                     to="/join?login=1"
-                    className="flex-1 rounded-2xl border border-cyan-primary bg-cyan-primary px-4 py-3 text-center text-sm font-bold text-primary-dark"
+                    className="flex-1 rounded-2xl border border-cyan-primary bg-cyan-primary px-4 py-3.5 text-center text-[15px] font-black text-primary-dark"
                   >
                     Sign In
                   </Link>
