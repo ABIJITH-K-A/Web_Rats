@@ -19,7 +19,7 @@ input[type="date"], input[type="month"], input[type="number"] {
 }
 
 /* ── Horizontal scroll guard ─────────────────────────────── */
-html { scroll-behavior: smooth; }
+html { scroll-behavior: auto; }
 
 body { overflow-x: hidden; position: relative; }
 img  { max-width: 100%; }
@@ -30,14 +30,13 @@ img  { max-width: 100%; }
   width: 100%; height: 100%;
   border: none; z-index: 0;
   pointer-events: none;
-  transform: scale(1.3);
 }
 
 /* ═══════════════════════════════════════════════════════════
    BOOKING PAGE — service & package cards
 ════════════════════════════════════════════════════════════ */
-.pkg-card.pkg-popular { border-color: var(--cyan) !important; transform: scale(1.04); z-index: 2; }
-.pkg-card.pkg-popular:hover { transform: scale(1.04) translateY(-4px) !important; }
+.pkg-card.pkg-popular { border-color: var(--cyan) !important; z-index: 2; }
+.pkg-card.pkg-popular:hover { }
 
 /* ═══════════════════════════════════════════════════════════
    AUTH / REVIEW MODALS
@@ -56,7 +55,7 @@ img  { max-width: 100%; }
   border: 1px solid rgba(155, 255, 87, .18);
   border-radius: 20px; padding: 40px 36px;
   max-height: 90vh; overflow-y: auto;
-  position: relative; animation: tnwr-in .28s ease;
+  position: relative;
 }
 @media (max-width: 500px) { .auth-box, .review-box { padding: 26px 20px; } }
 
@@ -66,7 +65,7 @@ img  { max-width: 100%; }
   color: rgba(244, 255, 241, .35); font-size: 1.3rem;
   cursor: pointer; min-width: 44px; min-height: 44px;
   display: flex; align-items: center; justify-content: center;
-  border-radius: 50%; transition: color .2s;
+  border-radius: 50%;
 }
 .auth-close:hover { color: var(--cyan); }
 
@@ -81,7 +80,7 @@ img  { max-width: 100%; }
 ════════════════════════════════════════════════════════════ */
 .star-btn {
   font-size: 2.2rem; color: rgba(155, 255, 87, .2);
-  cursor: pointer; transition: color .2s;
+  cursor: pointer;
   background: none; border: none; line-height: 1;
   min-width: 44px; min-height: 44px;
   display: inline-flex; align-items: center; justify-content: center;
@@ -123,7 +122,7 @@ img  { max-width: 100%; }
   color: var(--gray); padding: 11px 24px;
   border-radius: 100px; font-family: var(--mono);
   font-size: .7rem; letter-spacing: .08em;
-  z-index: 9999; transition: transform .35s ease;
+  z-index: 9999;
   pointer-events: none; white-space: nowrap;
 }
 .tnwr-toast.show { transform: translateX(-50%) translateY(0); }
@@ -161,9 +160,9 @@ img  { max-width: 100%; }
   background: rgba(11, 18, 12,.8); border: 1px solid rgba(155, 255, 87,.14);
   border-radius: 8px; color: var(--gray); font-family: var(--sans);
   font-size: .9rem; padding: 9px 13px; width: 100%;
-  outline: none; transition: border-color .25s;
+  outline: none;
 }
-.dash-input:focus { border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(155, 255, 87,.08); }
+.dash-input:focus { border-color: var(--cyan); }
 .dash-input::placeholder { color: rgba(244, 255, 241,.35); }
 select.dash-input option { background: var(--dark); }
 
@@ -186,7 +185,6 @@ select.dash-input option { background: var(--dark); }
   background: rgba(11, 18, 12,.84);
   border: 1px solid rgba(155, 255, 87,.2);
   border-radius: 20px; padding: 48px 36px;
-  animation: tnwr-in .4s ease;
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -204,7 +202,6 @@ select.dash-input option { background: var(--dark); }
 @media (max-width: 400px) {
   .svc-grid  { grid-template-columns: 1fr !important; }
   .stat-grid { grid-template-columns: 1fr 1fr !important; }
-  .pkg-card.pkg-popular { transform: scale(1) !important; }
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -222,11 +219,6 @@ select.dash-input option { background: var(--dark); }
 /* ═══════════════════════════════════════════════════════════
    KEYFRAMES
 ════════════════════════════════════════════════════════════ */
-@keyframes tnwr-in {
-  from { opacity: 0; transform: scale(.94) translateY(10px); }
-  to   { opacity: 1; transform: scale(1)   translateY(0); }
-}
-@keyframes tnwr-spin { to { transform: rotate(360deg); } }
 
 /* Shared dark-button hover treatments */
 .btn-dark-hover,
@@ -234,11 +226,6 @@ select.dash-input option { background: var(--dark); }
   position: relative;
   overflow: hidden;
   isolation: isolate;
-  transition:
-    color 0.3s ease,
-    border-color 0.3s ease,
-    box-shadow 0.35s ease,
-    background-color 0.35s ease;
 }
 
 .btn-dark-hover::before,
@@ -256,8 +243,6 @@ select.dash-input option { background: var(--dark); }
   );
   z-index: -2;
   opacity: 0;
-  transform: translateX(-135%) skewX(-24deg);
-  transition: transform 0.7s ease, opacity 0.35s ease;
 }
 
 .btn-dark-hover::after,
@@ -270,8 +255,6 @@ select.dash-input option { background: var(--dark); }
     radial-gradient(circle at top, rgba(155, 255, 87, 0.22), transparent 55%),
     linear-gradient(135deg, rgba(155, 255, 87, 0.12), rgba(11, 18, 12, 0.88) 55%);
   opacity: 0;
-  transform: scale(0.98);
-  transition: opacity 0.35s ease, transform 0.35s ease;
   z-index: -1;
 }
 
@@ -291,25 +274,14 @@ select.dash-input option { background: var(--dark); }
 .btn-dark-outline-hover:hover {
   color: #F4FFF1 !important;
   border-color: rgba(155, 255, 87, 0.9);
-  box-shadow:
-    inset 0 0 0 1px rgba(155, 255, 87, 0.18),
-    0 16px 42px rgba(155, 255, 87, 0.16);
 }
 
 .btn-dark-hover:hover::before,
 .btn-dark-outline-hover:hover::before {
   opacity: 1;
-  transform: translateX(125%) skewX(-24deg);
 }
 
 .btn-dark-hover:hover::after,
 .btn-dark-outline-hover:hover::after {
   opacity: 1;
-  transform: scale(1);
-}
-
-.btn-dark-outline-hover:hover::after {
-  background:
-    radial-gradient(circle at top, rgba(155, 255, 87, 0.16), transparent 55%),
-    linear-gradient(135deg, rgba(155, 255, 87, 0.08), rgba(11, 18, 12, 0.84) 60%);
 }

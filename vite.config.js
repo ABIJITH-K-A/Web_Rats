@@ -9,25 +9,24 @@ export default defineConfig({
     tailwindcss(),
   ],
   optimizeDeps: {
-    include: ['recharts', 'react-is', 'lenis/react', 'firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/storage'],
+    include: ['recharts', 'react-is', 'firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/storage'],
     exclude: ['@vercel/analytics/react'], // Lazy load analytics
   },
   build: {
     target: 'esnext',
-    minify: 'terser',
+    minify: 'esbuild',
     cssMinify: true,
     brotliSize: true,
     rollupOptions: {
       output: {
-        manualChunks: {
-          'firebase-core': ['firebase/app', 'firebase/auth'],
-          'firebase-db': ['firebase/firestore', 'firebase/storage'],
-          'ui-vendor': ['lucide-react'],
-          'animation': ['gsap', '@studio-freight/lenis', 'lenis/react'],
-          'analytics': ['@vercel/analytics/react'],
-          'charts': ['recharts', 'react-is'],
+        manualChunks(id) {
+          if (id.includes('firebase')) return 'firebase';
+          if (id.includes('lucide-react')) return 'ui-vendor';
+          if (id.includes('recharts') || id.includes('react-is')) return 'charts';
+          if (id.includes('@vercel/analytics')) return 'analytics';
         },
         assetFileNames: (assetInfo) => {
+          if (!assetInfo.name) return 'assets/[name]-[hash][extname]';
           const info = assetInfo.name.split('.')
           const ext = info[info.length - 1]
           if (/\.png|jpe?g|svg|gif|tiff?|bmp|ico$/i.test(ext)) {

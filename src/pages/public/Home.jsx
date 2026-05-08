@@ -37,7 +37,7 @@ const Home = () => {
 
   return (
     <div className="flex flex-col">
-      <ScrollReveal direction="down" delay={0.1} duration={0.8}>
+      
         <div className="w-full px-4 md:px-6 py-4">
           <img
             src="/Images/Icons/landscape.png"
@@ -45,7 +45,7 @@ const Home = () => {
             className="w-full h-auto rounded-3xl border-4 border-transparent shadow-2xl"
           />
         </div>
-      </ScrollReveal>
+      
       <section ref={heroRef} className="relative isolate overflow-hidden py-20 md:py-28">
         <div aria-hidden="true" className="absolute inset-0 z-0 overflow-hidden">
           <div
@@ -58,14 +58,14 @@ const Home = () => {
         <ImageGallery/>
         <div className="container relative z-10 mx-auto flex min-h-[82vh] flex-col items-center justify-center gap-14 px-6 text-center md:min-h-[96vh]">
           <div className="flex flex-col items-center">
-            <ScrollReveal direction="up" delay={0.1}>
+            
               <h1 className="max-w-4xl text-5xl font-black leading-[1.05] text-white md:text-7xl text-center">
                 we{" "}<GradientText className="inline-block">build</GradientText>, we{" "}<GradientText className="inline-block">design</GradientText>, we{" "}
                 <GradientText className="inline-block">deliver.</GradientText>
               </h1>
-            </ScrollReveal>
+            
 
-            <ScrollReveal direction="up" delay={0.2}>
+            
               <p className="mt-7 max-w-2xl text-lg leading-8 text-light-gray/74 md:text-xl text-center">
                 we build, we design, we deliver.
                 Crafted by two dedicated builders,
@@ -74,9 +74,9 @@ const Home = () => {
                 to polished presentations and visual assets,
                 all delivered with precision and speed.
               </p>
-            </ScrollReveal>
+            
 
-            <ScrollReveal direction="up" delay={0.3}>
+            
               <div className="mt-20 flex flex-wrap justify-center gap-8">
                 <Link to="/services">
                   <Button variant="galaxy" className="min-w-[224px]">
@@ -87,29 +87,29 @@ const Home = () => {
                   <Button variant="galaxy" className="min-w-[224px]">See Our Projects <ArrowRight size={18} /></Button>
                 </Link>
               </div>
-            </ScrollReveal>
+            
           </div>
         </div>
       </section>
 
       <section className="border-y border-white/6 bg-black/45 py-9">
         <div className="container mx-auto px-6 text-center">
-          <ScrollReveal direction="scale" duration={0.6}>
+          
             <p className="text-2xl font-black italic leading-snug text-white md:text-4xl">
               "Two minds. One mission.{" "}
               <GlowText color="accent">Infinite creativity.</GlowText>"
             </p>
-          </ScrollReveal>
+          
         </div>
       </section>
 
       <section className="py-28">
         <div className="container mx-auto px-6">
-          <ScrollReveal direction="up">
+          
             <SectionHeading subtitle="Rynix is a two-person creative powerhouse built on skill, hustle, and a shared obsession with work that actually feels considered.">
               Who We <GlowText>Are</GlowText>
             </SectionHeading>
-          </ScrollReveal>
+          
 
           <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
             <Card className="border-cyan-primary/10 bg-secondary-dark/65">

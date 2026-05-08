@@ -14,13 +14,13 @@ const Services = () => {
     <div className="flex flex-col py-20">
       <section className="pb-18">
         <div className="container mx-auto px-6 text-center">
-          <ScrollReveal direction="up" delay={0.1}>
+          
             <div className="mb-6 inline-flex rounded-full border border-cyan-primary/20 bg-cyan-primary/8 px-4 py-2 text-[10px] font-mono uppercase tracking-[0.24em] text-cyan-primary">
               Our Services
             </div>
-          </ScrollReveal>
           
-          <ScrollReveal direction="up" delay={0.2}>
+          
+          
             <h1 className="mx-auto max-w-5xl text-5xl font-black leading-[1.05] text-white md:text-6xl">
               Affordable{" "}
               <GradientText className="inline-block">
@@ -28,16 +28,16 @@ const Services = () => {
               </GradientText>{" "}
               for students, creators, and small businesses.
             </h1>
-          </ScrollReveal>
           
-          <ScrollReveal direction="up" delay={0.3}>
+          
+          
             <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-light-gray/70">
               We keep our focus sharp and our output sharper. Here is exactly what
               Rynix brings to the table - nothing bloated, nothing vague.
             </p>
-          </ScrollReveal>
+          
 
-          <ScrollReveal direction="up" delay={0.4}>
+          
             <div className="mt-10 flex flex-wrap justify-center gap-4">
               <Link to="/book">
                 <Button>
@@ -52,9 +52,9 @@ const Services = () => {
                 <Button variant="outline">Contact Us</Button>
               </a>
             </div>
-          </ScrollReveal>
+          
 
-          <ScrollReveal direction="up" delay={0.5}>
+          
             <div className="mt-10 flex flex-wrap justify-center gap-3">
               {SERVICE_CATEGORIES.map((category) => (
                 <a
@@ -66,7 +66,7 @@ const Services = () => {
                 </a>
               ))}
             </div>
-          </ScrollReveal>
+          
         </div>
       </section>
 

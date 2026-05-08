@@ -48,7 +48,7 @@ const Navbar = () => {
   return (
     <div className="fixed inset-x-0 top-0 z-50 flex justify-center">
       <nav
-        className={`border transition-[width,border-radius,background-color,border-color,padding,box-shadow,backdrop-filter,margin] duration-500 ease-out ${
+        className={`border ${
           isOpen ? "w-[96%] rounded-[2rem]" : navWidthClass
         } ${navSurfaceClass} overflow-hidden`}
       >
@@ -95,7 +95,7 @@ const Navbar = () => {
             {user ? (
               <Link
                 to={getDashboardPath()}
-                className="rounded-full border border-cyan-primary bg-cyan-primary px-7 py-3 text-[15px] font-black text-primary-dark transition-transform hover:-translate-y-0.5 shadow-lg shadow-cyan-primary/20"
+                className="rounded-full border border-cyan-primary bg-cyan-primary px-7 py-3 text-[15px] font-black text-primary-dark shadow-lg shadow-cyan-primary/20"
               >
                 <span className="flex items-center gap-2">
                   <User size={16} /> Dashboard
@@ -111,7 +111,7 @@ const Navbar = () => {
                 </Link>
                 <Link
                   to="/join?login=1"
-                  className="rounded-full border border-cyan-primary bg-cyan-primary px-6 py-2.5 text-[15px] font-black text-primary-dark transition-transform hover:-translate-y-0.5 shadow-lg shadow-cyan-primary/20"
+                  className="rounded-full border border-cyan-primary bg-cyan-primary px-6 py-2.5 text-[15px] font-black text-primary-dark shadow-lg shadow-cyan-primary/20"
                 >
                   Sign In
                 </Link>

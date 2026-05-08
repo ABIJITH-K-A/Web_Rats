@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
 import {
   Bell,
   Box,
@@ -33,24 +32,15 @@ import AnalyticsView from './views/AnalyticsView';
 const AdminDashboard = () => (
   <DashboardLayout>
     {({ currentView }) => (
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={currentView}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.3 }}
-          className="h-full w-full"
-        >
-          {currentView === 'overview' && <OverviewTab />}
-          {currentView === 'orders' && <OrdersView />}
-          {currentView === 'users' && <UsersView />}
-          {currentView === 'referrals' && <ReferralsView />}
-          {currentView === 'reviews' && <ReviewsView />}
-          {currentView === 'orderpool' && <OrderPoolView />}
-          {currentView === 'analytics' && <AnalyticsView />}
-        </motion.div>
-      </AnimatePresence>
+      <div className="h-full w-full">
+        {currentView === 'overview' && <OverviewTab />}
+        {currentView === 'orders' && <OrdersView />}
+        {currentView === 'users' && <UsersView />}
+        {currentView === 'referrals' && <ReferralsView />}
+        {currentView === 'reviews' && <ReviewsView />}
+        {currentView === 'orderpool' && <OrderPoolView />}
+        {currentView === 'analytics' && <AnalyticsView />}
+      </div>
     )}
   </DashboardLayout>
 );
@@ -130,7 +120,7 @@ const OverviewTab = () => {
       </div>
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat, index) => {
+        {stats.map((stat) => {
           const Icon = stat.icon;
           const displayValue =
             typeof stat.value === "string"
@@ -138,11 +128,8 @@ const OverviewTab = () => {
               : stat.value;
 
           return (
-            <motion.div
+            <div
               key={stat.label}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.08 }}
               className="relative overflow-hidden rounded-[2rem] border border-white/8 bg-control-default p-8 shadow-2xl"
             >
               <div className="mb-6 flex items-start justify-between gap-4">
@@ -157,7 +144,7 @@ const OverviewTab = () => {
               <div className="mt-1 text-[10px] font-mono uppercase tracking-widest text-white/28">
                 {stat.label}
               </div>
-            </motion.div>
+            </div>
           );
         })}
       </div>

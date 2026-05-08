@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+
 import {
   AlertCircle,
   Bell,
@@ -601,14 +601,7 @@ const Profile = () => {
             </div>
           )}
 
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeSection}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.18 }}
-            >
+            <div>
               {activeSection === "overview" && (
                 <section className="space-y-6">
                   {profile.workerApprovalStatus === "pending" ? (
@@ -1058,8 +1051,7 @@ const Profile = () => {
                   </Card>
                 </section>
               )}
-            </motion.div>
-          </AnimatePresence>
+            </div>
         </main>
       </div>
     </div>

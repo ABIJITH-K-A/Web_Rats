@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
 import { 
   Menu, X, Home, List, Users, Ticket, Star, Wallet, 
   Bug, Box, CheckSquare, DollarSign, Briefcase, Key, AlertCircle,
@@ -25,7 +24,6 @@ const DashboardLayout = ({ children }) => {
   const [currentView, setCurrentView] = useState('overview');
   const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString());
   const navigate = useNavigate();
-
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -92,17 +90,12 @@ const DashboardLayout = ({ children }) => {
   return (
     <div className="min-h-screen text-light-gray flex bg-control-default overflow-hidden font-rajdhani relative">
       {/* Sidebar Overlay */}
-      <AnimatePresence>
-        {isSidebarOpen && window.innerWidth < 1024 && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setIsSidebarOpen(false)}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
-          />
-        )}
-      </AnimatePresence>
+      {isSidebarOpen && window.innerWidth < 1024 && (
+        <div 
+          onClick={() => setIsSidebarOpen(false)}
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
+        />
+      )}
 
       {/* Sidebar */}
       <aside 
@@ -154,9 +147,6 @@ const DashboardLayout = ({ children }) => {
                   {item.icon}
                 </span>
                 <span className="text-sm font-semibold tracking-wide capitalize">{item.label}</span>
-                {currentView === item.id && (
-                   <motion.div layoutId="navIndicator" className="ml-auto w-1.5 h-1.5 rounded-full bg-cyan-primary shadow-[0_0_10px_rgba(var(--rgb-accent),1)]" />
-                )}
               </button>
             ))}
           </div>

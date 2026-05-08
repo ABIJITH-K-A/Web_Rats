@@ -16,39 +16,39 @@ const About = () => {
       <section className="pb-18">
         <div className="container mx-auto grid items-center gap-12 px-6 lg:grid-cols-[1.05fr_0.95fr]">
           <div>
-            <ScrollReveal direction="up" delay={0.1}>
+            
               <div className="mb-6 inline-flex rounded-full border border-cyan-primary/20 bg-cyan-primary/8 px-4 py-2 text-[10px] font-mono uppercase tracking-[0.24em] text-cyan-primary">
                 About Rynix
               </div>
-            </ScrollReveal>
             
-            <ScrollReveal direction="up" delay={0.2}>
+            
+            
               <h1 className="text-5xl font-black leading-[1.05] text-white md:text-6xl">
                 Two developers. Two designers. One shared drive to{" "}
                 <GradientText className="inline-block">
                   build things that actually matter.
                 </GradientText>
               </h1>
-            </ScrollReveal>
             
-            <ScrollReveal direction="up" delay={0.3}>
+            
+            
               <p className="mt-6 max-w-3xl text-lg leading-8 text-light-gray/68">
                 Rynix started as a simple conversation between two friends who
                 realised they were already doing the work - building things,
                 designing things, solving problems - so it made sense to make it
                 official.
               </p>
-            </ScrollReveal>
             
-            <ScrollReveal direction="up" delay={0.4}>
+            
+            
               <p className="mt-5 max-w-3xl text-lg leading-8 text-light-gray/68">
                 What began as side energy turned into a proper creative studio for
                 students, startups, and small businesses who want quality without
                 agency bloat or impersonal handoffs.
               </p>
-            </ScrollReveal>
+            
 
-            <ScrollReveal direction="up" delay={0.5}>
+            
               <div className="mt-10 flex flex-wrap gap-4">
                 <Link to="/book">
                   <Button>
@@ -59,10 +59,10 @@ const About = () => {
                   <Button variant="outline">See What We Build</Button>
                 </Link>
               </div>
-            </ScrollReveal>
+            
           </div>
 
-          <ScrollReveal direction="left" delay={0.3}>
+          
             <div>
               <Card className="border-cyan-primary/10 bg-black/72 p-8">
                 <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-cyan-primary/72">
@@ -88,21 +88,21 @@ const About = () => {
                 </div>
               </Card>
             </div>
-          </ScrollReveal>
+          
         </div>
       </section>
 
       <section className="bg-secondary-dark/28 py-20">
         <div className="container mx-auto px-6">
           <div className="grid gap-8 lg:grid-cols-[0.78fr_1.22fr]">
-            <ScrollReveal direction="up" delay={0.1}>
+            
               <Card className="border-white/8 bg-black/72">
                 <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-cyan-primary/72">
                   What We Are Building
                 </div>
-                <StaggerContainer staggerDelay={0.1} className="mt-6 space-y-4">
+                
                   {ABOUT_POINTS.map((point) => (
-                    <StaggerItem key={point} direction="right">
+                    
                       <div className="flex items-start gap-3 text-sm leading-7 text-light-gray/68">
                         <Sparkles
                           size={16}
@@ -110,11 +110,11 @@ const About = () => {
                         />
                         <span>{point}</span>
                       </div>
-                    </StaggerItem>
+                    
                   ))}
-                </StaggerContainer>
+                
               </Card>
-            </ScrollReveal>
+            
 
             <Card className="border-white/8 bg-secondary-dark/72">
               <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-cyan-primary/72">

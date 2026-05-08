@@ -67,7 +67,6 @@ const Footer = () => {
               >
                 <ArrowRight
                   size={14}
-                  className="transition-transform group-hover:translate-x-1"
                 />
                 Services
               </Link>
@@ -77,7 +76,6 @@ const Footer = () => {
               >
                 <ArrowRight
                   size={14}
-                  className="transition-transform group-hover:translate-x-1"
                 />
                 Projects
               </Link>
@@ -87,7 +85,6 @@ const Footer = () => {
               >
                 <ArrowRight
                   size={14}
-                  className="transition-transform group-hover:translate-x-1"
                 />
                 Templates
               </Link>
@@ -97,7 +94,6 @@ const Footer = () => {
               >
                 <ArrowRight
                   size={14}
-                  className="transition-transform group-hover:translate-x-1"
                 />
                 About
               </Link>
@@ -107,7 +103,6 @@ const Footer = () => {
               >
                 <ArrowRight
                   size={14}
-                  className="transition-transform group-hover:translate-x-1"
                 />
                 Book Service
               </Link>
@@ -118,7 +113,6 @@ const Footer = () => {
                 >
                   <ArrowRight
                     size={14}
-                    className="transition-transform group-hover:translate-x-1"
                   />
                   Profile
                 </Link>
@@ -130,7 +124,6 @@ const Footer = () => {
                   >
                     <ArrowRight
                       size={14}
-                      className="transition-transform group-hover:translate-x-1"
                     />
                     Join
                   </Link>
@@ -140,7 +133,6 @@ const Footer = () => {
                   >
                     <ArrowRight
                       size={14}
-                      className="transition-transform group-hover:translate-x-1"
                     />
                     Sign In
                   </Link>

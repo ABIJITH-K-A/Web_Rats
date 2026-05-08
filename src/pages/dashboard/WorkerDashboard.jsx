@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-
 import {
   AlertCircle,
   Briefcase,
@@ -16,21 +15,12 @@ import ReviewsView from "./views/ReviewsView";
 const WorkerDashboard = () => (
   <DashboardLayout>
     {({ currentView }) => (
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={currentView}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.3 }}
-          className="h-full w-full"
-        >
-          {currentView === "overview" && <WorkerOverview />}
-          {currentView === "orderpool" && <OrderPoolView />}
-          {currentView === "myorders" && <MyOrdersView />}
-          {currentView === "reviews" && <ReviewsView />}
-        </motion.div>
-      </AnimatePresence>
+      <div className="h-full w-full">
+        {currentView === "overview" && <WorkerOverview />}
+        {currentView === "orderpool" && <OrderPoolView />}
+        {currentView === "myorders" && <MyOrdersView />}
+        {currentView === "reviews" && <ReviewsView />}
+      </div>
     )}
   </DashboardLayout>
 );
@@ -96,14 +86,11 @@ const WorkerOverview = () => {
       </div>
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {statCards.map((stat, index) => {
+        {statCards.map((stat) => {
           const Icon = stat.icon;
           return (
-            <motion.div
+            <div
               key={stat.label}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.08 }}
               className="relative overflow-hidden rounded-[2rem] border border-white/8 bg-control-default p-8 shadow-2xl"
             >
               <div className="mb-6 flex items-start justify-between gap-4">
@@ -116,7 +103,7 @@ const WorkerOverview = () => {
               <div className="mt-1 text-[10px] font-mono uppercase tracking-widest text-white/28">
                 {stat.label}
               </div>
-            </motion.div>
+            </div>
           );
         })}
       </div>
@@ -139,18 +126,5 @@ const WorkerOverview = () => {
     </div>
   );
 };
-
-const ActionCard = ({ icon: Icon, title, description, tone, meta }) => (
-  <div className="flex items-center gap-4 rounded-2xl border border-white/8 bg-black/30 p-4">
-    <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-white/5 ${tone}`}>
-      <Icon size={18} />
-    </div>
-    <div>
-      <div className="text-sm font-bold text-white">{title}</div>
-      <div className="text-[10px] text-white/40">{description}</div>
-      <div className="mt-1 text-[10px] font-mono uppercase tracking-widest text-white/25">{meta}</div>
-    </div>
-  </div>
-);
 
 export default WorkerDashboard;

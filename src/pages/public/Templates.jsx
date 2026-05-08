@@ -1,5 +1,4 @@
 import { useState, useMemo, useRef, useCallback } from "react";
-
 import {
   Crown,
   Download,
@@ -147,12 +146,7 @@ const Templates = () => {
       {/* Hero */}
       <section className="relative overflow-hidden px-6 py-24 text-center lg:py-32">
         <div className="absolute inset-0 bg-gradient-to-b from-cyan-primary/5 via-transparent to-transparent" />
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="relative mx-auto max-w-3xl"
-        >
+        <div className="relative mx-auto max-w-3xl">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-cyan-primary/20 bg-cyan-primary/5 px-4 py-1.5 text-[10px] font-mono uppercase tracking-[0.2em] text-cyan-primary">
             <Sparkles size={12} /> Templates & Assets
           </div>
@@ -165,7 +159,7 @@ const Templates = () => {
             and graphic templates. Free & premium — all built by the Rynix
             studio.
           </p>
-        </motion.div>
+        </div>
       </section>
 
       {/* Filters */}
@@ -216,51 +210,42 @@ const Templates = () => {
           </div>
         ) : (
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {filtered.map((template, index) => (
-              <motion.div
-                key={template.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.06 }}
-              >
+            {filtered.map((template) => (
+              <div key={template.id}>
                 <TemplateCard
                   template={template}
                   onPreview={() => setPreviewTemplate(template)}
                   onGet={() => handleGetTemplate(template)}
                 />
-              </motion.div>
+              </div>
             ))}
           </div>
         )}
       </section>
 
       {/* Preview Modal */}
-      <AnimatePresence>
-        {previewTemplate && (
-          <InteractivePreviewModal
-            template={previewTemplate}
-            onClose={() => setPreviewTemplate(null)}
-            onGet={() => {
-              setPreviewTemplate(null);
-              handleGetTemplate(previewTemplate);
-            }}
-          />
-        )}
-      </AnimatePresence>
+      {previewTemplate && (
+        <InteractivePreviewModal
+          template={previewTemplate}
+          onClose={() => setPreviewTemplate(null)}
+          onGet={() => {
+            setPreviewTemplate(null);
+            handleGetTemplate(previewTemplate);
+          }}
+        />
+      )}
 
       {/* Purchase Modal */}
-      <AnimatePresence>
-        {purchaseTemplate && (
-          <PurchaseModal
-            template={purchaseTemplate}
-            user={user}
-            purchasing={purchasing}
-            success={purchaseSuccess}
-            onConfirm={handleConfirmPurchase}
-            onClose={closePurchaseModal}
-          />
-        )}
-      </AnimatePresence>
+      {purchaseTemplate && (
+        <PurchaseModal
+          template={purchaseTemplate}
+          user={user}
+          purchasing={purchasing}
+          success={purchaseSuccess}
+          onConfirm={handleConfirmPurchase}
+          onClose={closePurchaseModal}
+        />
+      )}
     </div>
   );
 };
@@ -275,7 +260,7 @@ const TemplateCard = ({ template, onPreview, onGet }) => (
       <img
         src={template.image}
         alt={template.title}
-        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+        className="h-full w-full object-cover group-hover:scale-105"
         loading="lazy"
       />
       {/* Badges */}
@@ -428,17 +413,11 @@ const InteractivePreviewModal = ({ template, onClose, onGet }) => {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
+    <div
       className="fixed inset-0 z-[120] flex items-center justify-center bg-black/85 backdrop-blur"
       onClick={onClose}
     >
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
+      <div
         className="relative h-[90vh] w-[95vw] max-w-6xl overflow-hidden rounded-3xl border border-white/10 bg-[#10141a] shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
@@ -512,9 +491,6 @@ const InteractivePreviewModal = ({ template, onClose, onGet }) => {
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
           onWheel={handleWheel}
           onContextMenu={handleContextMenu}
           onDragStart={preventDownload}
@@ -574,8 +550,8 @@ const InteractivePreviewModal = ({ template, onClose, onGet }) => {
             </div>
           </div>
         </div>
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 };
 
@@ -588,16 +564,10 @@ const PurchaseModal = ({
   onConfirm,
   onClose,
 }) => (
-  <motion.div
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    exit={{ opacity: 0 }}
+  <div
     className="fixed inset-0 z-[130] flex items-center justify-center bg-black/75 p-4 backdrop-blur"
   >
-    <motion.div
-      initial={{ opacity: 0, y: 20, scale: 0.97 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: 20, scale: 0.97 }}
+    <div
       className="w-full max-w-md rounded-[32px] border border-white/10 bg-[#10141a] p-6 shadow-2xl"
     >
       {!user ? (
@@ -687,8 +657,8 @@ const PurchaseModal = ({
           </div>
         </>
       )}
-    </motion.div>
-  </motion.div>
+    </div>
+  </div>
 );
 
 export default Templates;

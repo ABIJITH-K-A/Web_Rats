@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowRight,
   Briefcase,
@@ -456,22 +455,17 @@ export default function JoinHub() {
         </div>
 
         <Card className="p-6 sm:p-8">
-          <AnimatePresence>
-            {(error || success) && (
-              <motion.div
-                initial={{ opacity: 0, y: -8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                className={`mb-5 rounded-xl border px-4 py-3 text-xs font-mono ${
-                  error
-                    ? "border-red-500/20 bg-red-500/10 text-red-300"
-                    : "border-cyan-primary/20 bg-cyan-primary/10 text-cyan-primary"
-                }`}
-              >
-                {error || success}
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {(error || success) && (
+            <div
+              className={`mb-5 rounded-xl border px-4 py-3 text-xs font-mono ${
+                error
+                  ? "border-red-500/20 bg-red-500/10 text-red-300"
+                  : "border-cyan-primary/20 bg-cyan-primary/10 text-cyan-primary"
+              }`}
+            >
+              {error || success}
+            </div>
+          )}
 
           {tab === "login" && (
             <form onSubmit={handleLogin} className="space-y-5">
@@ -803,33 +797,12 @@ export default function JoinHub() {
                 </Field>
               </div>
 
-              <button
-                type="button"
-                onClick={() => setShowPass((current) => !current)}
-                className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest text-light-gray/40"
-              >
-                <span className={`flex h-4 w-4 items-center justify-center rounded border ${showPass ? "border-cyan-primary bg-cyan-primary/20 text-cyan-primary" : "border-white/20"}`}>
-                  {showPass ? <Check size={10} /> : null}
-                </span>
-                Show passwords
-              </button>
-
               <Button type="submit" className="w-full py-3" disabled={loading}>
-                {loading ? "Submitting..." : "Create Staff / Apply"} <ArrowRight size={16} />
+                {loading ? "Joining RyNix..." : "Complete Signup"} <ArrowRight size={16} />
               </Button>
             </form>
           )}
         </Card>
-
-        <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
-          <BackButton to="/" label="Back to home" className="min-w-[170px] h-12" />
-          <Link
-            to="/book"
-            className="text-[10px] font-mono uppercase tracking-widest text-light-gray/30 transition-colors hover:text-cyan-primary"
-          >
-            Book a Service
-          </Link>
-        </div>
       </div>
     </div>
   );
