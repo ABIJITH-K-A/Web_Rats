@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button, Card, SectionHeading } from "../../components/ui/Primitives";
-import { ScrollReveal, StaggerContainer, StaggerItem, GradientText, GlowText, AnimatedCounter } from "../../components/ui/ScrollReveal";
+import { GradientText, GlowText } from "../../components/ui/ScrollReveal";
 import backgroundTheme from "../../config/backgroundTheme";
 import {
   FEATURED_PROJECTS,
@@ -18,6 +18,7 @@ import {
   VALUE_POINTS,
 } from "../../data/siteData";
 import ImageGallery from "../../components/home_items/img_gallery";
+import HomeFrontImg from "../../components/home_items/front_img"; 
 
 const categoryIcons = {
   "presentation-design": FileStack,
@@ -37,15 +38,7 @@ const Home = () => {
 
   return (
     <div className="flex flex-col">
-      
-        <div className="w-full px-4 md:px-6 py-4">
-          <img
-            src="/Images/Icons/landscape.png"
-            alt="Rynix Landscape"
-            className="w-full h-auto rounded-3xl border-4 border-transparent shadow-2xl"
-          />
-        </div>
-      
+      <HomeFrontImg />
       <section ref={heroRef} className="relative isolate overflow-hidden py-20 md:py-28">
         <div aria-hidden="true" className="absolute inset-0 z-0 overflow-hidden">
           <div
@@ -55,7 +48,6 @@ const Home = () => {
           <div className="absolute inset-0 bg-black opacity-30" />
           <div className="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-b from-transparent via-primary-dark/45 to-primary-dark" />
         </div>
-        <ImageGallery/>
         <div className="container relative z-10 mx-auto flex min-h-[82vh] flex-col items-center justify-center gap-14 px-6 text-center md:min-h-[96vh]">
           <div className="flex flex-col items-center">
             
