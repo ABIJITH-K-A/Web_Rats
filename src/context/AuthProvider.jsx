@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   createUserWithEmailAndPassword,
+  GoogleAuthProvider,
   onAuthStateChanged,
   sendEmailVerification,
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
+  signInWithPopup,
   signOut,
 } from "firebase/auth";
 import { doc, getDoc, getDocFromCache } from "firebase/firestore";
@@ -317,6 +319,29 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const signInWithGoogle = async () => {
+    try {
+      const provider = new GoogleAuthProvider();
+      const cred = await signInWithPopup(auth, provider);
+      const profile = await fetchUserProfile(cred.user.uid);
+
+      if (!profile) {
+        throw new Error("Profile not found. Please complete registration first.");
+      }
+
+      const accountStatus = sanitizeString(profile.status || "active").toLowerCase();
+      if (["suspended", "fired"].includes(accountStatus)) {
+        await signOut(auth);
+        throw new Error("This account is not currently active.");
+      }
+
+      setUserProfile(profile);
+      setRole(normalizeRole(profile.role));
+      return profile;
+    } catch (error) {
+      throw wrapAuthError(error);
+    }
+  };
 
   const resendVerificationEmail = async () => {
     if (auth.currentUser) {
@@ -335,6 +360,7 @@ export const AuthProvider = ({ children }) => {
     login,
     signup,
     staffSignup,
+    signInWithGoogle,
     logout,
     resetPassword,
     resendVerificationEmail,

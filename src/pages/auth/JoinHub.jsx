@@ -222,7 +222,7 @@ function OrganizationFields({ data, setData }) {
 }
 
 export default function JoinHub() {
-  const { login, signup, staffSignup, user, userProfile, role } = useAuth();
+  const { login, signup, staffSignup, signInWithGoogle, user, userProfile, role } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const params = new URLSearchParams(location.search);
@@ -575,6 +575,34 @@ export default function JoinHub() {
           )}
 
           {tab === "login" && (
+            <>
+              <button
+                type="button"
+                onClick={async () => {
+                  reset();
+                  setLoading(true);
+                  try {
+                    await signInWithGoogle();
+                    navigate("/profile", { replace: true });
+                  } catch (err) {
+                    setError(err.message);
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
+                disabled={loading}
+                className="mb-5 flex w-full items-center justify-center gap-3 rounded-xl border border-white/10 bg-primary-dark px-4 py-3 text-sm font-semibold text-white transition-colors hover:border-white/20 hover:bg-white/5 disabled:opacity-50"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.61 20.08H42V20H24v8h11.3c-1.04 5.16-5.7 9-11.3 9-6.63 0-12-5.37-12-12s5.37-12 12-12c3.06 0 5.86 1.14 8 3.02l5.66-5.66C33.32 5.5 28.88 4 24 4 12.95 4 4 12.95 4 24s8.95 20 20 20 20-8.95 20-20c0-1.32-.15-2.62-.39-3.92"/><path fill="#FF3D00" d="m6.31 14.69 6.58 4.82C14.04 16.76 18.06 14 24 14c3.06 0 5.86 1.14 8 3.02l5.66-5.66C33.32 5.5 28.88 4 24 4c-7.76 0-14.52 4.18-17.69 10.69"/><path fill="#4CAF50" d="M24 44c4.88 0 9.32-1.5 13.04-4.02l-6-5.08C29.4 36.34 27.04 38 24 38c-5.92 0-10.86-4.1-11.98-9.66l-6.92 5.34C9.28 39.7 15.9 44 24 44"/><path fill="#1976D2" d="M43.61 20.08H42V20H24v8h11.3c-.54 2.68-2.14 5.02-4.26 6.62v.01l6 5.08c-.44.38 3.96-2.89 5.48-8.9.46-1.77.7-3.64.7-5.62 0-1.32-.15-2.62-.39-3.92"/></svg>
+                Sign In with Google
+              </button>
+
+              <div className="mb-5 flex items-center gap-3">
+                <span className="h-px flex-1 bg-white/8" />
+                <span className="text-[10px] font-mono uppercase tracking-widest text-white/20">or</span>
+                <span className="h-px flex-1 bg-white/8" />
+              </div>
+
             <form onSubmit={handleLogin} className="space-y-5">
               <Field label="Email" icon={Mail}>
                 <input
@@ -615,9 +643,38 @@ export default function JoinHub() {
                 </Link>
               </p>
             </form>
+            </>
           )}
 
           {tab === "register" && (
+            <>
+              <button
+                type="button"
+                onClick={async () => {
+                  reset();
+                  setLoading(true);
+                  try {
+                    await signInWithGoogle();
+                    navigate("/profile", { replace: true });
+                  } catch (err) {
+                    setError(err.message);
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
+                disabled={loading}
+                className="mb-5 flex w-full items-center justify-center gap-3 rounded-xl border border-white/10 bg-primary-dark px-4 py-3 text-sm font-semibold text-white transition-colors hover:border-white/20 hover:bg-white/5 disabled:opacity-50"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.61 20.08H42V20H24v8h11.3c-1.04 5.16-5.7 9-11.3 9-6.63 0-12-5.37-12-12s5.37-12 12-12c3.06 0 5.86 1.14 8 3.02l5.66-5.66C33.32 5.5 28.88 4 24 4 12.95 4 4 12.95 4 24s8.95 20 20 20 20-8.95 20-20c0-1.32-.15-2.62-.39-3.92"/><path fill="#FF3D00" d="m6.31 14.69 6.58 4.82C14.04 16.76 18.06 14 24 14c3.06 0 5.86 1.14 8 3.02l5.66-5.66C33.32 5.5 28.88 4 24 4c-7.76 0-14.52 4.18-17.69 10.69"/><path fill="#4CAF50" d="M24 44c4.88 0 9.32-1.5 13.04-4.02l-6-5.08C29.4 36.34 27.04 38 24 38c-5.92 0-10.86-4.1-11.98-9.66l-6.92 5.34C9.28 39.7 15.9 44 24 44"/><path fill="#1976D2" d="M43.61 20.08H42V20H24v8h11.3c-.54 2.68-2.14 5.02-4.26 6.62v.01l6 5.08c-.44.38 3.96-2.89 5.48-8.9.46-1.77.7-3.64.7-5.62 0-1.32-.15-2.62-.39-3.92"/></svg>
+                Sign Up with Google
+              </button>
+
+              <div className="mb-5 flex items-center gap-3">
+                <span className="h-px flex-1 bg-white/8" />
+                <span className="text-[10px] font-mono uppercase tracking-widest text-white/20">or</span>
+                <span className="h-px flex-1 bg-white/8" />
+              </div>
+
             <form onSubmit={handleRegister} className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field label="First Name" icon={User}>
@@ -710,6 +767,7 @@ export default function JoinHub() {
                 {loading ? "Creating Account..." : "Create Account"} <ArrowRight size={16} />
               </Button>
             </form>
+            </>
           )}
 
           {tab === "staff" && (
