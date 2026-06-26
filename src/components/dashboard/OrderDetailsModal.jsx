@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { 
   X, Check, Clock3, ExternalLink, Download, Star, 
   Info, CreditCard, Calendar, User,
-  LayoutDashboard
+  LayoutDashboard, Phone, Mail, Building2,
+  MapPin, Copy, MessageSquare, Users,
 } from 'lucide-react';
 import { Button, Card } from '../ui/Primitives';
 import { 
@@ -11,6 +12,7 @@ import {
   getOrderStatusBadgeClass,
   getOrderPriorityLabel,
   getOrderPriorityBadgeClass,
+  getRequirementFields,
 } from '../../utils/orderHelpers';
 
 /**
@@ -26,6 +28,7 @@ const OrderDetailsModal = ({
   onUpdateStatus,
 }) => {
   const [activeTab, setActiveTab] = useState('details');
+  const [copiedField, setCopiedField] = useState(null);
   const progress = getOrderProgress(order.status);
   const isCompleted = order.status === 'completed' || order.status === 'closed';
   const reviewDone = order.reviewDone || order.review?.rating;
@@ -38,6 +41,32 @@ const OrderDetailsModal = ({
     currency: 'INR',
     maximumFractionDigits: 0
   });
+
+  const copyToClipboard = async (text, field) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedField(field);
+      setTimeout(() => setCopiedField(null), 2000);
+    } catch {
+      // ignore
+    }
+  };
+
+  // Pull customer contact details from order fields
+  const req = getRequirementFields(order);
+  const customerName = req.name || order.customerName || order.name || 'Customer';
+  const customerEmail = req.email || order.customerEmail || order.email || '';
+  const customerPhone = req.phone || order.customerPhone || order.phone || '';
+  const organizationName = order.organizationName || '';
+  const organizationAddress = order.organizationAddress || '';
+  const organizationEmail = order.organizationEmail || '';
+  const organizationType = order.organizationType || '';
+
+  // Tabs — staff gets an extra Contact Info tab
+  const tabs = [
+    { id: 'details', label: 'Details', icon: Info },
+    ...(isStaff ? [{ id: 'contact', label: 'Contact Info', icon: Users }] : []),
+  ];
 
   return (
     <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/80 p-4 md:p-10 backdrop-blur-md">
@@ -59,10 +88,8 @@ const OrderDetailsModal = ({
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="bg-black/40 p-1 rounded-2xl border border-white/5 flex">
-                {[
-                  { id: 'details', label: 'Details', icon: Info },
-                ].map(tab => (
+            <div className="bg-black/40 p-1 rounded-2xl border border-white/5 flex gap-1">
+              {tabs.map(tab => (
                 <button 
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
@@ -86,6 +113,8 @@ const OrderDetailsModal = ({
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+
+          {/* ── DETAILS TAB ── */}
           {activeTab === 'details' && (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
               {/* Left Column: Stats & Progress */}
@@ -227,8 +256,172 @@ const OrderDetailsModal = ({
               </div>
             </div>
           )}
+
+          {/* ── CONTACT INFO TAB (staff/worker only) ── */}
+          {activeTab === 'contact' && isStaff && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Primary contact */}
+              <Card hoverEffect={false} className="bg-white/[0.02] border-white/5 p-7 rounded-[32px] space-y-5">
+                <h4 className="text-[10px] font-mono uppercase tracking-[0.2em] text-white/30 flex items-center gap-2">
+                  <User size={14} /> Customer Contact
+                </h4>
+
+                {/* Avatar + name */}
+                <div className="flex items-center gap-4">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-cyan-primary/10 border border-cyan-primary/15 text-2xl font-black text-cyan-primary">
+                    {customerName[0]?.toUpperCase() || 'C'}
+                  </div>
+                  <div>
+                    <div className="text-lg font-black text-white">{customerName}</div>
+                    {organizationType && (
+                      <div className="text-[10px] font-mono uppercase tracking-widest text-white/30 mt-0.5 capitalize">
+                        {organizationType}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="h-px bg-white/5" />
+
+                <div className="space-y-3">
+                  {customerEmail && (
+                    <StaffContactRow
+                      icon={Mail}
+                      label="Email"
+                      value={customerEmail}
+                      fieldKey="email"
+                      href={`mailto:${customerEmail}`}
+                      onCopy={copyToClipboard}
+                      copiedField={copiedField}
+                    />
+                  )}
+                  {customerPhone && (
+                    <StaffContactRow
+                      icon={Phone}
+                      label="Phone"
+                      value={customerPhone}
+                      fieldKey="phone"
+                      href={`tel:${customerPhone}`}
+                      onCopy={copyToClipboard}
+                      copiedField={copiedField}
+                    />
+                  )}
+                  {!customerEmail && !customerPhone && (
+                    <p className="text-xs text-white/30 italic">No direct contact details submitted.</p>
+                  )}
+                </div>
+
+                {/* Message button */}
+                {onContact && (
+                  <button
+                    type="button"
+                    onClick={onContact}
+                    className="w-full flex items-center justify-center gap-2 rounded-2xl bg-cyan-primary/10 border border-cyan-primary/15 px-4 py-3 text-sm font-bold text-cyan-primary transition-all hover:bg-cyan-primary/20"
+                  >
+                    <MessageSquare size={16} /> Message Client
+                  </button>
+                )}
+              </Card>
+
+              {/* Organization details */}
+              <Card hoverEffect={false} className="bg-white/[0.02] border-white/5 p-7 rounded-[32px] space-y-5">
+                <h4 className="text-[10px] font-mono uppercase tracking-[0.2em] text-white/30 flex items-center gap-2">
+                  <Building2 size={14} /> Organisation
+                </h4>
+
+                <div className="space-y-4">
+                  {organizationName ? (
+                    <div className="rounded-2xl border border-white/5 bg-black/30 px-4 py-3">
+                      <div className="text-[9px] font-mono uppercase tracking-widest text-white/25 mb-1">Name</div>
+                      <div className="text-sm font-bold text-white">{organizationName}</div>
+                    </div>
+                  ) : null}
+
+                  {organizationEmail && organizationEmail !== customerEmail ? (
+                    <StaffContactRow
+                      icon={Mail}
+                      label="Official Email"
+                      value={organizationEmail}
+                      fieldKey="orgEmail"
+                      href={`mailto:${organizationEmail}`}
+                      onCopy={copyToClipboard}
+                      copiedField={copiedField}
+                    />
+                  ) : null}
+
+                  {organizationAddress ? (
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/5 text-white/35">
+                        <MapPin size={14} />
+                      </div>
+                      <div>
+                        <div className="text-[9px] font-mono uppercase tracking-widest text-white/25 mb-1">Address</div>
+                        <div className="text-xs leading-5 text-white/60 whitespace-pre-line">{organizationAddress}</div>
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {!organizationName && !organizationEmail && !organizationAddress && (
+                    <p className="text-xs text-white/30 italic">Organisation details not yet filled by the customer.</p>
+                  )}
+                </div>
+
+                {/* Order meta */}
+                <div className="h-px bg-white/5" />
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/5 text-white/35">
+                      <Calendar size={14} />
+                    </div>
+                    <div>
+                      <div className="text-[9px] font-mono uppercase tracking-widest text-white/25">Order placed</div>
+                      <div className="text-xs text-white/60">
+                        {order.createdAt?.toDate?.()?.toLocaleString?.('en-IN') || '—'}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/5 text-white/35">
+                      <Clock3 size={14} />
+                    </div>
+                    <div>
+                      <div className="text-[9px] font-mono uppercase tracking-widest text-white/25">Customer type</div>
+                      <div className="text-xs text-white/60 capitalize">{order.customerType || 'New'}</div>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            </div>
+          )}
         </div>
       </div>
+    </div>
+  );
+};
+
+// ── Staff contact row helper ─────────────────────────────────────────────────
+
+const StaffContactRow = ({ icon: Icon, label, value, fieldKey, href, onCopy, copiedField }) => { // eslint-disable-line no-unused-vars
+  const isCopied = copiedField === fieldKey;
+  return (
+    <div className="flex items-center gap-3">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/5 text-white/35">
+        <Icon size={14} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="text-[9px] font-mono uppercase tracking-widest text-white/25">{label}</div>
+        <a href={href} className="block text-xs font-semibold text-cyan-primary truncate hover:underline">
+          {value}
+        </a>
+      </div>
+      <button
+        type="button"
+        onClick={() => onCopy(value, fieldKey)}
+        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-white/8 bg-white/5 text-white/30 transition-colors hover:border-cyan-primary/20 hover:text-cyan-primary"
+        aria-label={`Copy ${label}`}
+      >
+        {isCopied ? <Check size={12} className="text-cyan-primary" /> : <Copy size={12} />}
+      </button>
     </div>
   );
 };

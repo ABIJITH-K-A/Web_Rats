@@ -1,20 +1,24 @@
-import React from "react";
-import { Ghost, Home } from "lucide-react";
+import { Home } from "lucide-react";
 import { Link } from "react-router-dom";
 import Navbar from "../../components/layout/Navbar";
 import Footer from "../../components/layout/Footer";
+import FuzzyText from "../../components/ui/FuzzyText";
 
 const NotFound = () => {
   return (
     <div className="flex min-h-screen flex-col bg-primary-dark">
       <Navbar />
       <main className="flex flex-1 flex-col items-center justify-center px-6 text-center">
-        <div className="flex h-24 w-24 items-center justify-center rounded-3xl bg-white/5 text-cyan-primary">
-          <Ghost size={48} />
-        </div>
-        <h1 className="mt-8 text-5xl font-black tracking-tight text-white sm:text-7xl">
+        <FuzzyText
+          baseIntensity={0.2}
+          hoverIntensity={0.5}
+          enableHover={true}
+          color="#fff"
+          fontSize="clamp(4rem, 15vw, 10rem)"
+          fontWeight={900}
+        >
           404
-        </h1>
+        </FuzzyText>
         <p className="mt-4 text-xl font-bold text-white">Page Not Found</p>
         <p className="mx-auto mt-4 max-w-[400px] text-light-gray/60">
           The page you are looking for does not exist or has been moved.

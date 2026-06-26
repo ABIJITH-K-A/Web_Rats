@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
   AlertCircle,
@@ -26,7 +26,8 @@ import {
   Users,
   Wallet,
 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import CustomerOrderDetailModal from "../../components/dashboard/CustomerOrderDetailModal";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { Button, Card } from "../../components/ui/Primitives";
 import { db } from "../../config/firebase";
@@ -116,7 +117,10 @@ const Profile = () => {
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useDashboard();
   const navigate = useNavigate();
 
+  const [searchParams] = useSearchParams();
   const [activeSection, setActiveSection] = useState("overview");
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const highlightOrderId = useRef(null);
   const [orderFilter, setOrderFilter] = useState("active");
   const [orders, setOrders] = useState([]);
   const [payments, setPayments] = useState([]);
@@ -233,6 +237,26 @@ const Profile = () => {
 
     loadProfileData();
   }, [navigate, user, userProfile]);
+
+  // Handle ?section=orders&highlight=<orderId> from post-payment redirect
+  useEffect(() => {
+    const section = searchParams.get('section');
+    const highlight = searchParams.get('highlight');
+    if (section) setActiveSection(section);
+    if (highlight) highlightOrderId.current = highlight;
+  }, [searchParams]);
+
+  // Auto-open the highlighted order once orders are loaded
+  useEffect(() => {
+    if (!highlightOrderId.current || orders.length === 0) return;
+    const target = orders.find(
+      (o) => o.id === highlightOrderId.current || o.orderId === highlightOrderId.current
+    );
+    if (target) {
+      setSelectedOrder(target);
+      highlightOrderId.current = null; // only open once
+    }
+  }, [orders]);
 
   useEffect(() => {
     if (!user?.uid) return undefined;
@@ -673,6 +697,7 @@ const Profile = () => {
                         order={order}
                         onPay={(amount) => handleCashfreePayment(order, amount)}
                         paying={saving === `pay-${order.id}`}
+                        onClick={() => setSelectedOrder(order)}
                       />
                     ))}
                     {!visibleOrders.length && (
@@ -1052,6 +1077,28 @@ const Profile = () => {
             </div>
         </main>
       </div>
+
+      {/* Customer Order Detail Modal */}
+      {selectedOrder && (
+        <CustomerOrderDetailModal
+          order={selectedOrder}
+          onClose={() => setSelectedOrder(null)}
+          onContact={() => {
+            setSelectedOrder(null);
+            navigate(`/messages?id=${selectedOrder.id}`);
+          }}
+          onReorder={() => {
+            setSelectedOrder(null);
+          }}
+          onReview={() => {
+            setSelectedOrder(null);
+          }}
+          onPay={(amount) => {
+            handleCashfreePayment(selectedOrder, amount);
+          }}
+          paying={saving === `pay-${selectedOrder?.id}`}
+        />
+      )}
     </div>
   );
 };
@@ -1163,13 +1210,16 @@ const PaymentBadge = ({ value }) => (
   </span>
 );
 
-const OrderCard = ({ order, onPay, paying }) => {
+const OrderCard = ({ order, onPay, paying, onClick }) => {
   const summary = getOrderPaymentSummary(order);
   const progress = getOrderProgress(order.status || order.statusKey);
   const needsPayment = summary.dueNow > 0;
 
   return (
-    <Card className="p-5">
+    <Card
+      className={`p-5 cursor-pointer transition-all hover:border-cyan-primary/20 ${onClick ? 'group' : ''}`}
+      onClick={onClick}
+    >
       <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
