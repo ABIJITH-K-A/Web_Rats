@@ -1,4 +1,3 @@
-import React from 'react';  
 
 const images = [
   { id: 1, src: '/Images/Project_Preview/Project_Preview_1.png', alt: 'Rynix Creative Work 1' },
