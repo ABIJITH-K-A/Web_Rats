@@ -76,15 +76,14 @@
     position: relative;
   }
 
-  /* Create a dynamic top/bottom border glow on major wrapper sections across pages */
   section[class*="bg-"]::before {
     content: '';
     position: absolute;
     inset: 0;
     pointer-events: none;
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-    box-shadow: inset 0 20px 40px -20px rgba(255, 255, 255, 0.025), inset 0 -20px 40px -20px rgba(255, 255, 255, 0.025);
+    border-top: 1px solid rgba(155, 255, 87, 0.08);
+    border-bottom: 1px solid rgba(155, 255, 87, 0.08);
+    box-shadow: inset 0 20px 40px -20px rgba(155, 255, 87, 0.04), inset 0 -20px 40px -20px rgba(155, 255, 87, 0.04);
     z-index: 1;
   }
 
@@ -125,6 +124,32 @@
     -webkit-mask-composite: xor;
     mask-composite: exclude;
     pointer-events: none;
+  }
+}
+
+@layer components {
+  .premium-border {
+    border-color: rgba(155, 255, 87, 0.18) !important;
+    box-shadow: inset 0 0 0 1px rgba(155, 255, 87, 0.18), 0 0 14px rgba(155, 255, 87, 0.08);
+  }
+
+  .premium-border-thin {
+    border-color: rgba(155, 255, 87, 0.12) !important;
+    box-shadow: inset 0 0 0 1px rgba(155, 255, 87, 0.12), 0 0 10px rgba(155, 255, 87, 0.05);
+  }
+
+  [class*="border-white/"] {
+    border-color: rgba(155, 255, 87, 0.12);
+  }
+
+  [class*="border-white/5"],
+  [class*="border-white/6"],
+  [class*="border-white/8"] {
+    border-color: rgba(155, 255, 87, 0.08);
+  }
+
+  [class*="border-white/15"] {
+    border-color: rgba(155, 255, 87, 0.18);
   }
 }
 

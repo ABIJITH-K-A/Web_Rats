@@ -55,7 +55,7 @@ const Button = ({ children, variant = 'primary', className = '', ...props }) => 
 const Card = ({ children, className = '', ...props }) => {
   return (
     <div
-      className={`group relative overflow-hidden p-8 rounded-2xl border border-white/15 shadow-2xl backdrop-blur-2xl bg-[#0B120C]/95 ${className.replace(/bg-[a-zA-Z0-9/-]+/g, '')}`}
+      className={`group relative overflow-hidden p-8 rounded-2xl premium-border shadow-2xl backdrop-blur-2xl bg-[#0B120C]/95 ${className.replace(/bg-[a-zA-Z0-9/-]+/g, '')}`}
       {...props}
     >
       {/* Static Lighting Glow Base */}
