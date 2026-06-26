@@ -20,10 +20,6 @@ const UsersView = () => {
   const [loading, setLoading] = useState(true);
   const [roleFilter, setRoleFilter] = useState('');
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
   const fetchUsers = async () => {
     setLoading(true);
     try {
@@ -35,6 +31,10 @@ const UsersView = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
   const handlePromote = async (uid, newRole) => {
     if (!currentUser?.uid) return;

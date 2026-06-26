@@ -51,8 +51,6 @@ const OrderPoolView = () => {
   useEffect(() => {
     if (!user?.uid) return undefined;
 
-    setLoading(true);
-
     const unsubscribe = onSnapshot(
       query(collection(db, "orders"), orderBy("createdAt", "desc"), limit(80)),
       (snapshot) => {

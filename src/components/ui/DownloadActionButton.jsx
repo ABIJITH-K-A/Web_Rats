@@ -9,7 +9,7 @@ export default function DownloadActionButton({
   disabled = false,
   className = "",
   type = "button",
-  icon: Icon = Download,
+  icon: Icon = Download, // eslint-disable-line no-unused-vars
   ...props
 }) {
   const content = (

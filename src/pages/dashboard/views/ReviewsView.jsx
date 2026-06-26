@@ -10,10 +10,6 @@ const ReviewsView = () => {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ total: 0, avg: 0, top: 0 });
 
-  useEffect(() => {
-    fetchReviews();
-  }, []);
-
   const fetchReviews = async () => {
     if (!user?.uid) return;
     setLoading(true);
@@ -40,6 +36,10 @@ const ReviewsView = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchReviews();
+  }, []);
 
   const renderStars = (rating) => {
     return Array(5).fill(0).map((_, i) => (

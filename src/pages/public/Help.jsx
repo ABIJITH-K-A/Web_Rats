@@ -6,6 +6,7 @@ import {
   UserCircle,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion"; // eslint-disable-line no-unused-vars
 import AccordionToggleIcon from "../../components/ui/AccordionToggleIcon";
 import { Button, Card } from "../../components/ui/Primitives";
 import {
@@ -24,13 +25,21 @@ const AccordionItem = ({ question, answer, isOpen, onClick }) => (
       <span className="text-base font-semibold text-white">{question}</span>
       <AccordionToggleIcon open={isOpen} />
     </button>
-    {isOpen && (
-      <div className="overflow-hidden">
-        <div className="border-t border-white/8 px-6 py-5 text-sm leading-7 text-light-gray/68">
-          {answer}
-        </div>
-      </div>
-    )}
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: 'auto', opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }}
+          transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+          className="overflow-hidden"
+        >
+          <div className="border-t border-white/8 px-6 py-5 text-sm leading-7 text-light-gray/68">
+            {answer}
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   </div>
 );
 

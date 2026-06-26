@@ -198,7 +198,7 @@ export const AuthProvider = ({ children }) => {
     });
 
     return unsubscribe;
-  }, [refreshProfile]);
+  }, [refreshProfile, logout]);
 
   const login = async (email, password) => {
     try {

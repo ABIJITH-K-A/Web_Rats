@@ -124,7 +124,7 @@ const OverviewTab = () => {
           const Icon = stat.icon;
           const displayValue =
             typeof stat.value === "string"
-              ? stat.value.replace(/[^\x00-\x7F]+/g, "Rs ")
+              ? stat.value.replace(/[^\u0020-\u007E]+/g, "Rs ")
               : stat.value;
 
           return (

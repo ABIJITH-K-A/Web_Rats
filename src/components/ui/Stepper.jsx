@@ -1,4 +1,4 @@
-import React, { useState, Children, useRef, useLayoutEffect } from 'react';
+import React, { Children } from 'react';
 import BackButton from './BackButton';
 
 export default function Stepper({

@@ -1,11 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 
 const LoginModal = ({ isOpen, onClose, onLogin, onSignup, isLoggedIn = false, message = "Please log in to continue" }) => {
-  const [isVisible, setIsVisible] = useState(isOpen);
-
-  useEffect(() => {
-    setIsVisible(isOpen);
-  }, [isOpen]);
 
   const handleLogin = () => {
     onClose();
@@ -32,7 +27,7 @@ const LoginModal = ({ isOpen, onClose, onLogin, onSignup, isLoggedIn = false, me
     };
   }, [isOpen, onClose]);
 
-  if (!isVisible) return null;
+  if (!isOpen) return null;
 
   return (
     <>

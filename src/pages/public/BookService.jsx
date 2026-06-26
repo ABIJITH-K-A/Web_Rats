@@ -202,8 +202,11 @@ const BookService = () => {
           })
     );
     setReferralFeedback((current) =>
-      current || `${profileDiscount}% referral discount is linked to this order.`
+      current
+        ? current
+        : `Referral ${profileCode} auto-applied (${profileDiscount}% off)`
     );
+    setReferralError("");
   }, [userProfile]);
 
   const selectedCategory = selectedCategoryId
@@ -540,7 +543,7 @@ const BookService = () => {
       });
 
       if (cashfreeResponse?.paymentSessionId) {
-        window.location.href = `https://payments.cashfree.com/checkout?session_id=${cashfreeResponse.paymentSessionId}`;
+        window.location.assign(`https://payments.cashfree.com/checkout?session_id=${cashfreeResponse.paymentSessionId}`);
       } else {
         throw new Error("No payment session created");
       }

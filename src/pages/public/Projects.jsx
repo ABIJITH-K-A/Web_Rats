@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ArrowRight, ChevronLeft, ChevronRight, Eye, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button, Card, SectionHeading } from "../../components/ui/Primitives";
-import { ScrollReveal, StaggerContainer, StaggerItem, GradientText } from "../../components/ui/ScrollReveal";
+import { ScrollReveal, StaggerContainer, StaggerItem, GradientText, AnimatedText } from "../../components/ui/ScrollReveal";
 import {
   FEATURED_PROJECTS,
   PORTFOLIO_GALLERY,
@@ -55,6 +55,7 @@ const Projects = () => {
     <div className="flex flex-col py-20">
       <section className="pb-18">
         <div className="container mx-auto grid items-center gap-12 px-6 lg:grid-cols-[0.95fr_1.05fr]">
+          <ScrollReveal>
           <div>
             
               <div className="mb-6 inline-flex rounded-full border border-cyan-primary/20 bg-cyan-primary/8 px-4 py-2 text-[10px] font-mono uppercase tracking-[0.24em] text-cyan-primary">
@@ -89,12 +90,13 @@ const Projects = () => {
               </div>
             
           </div>
+          </ScrollReveal>
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <StaggerContainer className="grid gap-4 sm:grid-cols-2">
             {PORTFOLIO_GALLERY.slice(0, 4).map((item, index) => (
+              <StaggerItem key={item.id}>
               <button
                 type="button"
-                key={item.id}
                 onClick={() => setPreviewIndex(index)}
                 className="group relative overflow-hidden rounded-[24px] border border-white/8 text-left transition-transform duration-300 hover:-translate-y-1"
                 aria-label={`Preview ${item.title}`}
@@ -114,20 +116,23 @@ const Projects = () => {
                   {item.title}
                 </div>
               </button>
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerContainer>
         </div>
       </section>
 
+      <ScrollReveal>
       <section id="featured-projects" className="bg-secondary-dark/28 py-20">
         <div className="container mx-auto px-6">
           <SectionHeading subtitle="Current featured builds and active project slots.">
             Featured <span className="text-white">Projects</span>
           </SectionHeading>
 
-          <div className="grid gap-6 lg:grid-cols-3">
+          <StaggerContainer className="grid gap-6 lg:grid-cols-3">
             {FEATURED_PROJECTS.map((project) => (
-              <div key={project.id}>
+              <StaggerItem key={project.id}>
+              <div>
                 <Card className="flex h-full flex-col overflow-hidden border-white/8 bg-black/72 p-0">
                   <img
                     src={project.image}
@@ -147,7 +152,7 @@ const Projects = () => {
                       </div>
                     </div>
                     <h3 className="mt-4 text-2xl font-black text-white">
-                      {project.title}
+                      <AnimatedText text={project.title} stagger={0.04} blur={4} y={12} />
                     </h3>
                     <p className="mt-4 flex-1 text-sm leading-7 text-light-gray/66">
                       {project.description}
@@ -158,11 +163,14 @@ const Projects = () => {
                   </div>
                 </Card>
               </div>
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerContainer>
         </div>
       </section>
+      </ScrollReveal>
 
+      <ScrollReveal>
       <section className="py-20">
         <div className="container mx-auto px-6">
           <div className="mb-10">
@@ -170,15 +178,15 @@ const Projects = () => {
               Portfolio Vault
             </div>
             <h2 className="mt-3 text-4xl font-black text-white">
-              Past work, snapshots, and public-ready previews
+              <AnimatedText text="Past work, snapshots, and public-ready previews" stagger={0.05} blur={5} y={14} />
             </h2>
           </div>
 
-          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+          <StaggerContainer className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
             {PORTFOLIO_GALLERY.map((item, index) => (
+              <StaggerItem key={item.id}>
               <button
                 type="button"
-                key={item.id}
                 onClick={() => setPreviewIndex(index)}
                 className="group overflow-hidden rounded-[26px] border border-white/8 bg-black/70 text-left transition-transform duration-300 hover:-translate-y-1"
                 aria-label={`Preview ${item.title}`}
@@ -196,15 +204,18 @@ const Projects = () => {
                     <Eye size={14} /> Portfolio Preview
                   </div>
                   <div className="mt-3 text-lg font-bold text-white">
-                    {item.title}
+                    <AnimatedText text={item.title} stagger={0.03} blur={3} y={8} />
                   </div>
                 </div>
               </button>
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerContainer>
         </div>
       </section>
+      </ScrollReveal>
 
+      <ScrollReveal>
       <section className="pb-10 pt-4">
         <div className="container mx-auto px-6">
           <Card className="border-cyan-primary/12 bg-black/75 py-14 text-center">
@@ -228,6 +239,7 @@ const Projects = () => {
           </Card>
         </div>
       </section>
+      </ScrollReveal>
 
       {previewItem && (
         <PortfolioPreviewModal

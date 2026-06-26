@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X, User } from "lucide-react";
+import { AnimatePresence } from "framer-motion";
 import { useAuth } from "../../context/AuthContext";
 
 const navLinks = [
@@ -18,6 +19,8 @@ const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const { user, role } = useAuth();
   const location = useLocation();
+  const navRef = useRef(null);
+  const prevPath = useRef(location.pathname);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 16);
@@ -26,8 +29,29 @@ const Navbar = () => {
   }, []);
 
   useEffect(() => {
-    setIsOpen(false);
-  }, [location.pathname]);
+    if (prevPath.current !== location.pathname) {
+      prevPath.current = location.pathname;
+      if (isOpen) setIsOpen(false);
+    }
+  }, [location.pathname, isOpen]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (navRef.current && !navRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('touchstart', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [isOpen]);
 
   const getDashboardPath = () => {
     if (!role) return "/join";
@@ -48,6 +72,7 @@ const Navbar = () => {
   return (
     <div className="fixed inset-x-0 top-0 z-50 flex justify-center">
       <nav
+        ref={navRef}
         className={`border ${
           isOpen ? "w-[96%] rounded-[2rem]" : navWidthClass
         } ${navSurfaceClass} overflow-hidden`}
@@ -90,14 +115,24 @@ const Navbar = () => {
             })}
           </div>
 
+          {/* Mobile Menu Button - Right */}
+          <button
+            type="button"
+            className="text-cyan-primary lg:hidden absolute right-6 top-1/2 -translate-y-1/2 transition-all duration-300 ease-out hover:scale-110 active:scale-95"
+            onClick={() => setIsOpen((current) => !current)}
+            aria-label="Toggle navigation"
+          >
+            {isOpen ? <X size={28} /> : <Menu size={28} />}
+          </button>
+
           {/* Auth Buttons - Right */}
           <div className="hidden items-center justify-self-end gap-2 lg:flex">
             {user ? (
               <Link
                 to={getDashboardPath()}
-                className="rounded-full border border-cyan-primary bg-cyan-primary px-7 py-3 text-[15px] font-black text-primary-dark shadow-lg shadow-cyan-primary/20"
+                className="group rounded-full border border-cyan-primary bg-cyan-primary px-7 py-3 text-[15px] font-black text-primary-dark shadow-lg shadow-cyan-primary/20 transition-all duration-300 ease-out hover:scale-105 hover:shadow-cyan-primary/30"
               >
-                <span className="flex items-center gap-2">
+                <span className="flex items-center gap-2 transition-transform duration-300 group-hover:translate-x-1">
                   <User size={16} /> Dashboard
                 </span>
               </Link>
@@ -105,34 +140,31 @@ const Navbar = () => {
               <>
                 <Link
                   to="/join?tab=register"
-                  className="rounded-full border border-cyan-primary/50 px-5 py-2.5 text-[15px] font-bold text-cyan-primary transition-all hover:bg-cyan-primary/10"
+                  className="group rounded-full border border-cyan-primary/50 px-5 py-2.5 text-[15px] font-bold text-cyan-primary transition-all duration-300 ease-out hover:border-cyan-primary hover:bg-cyan-primary/10 hover:scale-105"
                 >
                   Join
                 </Link>
                 <Link
                   to="/join?login=1"
-                  className="rounded-full border border-cyan-primary bg-cyan-primary px-6 py-2.5 text-[15px] font-black text-primary-dark shadow-lg shadow-cyan-primary/20"
+                  className="group rounded-full border border-cyan-primary bg-cyan-primary px-6 py-2.5 text-[15px] font-black text-primary-dark shadow-lg shadow-cyan-primary/20 transition-all duration-300 ease-out hover:scale-105 hover:shadow-cyan-primary/30"
                 >
                   Sign In
                 </Link>
               </>
             )}
           </div>
-
-          {/* Mobile Menu Button */}
-          <button
-            type="button"
-            className="text-cyan-primary lg:hidden justify-self-end"
-            onClick={() => setIsOpen((current) => !current)}
-            aria-label="Toggle navigation"
-          >
-            {isOpen ? <X size={28} /> : <Menu size={28} />}
-          </button>
         </div>
 
-        {isOpen && (
-          <div className="border-t border-white/8 bg-[#08090C]/94 lg:hidden backdrop-blur-2xl">
-            <div className="mx-auto flex flex-col gap-4 px-6 py-6">
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div 
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+              className="border-t border-white/8 bg-[#08090C]/94 lg:hidden backdrop-blur-2xl"
+            >
+              <div className="mx-auto flex flex-col gap-4 px-6 py-6">
               {navLinks.map((link) => (
                 <Link
                   key={link.path}
@@ -150,29 +182,36 @@ const Navbar = () => {
               {user ? (
                 <Link
                   to={getDashboardPath()}
-                  className="mt-2 rounded-2xl border border-cyan-primary bg-cyan-primary px-5 py-4 text-center text-[15px] font-black text-primary-dark"
+                  className="group mt-2 rounded-2xl border border-cyan-primary bg-cyan-primary px-5 py-4 text-center text-[15px] font-black text-primary-dark transition-all duration-300 ease-out hover:scale-105 hover:shadow-cyan-primary/30"
                 >
-                  Open Dashboard
+                  <span className="transition-transform duration-300 group-hover:translate-y-[-2px]">
+                    Open Dashboard
+                  </span>
                 </Link>
               ) : (
                 <div className="mt-2 flex gap-2">
                   <Link
                     to="/join?tab=register"
-                    className="flex-1 rounded-2xl border border-cyan-primary/50 px-4 py-3.5 text-center text-[15px] font-bold text-cyan-primary transition-all hover:bg-cyan-primary/10"
+                    className="group flex-1 rounded-2xl border border-cyan-primary/50 px-4 py-3.5 text-center text-[15px] font-bold text-cyan-primary transition-all duration-300 ease-out hover:border-cyan-primary hover:bg-cyan-primary/10 hover:scale-105"
                   >
-                    Join
+                    <span className="transition-transform duration-300 group-hover:translate-y-[-2px]">
+                      Join
+                    </span>
                   </Link>
                   <Link
                     to="/join?login=1"
-                    className="flex-1 rounded-2xl border border-cyan-primary bg-cyan-primary px-4 py-3.5 text-center text-[15px] font-black text-primary-dark"
+                    className="group flex-1 rounded-2xl border border-cyan-primary bg-cyan-primary px-4 py-3.5 text-center text-[15px] font-black text-primary-dark transition-all duration-300 ease-out hover:scale-105 hover:shadow-cyan-primary/30"
                   >
-                    Sign In
+                    <span className="transition-transform duration-300 group-hover:translate-y-[-2px]">
+                      Sign In
+                    </span>
                   </Link>
                 </div>
               )}
             </div>
-          </div>
+          </motion.div>
         )}
+        </AnimatePresence>
       </nav>
     </div>
   );

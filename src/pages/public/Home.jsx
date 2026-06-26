@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button, Card, SectionHeading } from "../../components/ui/Primitives";
-import { ScrollReveal, StaggerContainer, StaggerItem, GradientText, GlowText, AnimatedCounter } from "../../components/ui/ScrollReveal";
+import { ScrollReveal, StaggerContainer, StaggerItem, GradientText, GlowText, AnimatedCounter, AnimatedText } from "../../components/ui/ScrollReveal";
 import backgroundTheme from "../../config/backgroundTheme";
 import {
   FEATURED_PROJECTS,
@@ -39,11 +39,15 @@ const Home = () => {
     <div className="flex flex-col">
       
         <div className="w-full px-4 md:px-6 py-4">
-          <img
-            src="/Images/Icons/landscape.png"
-            alt="Rynix Landscape"
-            className="w-full h-auto rounded-3xl border-4 border-transparent shadow-2xl"
-          />
+          <div className="relative overflow-hidden rounded-3xl border-[6px] border-black shadow-2xl">
+            <img
+              src="/Images/Icons/landscape.png"
+              alt="Rynix Landscape"
+              className="w-full h-auto"
+            />
+            <div className="pointer-events-none absolute inset-0 rounded-2xl shadow-[inset_0_0_80px_rgba(0,0,0,0.9),inset_0_0_40px_rgba(0,0,0,0.6)]" />
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,transparent_35%,rgba(0,0,0,0.85)_100%)]" />
+          </div>
         </div>
       
       <section ref={heroRef} className="relative isolate overflow-hidden py-20 md:py-28">
@@ -92,6 +96,7 @@ const Home = () => {
         </div>
       </section>
 
+      <ScrollReveal>
       <section className="border-y border-white/6 bg-black/45 py-9">
         <div className="container mx-auto px-6 text-center">
           
@@ -102,7 +107,9 @@ const Home = () => {
           
         </div>
       </section>
+      </ScrollReveal>
 
+      <ScrollReveal>
       <section className="py-28">
         <div className="container mx-auto px-6">
           
@@ -126,10 +133,10 @@ const Home = () => {
               </p>
             </Card>
 
-            <div className="grid gap-5 sm:grid-cols-2">
+            <StaggerContainer className="grid gap-5 sm:grid-cols-2">
               {STATS.map((stat) => (
+                <StaggerItem key={stat.label}>
                 <Card
-                  key={stat.label}
                   className="border-white/8 bg-black/70 text-center"
                 >
                   <div className="text-4xl font-black text-cyan-primary">
@@ -139,48 +146,56 @@ const Home = () => {
                     {stat.label}
                   </div>
                 </Card>
+                </StaggerItem>
               ))}
-            </div>
+            </StaggerContainer>
           </div>
         </div>
       </section>
+      </ScrollReveal>
 
+      <ScrollReveal>
       <section className="bg-secondary-dark/35 py-28">
         <div className="container mx-auto px-6">
           <SectionHeading subtitle="What sets Rynix apart is not size. It is the amount of care packed into every handoff.">
             Why Choose <span className="text-white">Rynix</span>
           </SectionHeading>
 
-          <div className="grid gap-6 lg:grid-cols-3">
+          <StaggerContainer className="grid gap-6 lg:grid-cols-3">
             {VALUE_POINTS.map((item) => (
-              <Card key={item.id} className="h-full border-cyan-primary/10 bg-black/75">
+              <StaggerItem key={item.id}>
+              <Card className="h-full border-cyan-primary/10 bg-black/75">
                 <div className="mb-4 text-[10px] font-mono uppercase tracking-[0.22em] text-cyan-primary/70">
                   0{VALUE_POINTS.indexOf(item) + 1}
                 </div>
                 <h3 className="mb-4 text-2xl font-black text-white">
-                  {item.title}
+                  <AnimatedText text={item.title} stagger={0.04} blur={4} y={12} />
                 </h3>
                 <p className="text-base leading-7 text-light-gray/68">
                   {item.summary}
                 </p>
               </Card>
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerContainer>
         </div>
       </section>
+      </ScrollReveal>
 
+      <ScrollReveal>
       <section className="py-28">
         <div className="container mx-auto px-6">
           <SectionHeading subtitle="The studio runs across four sharp service lanes, each built to solve a different kind of creative need.">
             What We <span className="text-white">Do</span>
           </SectionHeading>
 
-          <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-4">
+          <StaggerContainer className="grid gap-6 lg:grid-cols-2 xl:grid-cols-4">
             {SERVICE_CATEGORIES.map((category) => {
               const Icon = categoryIcons[category.id] || FileStack;
 
               return (
-                <Card key={category.id} className="flex h-full flex-col border-white/8 bg-secondary-dark/80">
+                <StaggerItem key={category.id}>
+                <Card className="flex h-full flex-col border-white/8 bg-secondary-dark/80">
                   <div className="mb-5 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-cyan-primary/10 text-cyan-primary">
                     <Icon size={24} />
                   </div>
@@ -188,7 +203,7 @@ const Home = () => {
                     {category.pricingHint}
                   </div>
                   <h3 className="text-2xl font-black text-white">
-                    {category.name}
+                    <AnimatedText text={category.name} stagger={0.04} blur={4} y={12} />
                   </h3>
                   <p className="mt-4 text-sm leading-7 text-light-gray/65">
                     {category.description}
@@ -212,21 +227,25 @@ const Home = () => {
                     Explore lane <ArrowRight size={16} />
                   </Link>
                 </Card>
+                </StaggerItem>
               );
             })}
-          </div>
+          </StaggerContainer>
         </div>
       </section>
+      </ScrollReveal>
 
+      <ScrollReveal>
       <section className="bg-secondary-dark/35 py-28">
         <div className="container mx-auto px-6">
           <SectionHeading subtitle="Every project here started with a problem and ended with something we were proud to put our name on.">
             Project <span className="text-white">Pulse</span>
           </SectionHeading>
 
-          <div className="grid gap-6 lg:grid-cols-3">
+          <StaggerContainer className="grid gap-6 lg:grid-cols-3">
             {FEATURED_PROJECTS.map((project) => (
-              <Card key={project.id} className="flex h-full flex-col overflow-hidden border-white/8 bg-black/70 p-0">
+              <StaggerItem key={project.id}>
+              <Card className="flex h-full flex-col overflow-hidden border-white/8 bg-black/70 p-0">
                 <img
                   src={project.image}
                   alt={project.title}
@@ -242,7 +261,7 @@ const Home = () => {
                     </div>
                   </div>
                   <h3 className="mt-4 text-2xl font-black text-white">
-                    {project.title}
+                    <AnimatedText text={project.title} stagger={0.04} blur={4} y={12} />
                   </h3>
                   <p className="mt-4 flex-1 text-sm leading-7 text-light-gray/66">
                     {project.description}
@@ -252,11 +271,13 @@ const Home = () => {
                   </div>
                 </div>
               </Card>
+              </StaggerItem>
             ))}
-          </div>
-          <div className="grid gap-6 lg:grid-cols-2 place-items-center mt-6">
+          </StaggerContainer>
+          <StaggerContainer className="grid gap-6 lg:grid-cols-2 place-items-center mt-6">
             {HORIZONTAL_PROJECTS.map((project) => (
-              <div key={project.id} className="w-full">
+              <StaggerItem key={project.id}>
+              <div className="w-full">
                 <Card className="relative overflow-hidden border-white/8 bg-black/70 p-0 h-64 group">
                   <img
                     src={project.image}
@@ -269,7 +290,7 @@ const Home = () => {
                       {project.category}
                     </div>
                     <h3 className="text-2xl font-black text-white mb-2">
-                      {project.title}
+                      <AnimatedText text={project.title} stagger={0.04} blur={4} y={12} />
                     </h3>
                     <p className="text-sm leading-relaxed text-white/70 line-clamp-2">
                       {project.description}
@@ -277,13 +298,16 @@ const Home = () => {
                   </div>
                 </Card>
               </div>
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerContainer>
         </div>
       </section>
+      </ScrollReveal>
 
       <ImageGallery />
 
+      <ScrollReveal>
       <section className="pb-24 pt-16">
         <div className="container mx-auto px-6">
           <Card hoverEffect={false} className="overflow-hidden border-cyan-primary/15 bg-gradient-to-r from-black to-secondary-dark px-8 py-16 text-center md:px-14">
@@ -307,6 +331,7 @@ const Home = () => {
           </Card>
         </div>
       </section>
+      </ScrollReveal>
     </div>
   );
 };

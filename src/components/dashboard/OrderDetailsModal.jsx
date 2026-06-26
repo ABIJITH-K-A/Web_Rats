@@ -8,11 +8,9 @@ import { Button, Card } from '../ui/Primitives';
 import { 
   getOrderDisplayId, 
   getOrderProgress, 
-  getOrderStatusLabel,
   getOrderStatusBadgeClass,
   getOrderPriorityLabel,
   getOrderPriorityBadgeClass,
-  getCustomerTypeLabel
 } from '../../utils/orderHelpers';
 
 /**
@@ -23,7 +21,6 @@ const OrderDetailsModal = ({
   userRole = 'client',
   onClose,
   onContact,
-  onDownload,
   onReorder,
   onReview,
   onUpdateStatus,

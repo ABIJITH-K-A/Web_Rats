@@ -20,7 +20,6 @@ export const DashboardProvider = ({ children }) => {
 
   useEffect(() => {
     if (!user?.uid) {
-      setNotifications([]);
       return undefined;
     }
 

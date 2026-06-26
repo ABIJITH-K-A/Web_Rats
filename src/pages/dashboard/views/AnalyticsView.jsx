@@ -230,7 +230,7 @@ const AnalyticsView = () => {
             meta: `${data.stats.completedOrders} completed orders`,
             color: 'text-secondary-dark',
           },
-        ].map((stat, index) => (
+        ].map((stat) => (
           <div
             key={stat.label}
             className="bg-[#1B241A] border border-white/5 p-8 rounded-[2rem] shadow-2xl"

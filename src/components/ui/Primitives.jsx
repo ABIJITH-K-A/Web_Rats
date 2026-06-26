@@ -1,4 +1,5 @@
 import { Children, isValidElement, useRef } from 'react';
+import { AnimatedText } from './ScrollReveal';
 
 const Button = ({ children, variant = 'primary', className = '', ...props }) => {
   const buttonRef = useRef(null);
@@ -51,7 +52,7 @@ const Button = ({ children, variant = 'primary', className = '', ...props }) => 
   );
 };
 
-const Card = ({ children, className = '', hoverEffect = true, ...props }) => {
+const Card = ({ children, className = '', ...props }) => {
   return (
     <div
       className={`group relative overflow-hidden p-8 rounded-2xl border border-white/15 shadow-2xl backdrop-blur-2xl bg-[#0B120C]/95 ${className.replace(/bg-[a-zA-Z0-9/-]+/g, '')}`}
@@ -67,21 +68,27 @@ const Card = ({ children, className = '', hoverEffect = true, ...props }) => {
   );
 };
 
+const isString = (val) => typeof val === 'string';
+
 const SectionHeading = ({ children, subtitle, centered = true }) => {
   return (
     <div className={`relative mb-16 ${centered ? 'text-center' : ''}`}>
       {/* Abstract Head Glow */}
       <div className={`absolute top-0 w-32 h-32 bg-cyan-primary/20 rounded-full blur-[60px] pointer-events-none ${centered ? 'left-1/2 -translate-x-1/2' : 'left-0'}`} />
-      <h2
-        className="text-gradient-brand relative mb-4 text-4xl font-black tracking-tight drop-shadow-[0_0_15px_rgba(155,255,87,0.4)] md:text-5xl"
-      >
-        {children}
+      <h2 className="text-gradient-brand relative mb-4 text-4xl font-black tracking-tight drop-shadow-[0_0_15px_rgba(155,255,87,0.4)] md:text-5xl">
+        {isString(children) ? (
+          <AnimatedText text={children} stagger={0.05} blur={6} y={16} />
+        ) : (
+          children
+        )}
       </h2>
       {subtitle && (
-        <p
-          className="relative text-light-gray text-lg max-w-2xl mx-auto opacity-80"
-        >
-          {subtitle}
+        <p className="relative text-light-gray text-lg max-w-2xl mx-auto opacity-80">
+          {isString(subtitle) ? (
+            <AnimatedText text={subtitle} stagger={0.03} blur={4} y={10} delay={0.25} />
+          ) : (
+            subtitle
+          )}
         </p>
       )}
     </div>

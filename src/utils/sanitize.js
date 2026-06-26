@@ -19,7 +19,7 @@ const entityMap = {
  * Use this when displaying raw user input in a place that might be interpreted as HTML.
  */
 export const escapeHtml = (string) => {
-  return String(string).replace(/[&<>"'`=\/]/g, function (s) {
+  return String(string).replace(/[&<>"'`=/]/g, function (s) {
     return entityMap[s];
   });
 };

@@ -15,6 +15,7 @@ const About = () => {
     <div className="flex flex-col py-20">
       <section className="pb-18">
         <div className="container mx-auto grid items-center gap-12 px-6 lg:grid-cols-[1.05fr_0.95fr]">
+          <ScrollReveal>
           <div>
             
               <div className="mb-6 inline-flex rounded-full border border-cyan-primary/20 bg-cyan-primary/8 px-4 py-2 text-[10px] font-mono uppercase tracking-[0.24em] text-cyan-primary">
@@ -61,8 +62,9 @@ const About = () => {
               </div>
             
           </div>
+          </ScrollReveal>
 
-          
+          <ScrollReveal delay={0.15}>
             <div>
               <Card className="border-cyan-primary/10 bg-black/72 p-8">
                 <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-cyan-primary/72">
@@ -88,10 +90,11 @@ const About = () => {
                 </div>
               </Card>
             </div>
-          
+          </ScrollReveal>
         </div>
       </section>
 
+      <ScrollReveal>
       <section className="bg-secondary-dark/28 py-20">
         <div className="container mx-auto px-6">
           <div className="grid gap-8 lg:grid-cols-[0.78fr_1.22fr]">
@@ -101,16 +104,14 @@ const About = () => {
                   What We Are Building
                 </div>
                 
-                  {ABOUT_POINTS.map((point) => (
-                    
-                      <div className="flex items-start gap-3 text-sm leading-7 text-light-gray/68">
-                        <Sparkles
-                          size={16}
-                          className="mt-1 shrink-0 text-cyan-primary"
-                        />
-                        <span>{point}</span>
-                      </div>
-                    
+                  {ABOUT_POINTS.map((point, index) => (
+                    <div key={index} className="flex items-start gap-3 text-sm leading-7 text-light-gray/68">
+                      <Sparkles
+                        size={16}
+                        className="mt-1 shrink-0 text-cyan-primary"
+                      />
+                      <span>{point}</span>
+                    </div>
                   ))}
                 
               </Card>
@@ -148,16 +149,19 @@ const About = () => {
           </div>
         </div>
       </section>
+      </ScrollReveal>
 
+      <ScrollReveal>
       <section className="py-20">
         <div className="container mx-auto px-6">
           <SectionHeading subtitle="The people behind the pixels.">
             Meet The <span className="text-white">Studio</span>
           </SectionHeading>
 
-          <div className="grid gap-8 lg:grid-cols-2">
+          <StaggerContainer className="grid gap-8 lg:grid-cols-2">
             {TEAM_MEMBERS.map((member) => (
-              <div key={member.id}>
+              <StaggerItem key={member.id}>
+              <div>
                 <Card className="h-full border-white/8 bg-black/72">
                   <div className="flex flex-col gap-8 md:flex-row md:items-start">
                     <img
@@ -197,11 +201,14 @@ const About = () => {
                   </div>
                 </Card>
               </div>
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerContainer>
         </div>
       </section>
+      </ScrollReveal>
 
+      <ScrollReveal>
       <section className="pb-10 pt-4">
         <div className="container mx-auto px-6">
           <Card className="border-cyan-primary/12 bg-black/75 py-14 text-center">
@@ -225,6 +232,7 @@ const About = () => {
           </Card>
         </div>
       </section>
+      </ScrollReveal>
     </div>
   );
 };

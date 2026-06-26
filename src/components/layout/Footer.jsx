@@ -1,4 +1,4 @@
-import { ArrowRight, Instagram, Mail, MessageCircle } from "lucide-react";
+import { ArrowRight, Globe, Mail, MessageCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { CONTACT_INFO, SERVICE_CATEGORIES } from "../../data/siteData";
@@ -50,7 +50,7 @@ const Footer = () => {
                 rel="noreferrer"
                 className="flex items-center gap-3 text-light-gray/68 transition-colors hover:text-cyan-primary"
               >
-                <Instagram size={18} className="text-cyan-primary" />
+                <Globe size={18} className="text-cyan-primary" />
                 <span>{CONTACT_INFO.instagramHandle}</span>
               </a>
             </div>

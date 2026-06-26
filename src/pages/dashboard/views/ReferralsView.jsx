@@ -14,7 +14,6 @@ const ReferralsView = () => {
   const [codes, setCodes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [ownerNames, setOwnerNames] = useState({});
-  
   // Create Form State
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -26,10 +25,6 @@ const ReferralsView = () => {
   const [formFeedback, setFormDataFeedback] = useState({ type: '', msg: '' });
 
   const isOwner = currentUserData?.role === 'owner';
-
-  useEffect(() => {
-    fetchCodes();
-  }, []);
 
   const fetchCodes = async () => {
     setLoading(true);
@@ -53,6 +48,10 @@ const ReferralsView = () => {
     }
   };
 
+  useEffect(() => {
+    fetchCodes();
+  }, []);
+
   const handleCreateCode = async (e) => {
     e.preventDefault();
     if (!isOwner) return;
@@ -62,7 +61,6 @@ const ReferralsView = () => {
 
     try {
       let ownerUid = 'system';
-      let ownerName = 'Manual Protocol';
 
       // If target email is provided, find the user
       if (formData.targetEmail) {
@@ -76,7 +74,6 @@ const ReferralsView = () => {
           throw new Error("No user found with that email address.");
         }
         ownerUid = uSnap.docs[0].id;
-        ownerName = uSnap.docs[0].data().name;
       }
 
       const tier = ROLE_REFERRAL_CONFIG[formData.role] || ROLE_REFERRAL_CONFIG.worker;

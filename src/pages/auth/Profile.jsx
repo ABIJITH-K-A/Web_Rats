@@ -118,7 +118,6 @@ const Profile = () => {
 
   const [activeSection, setActiveSection] = useState("overview");
   const [orderFilter, setOrderFilter] = useState("active");
-  const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState([]);
   const [payments, setPayments] = useState([]);
   const [tickets, setTickets] = useState([]);
@@ -145,7 +144,7 @@ const Profile = () => {
   const [status, setStatus] = useState({ type: "", message: "" });
   const [saving, setSaving] = useState("");
 
-  const profile = profileBundle.profile || userProfile || {};
+  const profile = useMemo(() => profileBundle.profile || userProfile || {}, [profileBundle.profile, userProfile]);
   const role = normalizeRole(profile.role || userProfile?.role);
   const isAdminLike = ["admin", "owner"].includes(role);
   const hasWorkerSurface =
@@ -203,7 +202,6 @@ const Profile = () => {
     }
 
     const loadProfileData = async () => {
-      setLoading(true);
       try {
         const [bundle, prefs, ticketData] = await Promise.all([
           apiRequest("/profile", { authMode: "required" }).catch(() => null),
@@ -229,7 +227,7 @@ const Profile = () => {
           message: error.message || "Could not load profile data.",
         });
       } finally {
-        setLoading(false);
+        // no-op
       }
     };
 
@@ -436,7 +434,7 @@ const Profile = () => {
       });
 
       if (data?.paymentSessionId) {
-        window.location.href = `https://payments.cashfree.com/checkout?session_id=${data.paymentSessionId}`;
+        window.location.assign(`https://payments.cashfree.com/checkout?session_id=${data.paymentSessionId}`);
         return;
       }
 
@@ -1069,7 +1067,7 @@ const SectionHeader = ({ title, action, onAction }) => (
   </div>
 );
 
-const MetricCard = ({ label, value, icon: Icon }) => (
+const MetricCard = ({ label, value, icon: Icon }) => ( // eslint-disable-line no-unused-vars
   <Card className="p-5">
     <div className="flex items-start justify-between gap-4">
       <div>
@@ -1085,7 +1083,7 @@ const MetricCard = ({ label, value, icon: Icon }) => (
   </Card>
 );
 
-const NoticeCard = ({ icon: Icon, title, description }) => (
+const NoticeCard = ({ icon: Icon, title, description }) => ( // eslint-disable-line no-unused-vars
   <div className="rounded-xl border border-cyan-primary/18 bg-cyan-primary/8 p-4">
     <div className="flex gap-3">
       <Icon className="mt-0.5 shrink-0 text-cyan-primary" size={18} />
@@ -1104,7 +1102,7 @@ const EmptyBlock = ({ title, description }) => (
   </div>
 );
 
-const Field = ({ label, icon: Icon, children }) => (
+const Field = ({ label, icon: Icon, children }) => ( // eslint-disable-line no-unused-vars
   <label className="block space-y-2">
     <span className="text-[10px] font-mono uppercase tracking-widest text-white/40">
       {label}
@@ -1208,7 +1206,7 @@ const OrderCard = ({ order, onPay, paying }) => {
   );
 };
 
-const LinkButton = ({ to, icon: Icon, label }) => (
+const LinkButton = ({ to, icon: Icon, label }) => ( // eslint-disable-line no-unused-vars
   <Link
     to={to}
     className="flex items-center justify-between rounded-xl border border-white/8 bg-black/25 px-4 py-3 text-sm font-bold text-white/65 transition-colors hover:border-cyan-primary/20 hover:text-cyan-primary"

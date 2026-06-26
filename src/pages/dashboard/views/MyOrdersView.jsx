@@ -280,7 +280,7 @@ const MyOrdersView = () => {
   );
 };
 
-const InfoCard = ({ icon: Icon, label, value }) => (
+const InfoCard = ({ icon: Icon, label, value }) => ( // eslint-disable-line no-unused-vars
   <div className="rounded-[22px] border border-white/8 bg-white/5 p-4">
     <div className="flex items-center gap-3">
       <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-black/35 text-cyan-primary">

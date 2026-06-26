@@ -100,6 +100,21 @@ const getStrength = (password) => {
   return score;
 };
 
+const validateEmail = (email) => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email.trim());
+};
+
+const validateRequiredFields = (data, requiredFields) => {
+  const missing = [];
+  requiredFields.forEach(field => {
+    if (!data[field] || String(data[field]).trim() === '') {
+      missing.push(field);
+    }
+  });
+  return missing;
+};
+
 const listFromText = (value) =>
   String(value || "")
     .split(/[\n,]/)
@@ -293,13 +308,45 @@ export default function JoinHub() {
   const handleLogin = async (event) => {
     event.preventDefault();
     reset();
+
+    // Validate required fields
+    const requiredFields = ['email', 'password'];
+    const missingFields = validateRequiredFields(loginData, requiredFields);
+    if (missingFields.length > 0) {
+      setError(`Please fill in all required fields: ${missingFields.join(', ')}`);
+      return;
+    }
+
+    // Validate email format
+    if (!validateEmail(loginData.email)) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+
+    // Validate password length
+    if (loginData.password.length < 6) {
+      setError("Password must be at least 6 characters long.");
+      return;
+    }
+
     setLoading(true);
     try {
       const data = await login(loginData.email, loginData.password);
       const nextRole = normalizeRole(data?.role || "client");
       navigate(ROLE_ROUTES[nextRole] || "/profile", { replace: true });
     } catch (err) {
-      setError(err.message);
+      // Handle specific Firebase errors
+      if (err.message.includes('invalid-credential') || err.message.includes('wrong-password')) {
+        setError("Incorrect email or password. Please try again.");
+      } else if (err.message.includes('user-not-found')) {
+        setError("No account found with this email address.");
+      } else if (err.message.includes('too-many-requests')) {
+        setError("Too many failed attempts. Please wait a few minutes before trying again.");
+      } else if (err.message.includes('user-disabled')) {
+        setError("This account has been disabled. Please contact support.");
+      } else {
+        setError(err.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -309,8 +356,29 @@ export default function JoinHub() {
     event.preventDefault();
     reset();
 
+    // Validate required fields
+    const requiredFields = ['firstName', 'lastName', 'email', 'password', 'confirmPassword'];
+    const missingFields = validateRequiredFields(regData, requiredFields);
+    if (missingFields.length > 0) {
+      setError(`Please fill in all required fields: ${missingFields.join(', ')}`);
+      return;
+    }
+
+    // Validate email format
+    if (!validateEmail(regData.email)) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+
+    // Validate password match
     if (regData.password !== regData.confirmPassword) {
       setError("Passwords do not match.");
+      return;
+    }
+
+    // Validate password strength
+    if (regData.password.length < 6) {
+      setError("Password must be at least 6 characters long.");
       return;
     }
     if (getStrength(regData.password) < 2) {
@@ -334,7 +402,16 @@ export default function JoinHub() {
       setSuccess(`Account created. Welcome, ${regData.firstName}.`);
       setTimeout(() => navigate("/profile"), 1200);
     } catch (err) {
-      setError(err.message);
+      // Handle specific Firebase errors
+      if (err.message.includes('email-already-in-use')) {
+        setError("This email is already registered. Try signing in instead.");
+      } else if (err.message.includes('weak-password')) {
+        setError("Password is too weak. Please choose a stronger password.");
+      } else if (err.message.includes('invalid-email')) {
+        setError("Please enter a valid email address.");
+      } else {
+        setError(err.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -344,8 +421,29 @@ export default function JoinHub() {
     event.preventDefault();
     reset();
 
+    // Validate required fields
+    const requiredFields = ['firstName', 'lastName', 'email', 'password', 'confirmPassword'];
+    const missingFields = validateRequiredFields(staffData, requiredFields);
+    if (missingFields.length > 0) {
+      setError(`Please fill in all required fields: ${missingFields.join(', ')}`);
+      return;
+    }
+
+    // Validate email format
+    if (!validateEmail(staffData.email)) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+
+    // Validate password match
     if (staffData.password !== staffData.confirmPassword) {
       setError("Passwords do not match.");
+      return;
+    }
+
+    // Validate password strength
+    if (staffData.password.length < 6) {
+      setError("Password must be at least 6 characters long.");
       return;
     }
     if (getStrength(staffData.password) < 2) {
@@ -382,7 +480,16 @@ export default function JoinHub() {
       );
       setTimeout(() => navigate(ROLE_ROUTES[result.role] || "/profile"), 1200);
     } catch (err) {
-      setError(err.message);
+      // Handle specific Firebase errors
+      if (err.message.includes('email-already-in-use')) {
+        setError("This email is already registered. Try signing in instead.");
+      } else if (err.message.includes('weak-password')) {
+        setError("Password is too weak. Please choose a stronger password.");
+      } else if (err.message.includes('invalid-email')) {
+        setError("Please enter a valid email address.");
+      } else {
+        setError(err.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -436,7 +543,7 @@ export default function JoinHub() {
 
       <div className="w-full max-w-2xl">
         <div className="mb-6 flex gap-1 rounded-2xl border border-white/10 bg-primary-dark/60 p-1">
-          {tabs.map(({ id, label, icon: Icon }) => (
+          {tabs.map(({ id, label, icon: Icon }) => ( // eslint-disable-line no-unused-vars
             <button
               key={id}
               type="button"
@@ -741,7 +848,7 @@ export default function JoinHub() {
                     Contact Methods
                   </div>
                   <div className="grid gap-2 sm:grid-cols-3">
-                    {CONTACT_METHODS.map(({ id, label, icon: Icon }) => {
+                    {CONTACT_METHODS.map(({ id, label, icon: Icon }) => { // eslint-disable-line no-unused-vars
                       const active = staffData.contactMethods.includes(id);
                       return (
                         <button

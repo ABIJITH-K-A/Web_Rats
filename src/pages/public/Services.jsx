@@ -1,7 +1,7 @@
 import { ArrowRight, MessageCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button, Card } from "../../components/ui/Primitives";
-import { ScrollReveal, StaggerContainer, StaggerItem, GradientText, GlowText } from "../../components/ui/ScrollReveal";
+import { ScrollReveal, StaggerContainer, StaggerItem, GradientText, GlowText, AnimatedText } from "../../components/ui/ScrollReveal";
 import ServiceCard from "../../components/ui/ServiceCard";
 import {
   CONTACT_INFO,
@@ -12,6 +12,7 @@ import {
 const Services = () => {
   return (
     <div className="flex flex-col py-20">
+      <ScrollReveal>
       <section className="pb-18">
         <div className="container mx-auto px-6 text-center">
           
@@ -69,10 +70,11 @@ const Services = () => {
           
         </div>
       </section>
+      </ScrollReveal>
 
       {SERVICE_CATEGORIES.map((category, categoryIndex) => (
+        <ScrollReveal key={category.id} delay={0.05}>
         <section
-          key={category.id}
           id={category.id}
           className={`py-16 ${
             categoryIndex % 2 === 1 ? "bg-secondary-dark/30" : ""
@@ -86,7 +88,7 @@ const Services = () => {
                     {category.pricingHint}
                   </div>
                   <h2 className="mt-4 text-4xl font-black text-white">
-                    {category.name}
+                    <AnimatedText text={category.name} stagger={0.05} blur={5} y={14} />
                   </h2>
                   <p className="mt-5 text-base leading-8 text-light-gray/68">
                     {category.description}
@@ -117,10 +119,10 @@ const Services = () => {
                 </Card>
               </div>
 
-              <div className="grid gap-6 xl:grid-cols-2">
+              <StaggerContainer className="grid gap-6 xl:grid-cols-2">
                 {category.services.map((service) => (
+                  <StaggerItem key={service.id}>
                   <ServiceCard
-                    key={service.id}
                     service={{
                       ...service,
                       categoryId: category.id,
@@ -130,20 +132,23 @@ const Services = () => {
                       ),
                     }}
                   />
+                  </StaggerItem>
                 ))}
-              </div>
+              </StaggerContainer>
             </div>
           </div>
         </section>
+        </ScrollReveal>
       ))}
 
+      <ScrollReveal>
       <section className="py-20">
         <div className="container mx-auto px-6">
           <Card className="border-white/8 bg-secondary-dark/70 p-10">
-            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+            <StaggerContainer className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
               {WHY_CHOOSE_US.map((item) => (
+                <StaggerItem key={item}>
                 <div
-                  key={item}
                   className="rounded-2xl border border-white/8 bg-black/55 p-6"
                 >
                   <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-cyan-primary/70">
@@ -151,12 +156,15 @@ const Services = () => {
                   </div>
                   <div className="mt-3 text-xl font-bold text-white">{item}</div>
                 </div>
+                </StaggerItem>
               ))}
-            </div>
+            </StaggerContainer>
           </Card>
         </div>
       </section>
+      </ScrollReveal>
 
+      <ScrollReveal>
       <section className="pb-12 pt-4">
         <div className="container mx-auto px-6">
           <Card className="border-cyan-primary/12 bg-black/75 py-14 text-center">
@@ -186,6 +194,7 @@ const Services = () => {
           </Card>
         </div>
       </section>
+      </ScrollReveal>
     </div>
   );
 };

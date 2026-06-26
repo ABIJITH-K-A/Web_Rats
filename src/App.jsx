@@ -7,6 +7,7 @@ import ProtectedRoute from './components/auth/ProtectedRoute';
 import ScrollToTop from './components/utils/ScrollToTop';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import LoadingSpinner from './components/ui/LoadingSpinner';
+import PageTransition from './components/ui/PageTransition';
 
 // Lazy load ALL routes for better code splitting
 const Home = lazy(() => import('./pages/public/Home'));
@@ -42,34 +43,34 @@ function App() {
             <RootLayout>
               <Suspense fallback={<LoadingSpinner />}>
                 <Routes>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/services" element={<Services />} />
-                    <Route path="/service/:serviceId" element={<ServiceDetail />} />
-                    <Route path="/about" element={<About />} />
-                    <Route path="/projects" element={<Projects />} />
-                    <Route path="/help" element={<Help />} />
-                    <Route path="/book" element={<BookService />} />
-                    <Route path="/templates" element={<MarketplaceIndex />} />
-                    <Route path="/marketplace" element={<MarketplaceIndex />} />
-                    <Route path="/template/:id" element={<TemplateDetail />} />
-                    <Route path="/checkout/:id" element={<Checkout />} />
-                    <Route path="/payment-success/:orderId?" element={<PaymentSuccess />} />
-                    <Route path="/join" element={<JoinHub />} />
-                    <Route path="/signup" element={<JoinHub />} />
-                    <Route path="/forgot-password" element={<ForgotPassword />} />
-                    <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+                    <Route path="/" element={<PageTransition><Home /></PageTransition>} />
+                    <Route path="/services" element={<PageTransition><Services /></PageTransition>} />
+                    <Route path="/service/:serviceId" element={<PageTransition><ServiceDetail /></PageTransition>} />
+                    <Route path="/about" element={<PageTransition><About /></PageTransition>} />
+                    <Route path="/projects" element={<PageTransition><Projects /></PageTransition>} />
+                    <Route path="/help" element={<PageTransition><Help /></PageTransition>} />
+                    <Route path="/book" element={<PageTransition><BookService /></PageTransition>} />
+                    <Route path="/templates" element={<PageTransition><MarketplaceIndex /></PageTransition>} />
+                    <Route path="/marketplace" element={<PageTransition><MarketplaceIndex /></PageTransition>} />
+                    <Route path="/template/:id" element={<PageTransition><TemplateDetail /></PageTransition>} />
+                    <Route path="/checkout/:id" element={<PageTransition><Checkout /></PageTransition>} />
+                    <Route path="/payment-success/:orderId?" element={<PageTransition><PaymentSuccess /></PageTransition>} />
+                    <Route path="/join" element={<PageTransition><JoinHub /></PageTransition>} />
+                    <Route path="/signup" element={<PageTransition><JoinHub /></PageTransition>} />
+                    <Route path="/forgot-password" element={<PageTransition><ForgotPassword /></PageTransition>} />
+                    <Route path="/profile" element={<ProtectedRoute><PageTransition><Profile /></PageTransition></ProtectedRoute>} />
                     <Route
                       path="/dashboard"
                       element={
                         <ProtectedRoute allowedRoles={['admin', 'owner', 'worker']}>
-                          <RoleBasedDashboard />
+                          <PageTransition><RoleBasedDashboard /></PageTransition>
                         </ProtectedRoute>
                       }
                     />
-                    <Route path="/terms" element={<Terms />} />
-                    <Route path="/privacy" element={<Privacy />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
+                    <Route path="/terms" element={<PageTransition><Terms /></PageTransition>} />
+                    <Route path="/privacy" element={<PageTransition><Privacy /></PageTransition>} />
+                    <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
+                </Routes>
                 <Suspense fallback={null}>
                   <Analytics />
                 </Suspense>

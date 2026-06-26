@@ -385,28 +385,6 @@ const InteractivePreviewModal = ({ template, onClose, onGet }) => {
     setIsDragging(false);
   };
 
-  const handleTouchStart = (e) => {
-    if (e.touches.length === 1) {
-      const touch = e.touches[0];
-      setIsDragging(true);
-      setDragStart({ x: touch.clientX - position.x, y: touch.clientY - position.y });
-    }
-  };
-
-  const handleTouchMove = (e) => {
-    if (!isDragging || e.touches.length !== 1) return;
-    e.preventDefault();
-    const touch = e.touches[0];
-    setPosition({
-      x: touch.clientX - dragStart.x,
-      y: touch.clientY - dragStart.y,
-    });
-  };
-
-  const handleTouchEnd = () => {
-    setIsDragging(false);
-  };
-
   const resetView = () => {
     setScale(1);
     setPosition({ x: 0, y: 0 });
