@@ -21,8 +21,12 @@
 
 @layer base {
   body {
-    @apply bg-primary-dark text-light-gray font-sans cursor-default overflow-x-hidden m-0 p-0;
+    @apply text-light-gray font-sans cursor-default overflow-x-hidden m-0 p-0;
     background: var(--color-primary-dark);
+    background-image:
+      radial-gradient(ellipse 80% 60% at 50% -20%, rgba(155, 255, 87, 0.06) 0%, transparent 100%),
+      radial-gradient(ellipse 50% 40% at 80% 20%, rgba(155, 255, 87, 0.04) 0%, transparent 100%),
+      radial-gradient(ellipse 40% 50% at 20% 80%, rgba(155, 255, 87, 0.03) 0%, transparent 100%);
   }
 
   /* Grid overlay from original styles.css */
@@ -72,6 +76,10 @@
   /* Force a high-opacity backing on any section or glass elements so text remains readable over the intense neural background */
   section[class*="bg-"] {
     background-color: var(--color-primary-dark) !important;
+    background-image:
+      radial-gradient(ellipse 80% 60% at 50% -20%, rgba(155, 255, 87, 0.06) 0%, transparent 100%),
+      radial-gradient(ellipse 50% 40% at 80% 20%, rgba(155, 255, 87, 0.04) 0%, transparent 100%),
+      radial-gradient(ellipse 40% 50% at 20% 80%, rgba(155, 255, 87, 0.03) 0%, transparent 100%) !important;
     backdrop-filter: blur(28px) !important;
     position: relative;
   }
