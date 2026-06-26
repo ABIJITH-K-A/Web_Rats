@@ -274,30 +274,35 @@ const Home = () => {
               </StaggerItem>
             ))}
           </StaggerContainer>
-          <StaggerContainer className="grid gap-6 lg:grid-cols-2 place-items-center mt-6">
+          <StaggerContainer className="grid gap-6 lg:grid-cols-3 mt-6">
             {HORIZONTAL_PROJECTS.map((project) => (
               <StaggerItem key={project.id}>
-              <div className="w-full">
-                <Card className="relative overflow-hidden border-white/8 bg-black/70 p-0 h-64 group">
-                  <img
-                    src={project.image}
-                    alt={project.title}
-                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
-                  <div className="absolute bottom-0 left-0 right-0 p-6">
-                    <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary mb-2">
+              <Card className="flex h-full flex-col overflow-hidden border-white/8 bg-black/70 p-0">
+                <img
+                  src={project.image}
+                  alt={project.title}
+                  className="h-60 w-full object-cover"
+                />
+                <div className="flex flex-1 flex-col p-7">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-primary/70">
                       {project.category}
                     </div>
-                    <h3 className="text-2xl font-black text-white mb-2">
-                      <AnimatedText text={project.title} stagger={0.04} blur={4} y={12} />
-                    </h3>
-                    <p className="text-sm leading-relaxed text-white/70 line-clamp-2">
-                      {project.description}
-                    </p>
+                    <div className="rounded-full border border-cyan-primary/20 bg-cyan-primary/8 px-3 py-1 text-[10px] font-mono uppercase tracking-[0.16em] text-cyan-primary">
+                      {project.status}
+                    </div>
                   </div>
-                </Card>
-              </div>
+                  <h3 className="mt-4 text-2xl font-black text-white">
+                    <AnimatedText text={project.title} stagger={0.04} blur={4} y={12} />
+                  </h3>
+                  <p className="mt-4 flex-1 text-sm leading-7 text-light-gray/66">
+                    {project.description}
+                  </p>
+                  <div className="mt-6 text-sm text-light-gray/58">
+                    Built by: {project.builtBy}
+                  </div>
+                </div>
+              </Card>
               </StaggerItem>
             ))}
           </StaggerContainer>
