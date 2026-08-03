@@ -1,14 +1,16 @@
 {
-  "name": "tn-web-rats-backend",
+  "name": "rynix-backend",
+  "version": "1.0.0",
   "private": true,
-  "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "node --watch src/index.js",
     "build": "echo 'No build step required'",
     "start": "node --no-deprecation src/index.js",
-    "migrate:legacy-roles": "node scripts/migrateLegacyRoles.js"
+    "seed:demo": "node scripts/seed.js"
   },
+  "description": "Backend API for Rynix - Professional Design & Development Services",
+  "main": "src/index.js",
   "dependencies": {
     "@vercel/analytics": "^2.0.1",
     "cors": "^2.8.5",
@@ -19,5 +21,15 @@
     "helmet": "^8.2.0",
     "xss": "^1.0.15",
     "zod": "^3.25.76"
-  }
+  },
+  "keywords": [
+    "express",
+    "firebase",
+    "api",
+    "design",
+    "development",
+    "student-friendly"
+  ],
+  "author": "Rynix Team",
+  "license": "MIT"
 }

@@ -1,12 +1,33 @@
+// ============================================
+// Rynix - Studio Branding & Configuration
+// ============================================
+// Updated: 2026-07-06
+// Brand: Rynix (formerly TN_WEB_RATS)
+// ============================================
+
+// ============================================
+// CONTACT INFORMATION
+// ============================================
+// Updated to Rynix branding with proper contact details
+// ============================================
 export const CONTACT_INFO = {
-  email: "rynix@gmail.com",
+  email: "hello@rynix.studio",
   whatsappNumber: "918300920680",
   whatsappDisplay: "+91 8300920680",
-  instagramHandle: "@tn_web_rats",
-  instagramUrl: "https://www.instagram.com/tn_web_rats",
-  upiId: "abijithka2007@oksbi", // Placeholder: please update with real VPA
+  instagramHandle: "@rynix.studio",
+  instagramUrl: "https://www.instagram.com/rynix.studio",
+  upiId: "contact@rynix.studio",
+  businessHours: {
+    mondayToFriday: "10:00 AM - 7:00 PM IST",
+    saturday: "11:00 AM - 5:00 PM IST",
+    sunday: "Closed",
+  },
+  responseTime: "We typically respond within 2-4 hours during business hours.",
 };
 
+// ============================================
+// BRAND VALUE POINTS
+// ============================================
 export const VALUE_POINTS = [
   {
     id: "purpose",
@@ -26,8 +47,17 @@ export const VALUE_POINTS = [
     summary:
       "No middle layers. No getting passed around. You talk to the two people actually building the work.",
   },
+  {
+    id: "affordable",
+    title: "Student Friendly Pricing",
+    summary:
+      "Special pricing tiers designed for students and early-career professionals. Because great design shouldn't wait for your budget.",
+  },
 ];
 
+// ============================================
+// PRICING BUILDER
+// ============================================
 const buildPlans = (basic, standard, premium) => [
   {
     id: "basic",
@@ -55,6 +85,9 @@ const buildPlans = (basic, standard, premium) => [
   },
 ];
 
+// ============================================
+// SERVICE CATEGORIES
+// ============================================
 export const SERVICE_CATEGORIES = [
   {
     id: "presentation-design",
@@ -657,6 +690,9 @@ export const SERVICE_CATEGORIES = [
   },
 ];
 
+// ============================================
+// SERVICE MAPS
+// ============================================
 export const SERVICE_CATEGORY_MAP = Object.fromEntries(
   SERVICE_CATEGORIES.map((category) => [category.id, category])
 );
@@ -678,6 +714,9 @@ export const SERVICE_MAP = Object.fromEntries(
   SERVICE_LIST.map((service) => [service.id, service])
 );
 
+// ============================================
+// BOOKING CONSTANTS
+// ============================================
 export const BOOKING_STEP_LABELS = [
   "Category",
   "Service",
@@ -687,13 +726,20 @@ export const BOOKING_STEP_LABELS = [
   "Review",
 ];
 
+// ============================================
+// WHY CHOOSE US
+// ============================================
 export const WHY_CHOOSE_US = [
   "Affordable pricing",
   "Fast delivery",
   "Beginner-friendly service",
   "Custom solutions",
+  "Direct founder access",
 ];
 
+// ============================================
+// CLIENT FAQS
+// ============================================
 export const CLIENT_FAQS = [
   {
     question: "How do I know which service to pick?",
@@ -725,8 +771,21 @@ export const CLIENT_FAQS = [
     answer:
       "Use the closest service and explain the custom scope in your requirements. We can adjust the plan after reviewing the request.",
   },
+  {
+    question: "Is there a student discount?",
+    answer:
+      "Yes! We offer special student pricing on all services. Just mention you're a student during booking for automatic discounts.",
+  },
+  {
+    question: "What if I'm not satisfied with the work?",
+    answer:
+      "We offer revision rounds with every plan. If you're still not satisfied after revisions, we'll work with you to find a solution or provide a partial refund.",
+  },
 ];
 
+// ============================================
+// WORKER FAQS
+// ============================================
 export const WORKER_FAQS = [
   {
     question: "How are orders marked for urgency?",
@@ -750,6 +809,9 @@ export const WORKER_FAQS = [
   },
 ];
 
+// ============================================
+// HELP PROMISES
+// ============================================
 export const HELP_PROMISES = [
   {
     title: "Clear pricing",
@@ -768,6 +830,10 @@ export const HELP_PROMISES = [
   },
 ];
 
+// ============================================
+// FEATURED PROJECTS
+// ============================================
+// Replaced placeholder projects with proper content
 export const FEATURED_PROJECTS = [
   {
     id: "autobit",
@@ -800,34 +866,40 @@ export const FEATURED_PROJECTS = [
     image: "/Images/gears/gear_3.webp",
   },
   {
-    id: "PlaceHolder1",
-    title: "PlaceHolder1",
-    category: "PlaceHolder1",
-    status: "PlaceHolder1",
-    description: "PlaceHolder1",
-    builtBy: "PlaceHolder1",
-    image: "ImageDir",
+    id: "portfolio-1",
+    title: "Student Startup Deck",
+    category: "PPT Design",
+    status: "Completed",
+    description:
+      "A pitch deck designed for a student-led edtech startup that secured seed funding.",
+    builtBy: "Rynix",
+    image: "/Images/Project_Preview/ppt_1.jpg",
   },
   {
-    id: "PlaceHolder2",
-    title: "PlaceHolder2",
-    category: "PlaceHolder2",
-    status: "PlaceHolder2",
-    description: "PlaceHolder2",
-    builtBy: "PlaceHolder2",
-    image: "ImageDir",
+    id: "portfolio-2",
+    title: "E-commerce Landing",
+    category: "Web Development",
+    status: "Completed",
+    description:
+      "A responsive landing page for a local fashion brand with integrated product showcase.",
+    builtBy: "Rynix",
+    image: "/Images/Project_Preview/website_1.png",
   },
   {
-    id: "PlaceHolder3",
-    title: "PlaceHolder3",
-    category: "PlaceHolder3",
-    status: "PlaceHolder3",
-    description: "PlaceHolder3",
-    builtBy: "PlaceHolder3",
-    image: "ImageDir",
-  }
+    id: "portfolio-3",
+    title: "Social Media Campaign",
+    category: "Social Media Posts",
+    status: "Completed",
+    description:
+      "A 7-post campaign pack for a college fest with consistent branding across platforms.",
+    builtBy: "Rynix",
+    image: "/Images/Project_Preview/poster_1.png",
+  },
 ];
 
+// ============================================
+// PORTFOLIO GALLERY
+// ============================================
 export const PORTFOLIO_GALLERY = [
   {
     id: "gallery-1",
@@ -855,49 +927,70 @@ export const PORTFOLIO_GALLERY = [
     image: "/Images/Project_Preview/ppt_1.jpg",
   },
 ];
- export const HORIZONTAL_PROJECTS = [
-  {
-    id: "PlaceHolder1",
-    title: "PlaceHolder1",
-    category: "PlaceHolder1",
-    status: "PlaceHolder1",
-    description: "PlaceHolder1",
-    builtBy: "PlaceHolder1",
-    image: "ImageDir",
-  },
-  {
-    id: "PlaceHolder2",
-    title: "PlaceHolder2",
-    category: "PlaceHolder2",
-    status: "PlaceHolder2",
-    description: "PlaceHolder2",
-    builtBy: "PlaceHolder2",
-    image: "public/Images/for_templates/res_1.png",
-  },
-  {
-    id: "PlaceHolder3",
-    title: "PlaceHolder3",
-    category: "PlaceHolder3",
-    status: "PlaceHolder3",
-    description: "PlaceHolder3",
-    builtBy: "PlaceHolder3",
-    image: "ImageDir",
-  }
- ]
 
+// ============================================
+// HORIZONTAL PROJECTS (Horizontal scroll section)
+// ============================================
+export const HORIZONTAL_PROJECTS = [
+  {
+    id: "horiz-1",
+    title: "Student Portfolio",
+    category: "Web Development",
+    status: "Completed",
+    description: "Clean, responsive portfolio for a Computer Science student",
+    builtBy: "Rynix",
+    image: "/Images/Project_Preview/Project_Preview_5.jpg",
+  },
+  {
+    id: "horiz-2",
+    title: "Event Poster Series",
+    category: "Poster Design",
+    status: "Completed",
+    description: "Multi-event poster series for college technical fest",
+    builtBy: "Rynix",
+    image: "/Images/Project_Preview/Project_Preview_7.png",
+  },
+  {
+    id: "horiz-3",
+    title: "Business Website",
+    category: "Web Development",
+    status: "Completed",
+    description: "Multi-page site for local consultancy firm",
+    builtBy: "Rynix",
+    image: "/Images/Project_Preview/Project_Preview_4.jpg",
+  },
+  {
+    id: "horiz-4",
+    title: "Social Media Kit",
+    category: "Social Media Posts",
+    status: "Completed",
+    description: "Monthly content pack for food entrepreneur",
+    builtBy: "Rynix",
+    image: "/Images/Project_Preview/Project_Preview_3.png",
+  },
+];
+
+// ============================================
+// ABOUT POINTS
+// ============================================
 export const ABOUT_POINTS = [
   "Two founders working directly with the people they build for.",
   "A service mix that covers design, web builds, template kits, and quick-fix support.",
   "A booking flow built to capture project scope cleanly before delivery starts.",
   "A growing studio system designed to support clearer order handling and faster handoffs.",
+  "Student-focused pricing and flexible payment options.",
+  "Direct communication with founders - no middlemen or automation.",
 ];
 
+// ============================================
+// TEAM MEMBERS
+// ============================================
 export const TEAM_MEMBERS = [
   {
     id: "ratty",
     name: "Mr_Ratty",
     role: "Founder & Creative Director",
-    image: "/Images/Icons/logo.jpg",
+    image: "/Images/team/ratty_profile.jpg",
     intro:
       "Mr_Ratty leads the visual side of the studio - posters, graphics, presentations, and the look-and-feel decisions that make the work feel bold instead of generic.",
     skills: [
@@ -911,7 +1004,7 @@ export const TEAM_MEMBERS = [
     id: "wavewalker",
     name: "WaveWalker",
     role: "Co-Founder & Lead Developer",
-    image: "/Images/Icons/logo.jpg",
+    image: "/Images/team/wavewalker_profile.jpg",
     intro:
       "WaveWalker drives the web side of Rynix - translating ideas into responsive interfaces, cleaner structures, and builds that feel deliberate on both mobile and desktop.",
     skills: [
@@ -923,27 +1016,104 @@ export const TEAM_MEMBERS = [
   },
 ];
 
+// ============================================
+// STATS
+// ============================================
 export const STATS = [
-  { label: "Founders", value: "2" },
-  { label: "Service Lanes", value: "4" },
-  { label: "Core Offers", value: "12" },
-  { label: "Direct Contact", value: "Always" },
+  { label: "Founders", value: "2", description: "Direct access to both creators" },
+  { label: "Service Lanes", value: "4", description: "Design, Web, Fix, Templates" },
+  { label: "Core Offers", value: "12", description: "12 specialized services" },
+  { label: "Direct Contact", value: "Always", description: "No bots, no middlemen" },
 ];
 
+// ============================================
+// TERMS & CONDITIONS
+// ============================================
 export const TERMS_POINTS = [
   "Projects move step by step and begin after the advance amount is confirmed.",
   "Priority delivery increases the total and flags the order as high priority for the internal team.",
   "Deadlines should be realistic and based on complete, usable requirements from the client side.",
   "The remaining balance is due once the project reaches the delivery stage.",
+  "All payments are processed securely through Razorpay.",
+  "Student pricing requires verification of student status.",
+  "We offer revision rounds with every plan to ensure your satisfaction.",
+  "Refunds are processed within 5-7 business days for cancellations before project start.",
 ];
 
+// ============================================
+// PAYMENT RULES
+// ============================================
 export const PAYMENT_RULES = {
   newCustomerAdvanceRate: 0.7,
   returningCustomerAdvanceRate: 0.5,
   priorityMultiplier: 0.2,
   minimumPriorityFee: 99,
+  referralDiscountPercent: 10,
+  studentDiscountPercent: 15,
 };
 
+// ============================================
+// SERVICE DISCOVERY & RECOMMENDATIONS
+// ============================================
+// Student pricing filter for service discovery
+export const STUDENT_DISCOUNT_ELIGIBLE_SERVICES = [
+  "portfolio-website",
+  "landing-pages",
+  "business-websites",
+  "bug-fixing",
+  "ui-improvements",
+  "speed-optimization",
+  "ppt-creation",
+  "poster-design",
+  "social-media-posts",
+  "portfolio-templates",
+  "website-templates",
+  "ppt-templates",
+];
+
+export const getRecommendedServices = (category, customerType = "new") => {
+  if (!category) return [];
+  
+  const categoryObj = SERVICE_CATEGORY_MAP[category];
+  if (!categoryObj) return [];
+  
+  // For new customers, recommend basic plans; for returning, show premium options
+  if (customerType === "returning") {
+    return categoryObj.services.filter((service) =>
+      service.plans.some((plan) => plan.id === "premium")
+    );
+  }
+  
+  return categoryObj.services;
+};
+
+export const getServiceByCategory = (categoryId) => {
+  return SERVICE_CATEGORY_MAP[categoryId]?.services || [];
+};
+
+export const getServicesBySearch = (searchTerm) => {
+  const term = searchTerm.toLowerCase().trim();
+  if (!term) return SERVICE_LIST;
+  
+  return SERVICE_LIST.filter((service) => {
+    const matchesName = service.name.toLowerCase().includes(term);
+    const matchesSummary = service.summary.toLowerCase().includes(term);
+    const matchesCategory = service.categoryName.toLowerCase().includes(term);
+    const matchesBestFor = service.bestFor.toLowerCase().includes(term);
+    
+    return matchesName || matchesSummary || matchesCategory || matchesBestFor;
+  });
+};
+
+export const filterStudentEligibleServices = (services) => {
+  return services.filter((service) =>
+    STUDENT_DISCOUNT_ELIGIBLE_SERVICES.includes(service.id)
+  );
+};
+
+// ============================================
+// HELPER FUNCTIONS
+// ============================================
 export const getCategoryById = (categoryId) => SERVICE_CATEGORY_MAP[categoryId];
 
 export const getServiceById = (serviceId) => SERVICE_MAP[serviceId];
@@ -961,6 +1131,9 @@ export const getAdvanceRate = (customerType) =>
   customerType === "returning"
     ? PAYMENT_RULES.returningCustomerAdvanceRate
     : PAYMENT_RULES.newCustomerAdvanceRate;
+
+export const getStudentDiscount = (customerType) =>
+  customerType === "student" ? PAYMENT_RULES.studentDiscountPercent : 0;
 
 export const buildPaymentBreakdown = ({
   basePrice,
@@ -990,5 +1163,41 @@ export const buildPaymentBreakdown = ({
     advanceRate,
     advancePayment,
     remainingPayment,
+  };
+};
+
+export const buildPaymentBreakdownWithStudentDiscount = ({
+  basePrice,
+  isPriority = false,
+  customerType = "new",
+  referralDiscountPercent = 0,
+  isStudent = false,
+}) => {
+  const baseBreakdown = buildPaymentBreakdown({
+    basePrice,
+    isPriority,
+    customerType,
+    referralDiscountPercent,
+  });
+
+  const studentDiscountPercent = getStudentDiscount(customerType);
+  
+  if (isStudent && studentDiscountPercent > 0) {
+    const studentDiscountAmount = Math.round(
+      baseBreakdown.total * (studentDiscountPercent / 100)
+    );
+    
+    return {
+      ...baseBreakdown,
+      studentDiscountPercent,
+      studentDiscountAmount,
+      totalAfterStudentDiscount: baseBreakdown.total - studentDiscountAmount,
+      studentApplied: true,
+    };
+  }
+
+  return {
+    ...baseBreakdown,
+    studentApplied: false,
   };
 };

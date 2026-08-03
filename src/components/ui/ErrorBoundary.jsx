@@ -38,15 +38,15 @@ export class ErrorBoundary extends React.Component {
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-red-500/10 text-red-500">
               <AlertCircle size={24} />
             </div>
-            <h3 className="mt-4 text-lg font-bold text-white">Feature Offline</h3>
+            <h3 className="mt-4 text-lg font-bold text-white">Something went wrong</h3>
             <p className="mt-2 max-w-sm text-xs leading-relaxed text-light-gray/50">
-              A module-level error occurred. The rest of the platform is safe.
+              We couldn't load this component. The rest of the site is still working.
             </p>
             <button
               onClick={this.handleReset}
               className="mt-6 flex items-center justify-center gap-2 rounded-xl bg-red-500/10 px-6 py-2.5 text-[10px] font-mono uppercase tracking-widest text-red-500 border border-red-500/20 hover:bg-red-500/20 transition-all"
             >
-              <RefreshCw size={14} /> Retry Component
+              <RefreshCw size={14} /> Try Again
             </button>
           </div>
         );
@@ -59,12 +59,11 @@ export class ErrorBoundary extends React.Component {
           </div>
           
           <h1 className="mt-8 text-4xl font-black tracking-tight sm:text-5xl italic uppercase">
-            System <span className="text-red-500">Instability</span> Detected
+            Something <span className="text-red-500">Went Wrong</span>
           </h1>
           
-          <p className="mx-auto mt-4 max-w-[500px] text-sm font-mono uppercase tracking-[0.2em] text-light-gray/40">
-            Catastrophic runtime exception caught.
-            Emergency synchronization recommended.
+          <p className="mx-auto mt-4 max-w-[500px] text-sm font-normal uppercase tracking-[0.2em] text-light-gray/40">
+            We couldn't load this page. Please try refreshing, or contact support if the problem persists.
           </p>
 
           <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:justify-center">
@@ -72,13 +71,19 @@ export class ErrorBoundary extends React.Component {
               onClick={() => window.location.reload()}
               className="flex items-center justify-center gap-3 rounded-2xl bg-white px-8 py-4 text-xs font-black uppercase tracking-widest text-black transition-transform hover:scale-105"
             >
-              <RefreshCw size={18} /> Forced Refresh
+              <RefreshCw size={18} /> Try Again
             </button>
             <a
               href="/"
               className="flex items-center justify-center gap-3 rounded-2xl border border-white/10 px-8 py-4 text-xs font-black uppercase tracking-widest text-white transition-colors hover:bg-white/5"
             >
-              <Home size={18} /> Return Home
+              <Home size={18} /> Go Home
+            </a>
+            <a
+              href="mailto:hello@rynix.studio"
+              className="flex items-center justify-center gap-3 rounded-2xl border border-white/10 px-8 py-4 text-xs font-black uppercase tracking-widest text-white transition-colors hover:bg-white/5"
+            >
+              <AlertCircle size={18} /> Contact Support
             </a>
           </div>
         </div>

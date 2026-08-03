@@ -109,16 +109,29 @@ export function useTemplates() {
         if (filters.sort) params.set("sort", filters.sort);
 
         const response = await apiRequest(`/templates${params.toString() ? `?${params}` : ""}`);
-        setTemplates(
-          filterTemplates((response?.templates || []).map(normalizeTemplate), filters)
-        );
+        const apiTemplates = (response?.templates || []).map(normalizeTemplate);
+        const filtered = filterTemplates(apiTemplates, filters);
+        if (apiTemplates.length > 0) {
+          setTemplates(filtered);
+        } else {
+          const local = filterTemplates(getLocalTemplates(), filters);
+          if (local.length > 0) {
+            console.warn("API returned no templates, using local data as fallback.");
+            setTemplates(local);
+          } else {
+            setTemplates(filtered);
+          }
+        }
       } else {
         setTemplates(filterTemplates(getLocalTemplates(), filters));
       }
     } catch (fetchError) {
-      console.error("Error fetching templates:", fetchError);
-      setError(fetchError.message || "Could not load templates.");
-      setTemplates(filterTemplates(getLocalTemplates(), filters));
+      console.warn("API unavailable, using local templates:", fetchError.message);
+      const local = filterTemplates(getLocalTemplates(), filters);
+      setTemplates(local);
+      if (local.length === 0) {
+        setError(fetchError.message || "Could not load templates.");
+      }
     } finally {
       setLoading(false);
     }

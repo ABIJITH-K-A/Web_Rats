@@ -15,7 +15,7 @@ import {
   Lock,
 } from "lucide-react";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
-import { Button, Card } from "../../components/ui/Primitives";
+import { Button } from "../../components/ui/Primitives";
 import { db } from "../../config/firebase";
 import { useAuth } from "../../context/AuthContext";
 import {
@@ -33,6 +33,7 @@ const Templates = () => {
   const [purchaseTemplate, setPurchaseTemplate] = useState(null);
   const [purchasing, setPurchasing] = useState(false);
   const [purchaseSuccess, setPurchaseSuccess] = useState(false);
+  const [sortOption, setSortOption] = useState("name-asc");
 
   const filtered = useMemo(() => {
     let results = TEMPLATE_ITEMS;
@@ -48,8 +49,17 @@ const Templates = () => {
           t.tags.some((tag) => tag.includes(q))
       );
     }
+    if (sortOption === "price-low") {
+      results = [...results].sort((a, b) => a.price - b.price);
+    } else if (sortOption === "price-high") {
+      results = [...results].sort((a, b) => b.price - a.price);
+    } else if (sortOption === "name-desc") {
+      results = [...results].sort((a, b) => b.title.localeCompare(a.title));
+    } else {
+      results = [...results].sort((a, b) => a.title.localeCompare(b.title));
+    }
     return results;
-  }, [activeCategory, searchQuery]);
+  }, [activeCategory, searchQuery, sortOption]);
 
   const handleGetTemplate = async (template) => {
     if (!user) {
@@ -182,19 +192,31 @@ const Templates = () => {
             ))}
           </div>
 
-          {/* Search */}
-          <div className="relative max-w-xs">
-            <Search
-              size={14}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-light-gray/30"
-            />
-            <input
-              type="text"
-              placeholder="Search templates..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-xl border border-white/10 bg-black/35 py-2.5 pl-9 pr-4 text-sm text-white outline-none transition-colors placeholder:text-light-gray/30 focus:border-cyan-primary"
-            />
+          {/* Search & Sort */}
+          <div className="flex items-center gap-3">
+            <div className="relative max-w-xs">
+              <Search
+                size={14}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-light-gray/30"
+              />
+              <input
+                type="text"
+                placeholder="Search templates..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full min-w-[200px] rounded-xl border border-white/10 bg-black/35 py-2.5 pl-9 pr-4 text-sm text-white outline-none transition-colors placeholder:text-light-gray/30 focus:border-cyan-primary"
+              />
+            </div>
+            <select
+              value={sortOption}
+              onChange={(e) => setSortOption(e.target.value)}
+              className="rounded-xl border border-white/10 bg-black/35 px-3 py-2.5 text-xs text-white/70 outline-none transition-colors focus:border-cyan-primary"
+            >
+              <option value="name-asc" className="bg-[#10141a]">Name A-Z</option>
+              <option value="name-desc" className="bg-[#10141a]">Name Z-A</option>
+              <option value="price-low" className="bg-[#10141a]">Price Low-High</option>
+              <option value="price-high" className="bg-[#10141a]">Price High-Low</option>
+            </select>
           </div>
         </div>
       </section>
@@ -252,8 +274,8 @@ const Templates = () => {
 
 /* ─── Template Card ─────────────────────────────────────── */
 const TemplateCard = ({ template, onPreview, onGet }) => (
-  <Card
-    className="group relative overflow-hidden border-white/8 bg-[#10141a] transition-all hover:border-cyan-primary/18"
+  <div
+    className="group relative overflow-hidden rounded-2xl border border-white/8 bg-[#10141a] shadow-2xl backdrop-blur-2xl transition-all hover:border-cyan-primary/18"
   >
     {/* Image */}
     <div className="relative aspect-[16/10] overflow-hidden bg-black/50">
@@ -324,7 +346,7 @@ const TemplateCard = ({ template, onPreview, onGet }) => (
         </div>
       </div>
     </div>
-  </Card>
+  </div>
 );
 
 /* ─── Interactive Preview Modal ─────────────────────────── */

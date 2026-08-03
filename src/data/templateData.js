@@ -41,7 +41,7 @@ export const TEMPLATE_ITEMS = [
     tags: ["html", "food", "gallery"],
   },
   {
-    id: "tpl-web-03",
+    id: "tpl-web-04",
     title: "Restaurant Menu Site 02",
     category: "website",
     description: "A visually appealing menu site that makes food choices easy and inviting.",
@@ -52,7 +52,7 @@ export const TEMPLATE_ITEMS = [
     tags: ["html", "food", "gallery"],
   },
   {
-    id: "tpl-web-03",
+    id: "tpl-web-05",
     title: "Restaurant Menu Site 03",
     category: "website",
     description: "A simple restaurant website designed to showcase menu items and encourage orders.",
@@ -74,7 +74,7 @@ export const TEMPLATE_ITEMS = [
     tags: ["developer", "dark", "minimal"],
   },
   {
-    id: "tpl-port-01",
+    id: "tpl-port-04",
     title: "Minimal Portfolio 02",
     category: "portfolio",
     description: "Dark background with warm mid-tones and an electric-but-refined accent — all contrast, no clutter.",
@@ -85,7 +85,7 @@ export const TEMPLATE_ITEMS = [
     tags: ["developer", "dark", "minimal"],
   },
   {
-    id: "tpl-port-01",
+    id: "tpl-port-05",
     title: "Minimal Portfolio 03",
     category: "portfolio",
     description: "Earthy greens on soft linen — feels handcrafted and human, not corporate.",
